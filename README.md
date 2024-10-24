@@ -206,7 +206,7 @@
 
 ![image-20241012011005767](https://cdn.jsdelivr.net/gh/mogullzr/Typora_img@main/202410241330335.png)
 
-![image-20241012011023667](./assets/image-20241012011023667.png)
+![image-20241012011023667](https://cdn.jsdelivr.net/gh/mogullzr/Typora_img@main/202410241701043.png)
 
 ### 竞赛创建页面
 
