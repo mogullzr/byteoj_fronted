@@ -268,11 +268,15 @@ const options: any = ref({
 });
 const path = router.currentRoute.value.fullPath;
 const problem_id = ref(
-  path.toString().split("/")[1] == "competition"
-    ? parseInt(path.toString().split("/")[2]) +
+    path.toString().split("/")[1] == "competition"
+        ? parseInt(path.toString().split("/")[2]) +
         "-" +
         path.toString().split("/")[4]
-    : parseInt(path.toString().split("/")[3])
+        : parseInt(
+            path.toString().split("/")?.length == 2
+                ? path.toString().split("/")[3]
+                : "1"
+        )
 );
 
 const languages_options = useStore.languages_options;

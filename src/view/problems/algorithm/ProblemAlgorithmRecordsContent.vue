@@ -155,13 +155,20 @@ const goBack = () => {
   if (competition_id.value != -1) {
     router.push("/competition/" + competition_id.value);
   } else {
-    router.push("/home");
+    router.push("home");
   }
 };
 </script>
 
 <template>
   <div v-if="!auth_status" class="flex mx-40">
+    <button
+        v-if="competition_id != -1"
+        class="btn font-bold text-xl btn-lg"
+        @click="goBack"
+    >
+      返回
+    </button>
     <div class="card-side rounded-xl bg-base-100 shadow-xl mx-5 w-2/3">
       <div class="m-6" v-if="!isLoading">
         <div class="my-2">
