@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, Ref } from "vue";
 
-// 题目列表信息的假数据，大工程，这一部分还没有写后端逻辑
 const algorithm_problems: Ref<any> = ref([
   {
     problems_type: "第一章：变量的基本应用",

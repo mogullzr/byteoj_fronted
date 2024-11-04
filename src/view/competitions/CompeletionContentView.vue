@@ -12,29 +12,21 @@ import CompetitionContentRecordsView from "@/view/competitions/CompetitionConten
 import CompetitionContentRankView from "@/view/competitions/CompetitionContentComponent/CompetitionContentRankView.vue";
 import { Startup } from "mathjax-full/js/components/startup";
 import elements = Startup.elements;
+import CompetitionContentControlView from "@/view/competitions/CompetitionContentComponent/CompetitionContentControlView.vue";
 
-// 导入dayjs
 const dayjs = require("dayjs");
 const useStore = UserStore();
 const router = useRouter();
-// 当前路由
 const path = router.currentRoute.value.fullPath;
 
-// 竞赛id
 const competition_id = ref(parseInt(path.toString().split("/")[2]));
 // 当前时间
 const current_time = new Date();
-// 输入竞赛密码
 const password = ref();
-// 反馈失败信息
 const message = ref("");
-// 0表示展示成功信息，1表示展示失败信息
 const status = ref();
-// 表示是否展示提示信息
 const showDialog = ref(true);
-// 竞赛信息
 const competition_info: Ref<CompetitionInfoVo> = ref({} as CompetitionInfoVo);
-// 时间相关数据
 let timer: any = ref(null);
 let remainingTime = ref("");
 let day: Ref<any> = ref(0);
@@ -42,30 +34,27 @@ let hour: Ref<any> = ref(0);
 let min: Ref<any> = ref(0);
 let seconds: Ref<any> = ref(0);
 
-// 0，1，2，3，4分别表示比赛说明、题目、提交记录、榜单、赛后讨论5个页面，默认情况点击竞赛进入题目页面。
 const local: any =
-  localStorage.getItem("competition-" + competition_id.value + "-status") !=
-  undefined
-    ? localStorage.getItem("competition-" + competition_id.value + "-status")
-    : "1";
-
+    localStorage.getItem("competition-" + competition_id.value + "-status") !=
+    undefined
+        ? localStorage.getItem("competition-" + competition_id.value + "-status")
+        : "1";
 const isShow = ref(
-  localStorage.getItem("competition-" + competition_id.value + "-status") == ""
-    ? 0
-    : parseInt(local)
+    localStorage.getItem("competition-" + competition_id.value + "-status") == ""
+        ? 0
+        : parseInt(local)
 );
-
 // 时间戳转时分秒
 const toHHmmss = (data: number) => {
   let s;
   let days = Math.floor(
-    (data % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24)
+      (data % (1000 * 60 * 60 * 24 * 365)) / (1000 * 60 * 60 * 24)
   );
   let hours = Math.floor((data % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   let minutes = Math.floor((data % (1000 * 60 * 60)) / (1000 * 60));
   let secondss = Math.floor((data % (1000 * 60)) / 1000);
   s = `${days < 10 ? "0" + days : days}:${hours < 10 ? "0" + hours : hours}:${
-    minutes < 10 ? "0" + minutes : minutes
+      minutes < 10 ? "0" + minutes : minutes
   }:${secondss < 10 ? "0" + secondss : secondss}`;
   if (s.length > 11) {
     s = s.slice(0, 11);
@@ -83,46 +72,46 @@ const initRemainingTime = (value: UnwrapRef<null>, flag: any) => {
     let timeStamp = endTime - currentTime - 2000;
     remainingTime.value = toHHmmss(timeStamp);
     day.value = parseInt(
-      remainingTime.value[0] == "0"
-        ? remainingTime.value[1]
-        : remainingTime.value.substring(0, 2)
+        remainingTime.value[0] == "0"
+            ? remainingTime.value[1]
+            : remainingTime.value.substring(0, 2)
     );
     hour.value = parseInt(
-      remainingTime.value[3] == "0"
-        ? remainingTime.value[4]
-        : remainingTime.value.substring(3, 5)
+        remainingTime.value[3] == "0"
+            ? remainingTime.value[4]
+            : remainingTime.value.substring(3, 5)
     );
     min.value = parseInt(
-      remainingTime.value[6] == "0"
-        ? remainingTime.value[7]
-        : remainingTime.value.substring(6, 8)
+        remainingTime.value[6] == "0"
+            ? remainingTime.value[7]
+            : remainingTime.value.substring(6, 8)
     );
     seconds.value = parseInt(
-      remainingTime.value[9] == "0"
-        ? remainingTime.value[10]
-        : remainingTime.value.substring(9, 11)
+        remainingTime.value[9] == "0"
+            ? remainingTime.value[10]
+            : remainingTime.value.substring(9, 11)
     );
     if (timeStamp >= 1000) {
       timer = setInterval(() => {
         day.value = parseInt(
-          remainingTime.value[0] == "0"
-            ? remainingTime.value[1]
-            : remainingTime.value.substring(0, 2)
+            remainingTime.value[0] == "0"
+                ? remainingTime.value[1]
+                : remainingTime.value.substring(0, 2)
         );
         hour.value = parseInt(
-          remainingTime.value[3] == "0"
-            ? remainingTime.value[4]
-            : remainingTime.value.substring(3, 5)
+            remainingTime.value[3] == "0"
+                ? remainingTime.value[4]
+                : remainingTime.value.substring(3, 5)
         );
         min.value = parseInt(
-          remainingTime.value[6] == "0"
-            ? remainingTime.value[7]
-            : remainingTime.value.substring(6, 8)
+            remainingTime.value[6] == "0"
+                ? remainingTime.value[7]
+                : remainingTime.value.substring(6, 8)
         );
         seconds.value = parseInt(
-          remainingTime.value[9] == "0"
-            ? remainingTime.value[10]
-            : remainingTime.value.substring(9, 11)
+            remainingTime.value[9] == "0"
+                ? remainingTime.value[10]
+                : remainingTime.value.substring(9, 11)
         );
         timeStamp -= 1000;
         remainingTime.value = toHHmmss(timeStamp);
@@ -132,6 +121,9 @@ const initRemainingTime = (value: UnwrapRef<null>, flag: any) => {
         }
       }, 1000);
     }
+    console.log(hour.value);
+    console.log(min.value);
+    console.log(seconds.value);
   }
 };
 
@@ -141,25 +133,25 @@ onMounted(async () => {
     el.checked = true;
   }
   const res =
-    await CompetitionControllerService.competitionSearchByCompetitionIdUsingPost(
-      competition_id.value
-    );
+      await CompetitionControllerService.competitionSearchByCompetitionIdUsingPost(
+          competition_id.value
+      );
 
   if (res.code === 0) {
     competition_info.value = res.data;
     if (
-      competition_info.value?.start_time != undefined &&
-      competition_info.value?.end_time != undefined
+        competition_info.value?.start_time != undefined &&
+        competition_info.value?.end_time != undefined
     ) {
       competition_info.value.start_time = new Date(
-        competition_info.value.start_time
+          competition_info.value.start_time
       ).toString();
       competition_info.value.end_time = new Date(
-        competition_info.value.end_time
+          competition_info.value.end_time
       ).toString();
       if (
-        new Date().getTime() <=
-        dayjs(competition_info.value.start_time).valueOf()
+          new Date().getTime() <=
+          dayjs(competition_info.value.start_time).valueOf()
       ) {
         initRemainingTime(timer.value, 0);
       } else {
@@ -169,11 +161,19 @@ onMounted(async () => {
   }
 });
 
+const onShowDialog = () => {
+  showDialog.value = true;
+  console.log(showDialog.value);
+};
+const closeDialog = () => {
+  showDialog.value = false;
+  console.log(showDialog.value);
+};
 // 报名
 const Join = async () => {
   const res = await CompetitionControllerService.competitionUserJoinUsingPost(
-    competition_id.value,
-    password.value
+      competition_id.value,
+      password.value
   );
 
   if (res.code === 0) {
@@ -192,9 +192,9 @@ const Join = async () => {
 // 取消报名
 const cancelJoin = async () => {
   const res =
-    await CompetitionControllerService.competitionUserJoinCancelUsingPost(
-      competition_id.value
-    );
+      await CompetitionControllerService.competitionUserJoinCancelUsingPost(
+          competition_id.value
+      );
 
   if (res.code === 0) {
     message.value = "已经成功取消报名";
@@ -219,8 +219,8 @@ const showModal = () => {
 const changeShow = (key: number) => {
   isShow.value = key;
   localStorage.setItem(
-    "competition-" + competition_id.value + "-status",
-    key.toString()
+      "competition-" + competition_id.value + "-status",
+      key.toString()
   );
   let element: any = document.getElementById(isShow.value.toString());
   if (element) {
@@ -232,16 +232,16 @@ const changeShow = (key: number) => {
 <template>
   <div role="alert" class="alert alert-success" v-if="status == 0">
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-      class="stroke-info h-6 w-6 shrink-0"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        class="stroke-info h-6 w-6 shrink-0"
     >
       <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
       ></path>
     </svg>
     <span>{{ message }}</span>
@@ -249,16 +249,16 @@ const changeShow = (key: number) => {
 
   <div role="alert" class="alert alert-error" v-else-if="status == 1">
     <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-6 w-6 shrink-0 stroke-current"
+        fill="none"
+        viewBox="0 0 24 24"
     >
       <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
       />
     </svg>
     <span>{{ message }}</span>
@@ -274,7 +274,7 @@ const changeShow = (key: number) => {
             <div class="my-5" style="font-size: 20px">
               <span class="font-bold">比赛时间：</span>
               <span
-                >{{
+              >{{
                   dayjs(competition_info.start_time).format("YYYY-MM-DD HH:mm")
                 }}
                 至
@@ -290,14 +290,14 @@ const changeShow = (key: number) => {
             <div class="my-5" style="font-size: 20px">
               <span class="font-bold">时长：</span>
               <span>{{
-                parseInt(
-                  String(
-                    (dayjs(competition_info.end_time).valueOf() -
-                      dayjs(competition_info.start_time).valueOf()) /
-                      3600000
+                  parseInt(
+                      String(
+                          (dayjs(competition_info.end_time).valueOf() -
+                              dayjs(competition_info.start_time).valueOf()) /
+                          3600000
+                      )
                   )
-                )
-              }}</span>
+                }}</span>
               <span class="font-bold">h</span>
             </div>
           </div>
@@ -305,16 +305,16 @@ const changeShow = (key: number) => {
       </div>
       <div id="content"></div>
       <div
-        v-if="dayjs(new Date()) < dayjs(competition_info.start_time)"
-        class="m-auto font-bold"
-        style="font-size: 24px"
+          v-if="dayjs(new Date()) < dayjs(competition_info.start_time)"
+          class="m-auto font-bold"
+          style="font-size: 24px"
       >
         距离比赛开始
       </div>
       <div
-        v-else-if="dayjs(new Date()) > dayjs(competition_info.end_time)"
-        class="m-auto font-bold"
-        style="font-size: 100px"
+          v-else-if="dayjs(new Date()) > dayjs(competition_info.end_time)"
+          class="m-auto font-bold"
+          style="font-size: 100px"
       >
         比赛已结束
       </div>
@@ -322,12 +322,12 @@ const changeShow = (key: number) => {
         距离比赛结束还有
       </div>
       <div
-        v-if="dayjs(new Date()) < dayjs(competition_info.end_time)"
-        style="font-size: 24px"
-        class="grid auto-cols-max grid-flow-col gap-5 text-center m-auto my-5"
+          v-if="dayjs(new Date()) < dayjs(competition_info.end_time)"
+          style="font-size: 24px"
+          class="grid auto-cols-max grid-flow-col gap-5 text-center m-auto my-5"
       >
         <div
-          class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
+            class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
         >
           <span class="countdown font-mono text-7xl">
             <span :style="'--value:' + day"></span>
@@ -335,7 +335,7 @@ const changeShow = (key: number) => {
           days
         </div>
         <div
-          class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
+            class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
         >
           <span class="countdown font-mono text-7xl">
             <span :style="'--value:' + hour"></span>
@@ -343,7 +343,7 @@ const changeShow = (key: number) => {
           hours
         </div>
         <div
-          class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
+            class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
         >
           <span class="countdown font-mono text-7xl">
             <span :style="'--value:' + min"></span>
@@ -351,7 +351,7 @@ const changeShow = (key: number) => {
           min
         </div>
         <div
-          class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
+            class="bg-neutral rounded-box text-neutral-content flex flex-col p-2"
         >
           <span class="countdown font-mono text-7xl">
             <span :style="'--value:' + seconds"></span>
@@ -360,35 +360,37 @@ const changeShow = (key: number) => {
         </div>
       </div>
       <button
-        v-if="
+          v-if="
           (competition_info.user_status === 1 ||
-            competition_info.user_status === 2) &&
+            competition_info.user_status === 2 ||
+            competition_info.user_status === 5) &&
           competition_info.status === 0
         "
-        class="btn btn-success w-1/3 m-auto text-white"
-        style="font-size: 20px"
-        @click="Join"
+          class="btn btn-success w-1/3 m-auto text-white"
+          style="font-size: 20px"
+          @click="Join"
       >
         报名
       </button>
       <button
-        v-else-if="competition_info.user_status === 0"
-        class="btn btn-error w-1/3 m-auto text-white"
-        style="font-size: 20px"
-        @click="cancelJoin"
+          v-else-if="competition_info.user_status === 0"
+          class="btn btn-error w-1/3 m-auto text-white"
+          style="font-size: 20px"
+          @click="cancelJoin"
       >
         取消报名
       </button>
       <!-- Open the modal using ID.showModal() method -->
       <button
-        v-else-if="
-          competition_info.status === 1 &&
+          v-else-if="
           (competition_info.user_status === 1 ||
-            competition_info.user_status === 2)
+            competition_info.user_status === 2 ||
+            competition_info.user_status === 5) &&
+          competition_info.status === 1
         "
-        class="btn btn-success w-1/3 m-auto text-white"
-        @click="showModal"
-        style="font-size: 20px"
+          class="btn btn-success w-1/3 m-auto text-white"
+          @click="showModal"
+          style="font-size: 20px"
       >
         报名
       </button>
@@ -397,10 +399,10 @@ const changeShow = (key: number) => {
           <h3 class="text-lg font-bold">你好</h3>
           <p class="py-4">这场比赛并非一场公开比赛，请输入比赛邀请码：</p>
           <input
-            type="password"
-            placeholder="输入比赛邀请码"
-            class="input input-bordered input-primary w-full"
-            v-model="password"
+              type="password"
+              placeholder="输入比赛邀请码"
+              class="input input-bordered input-primary w-full"
+              v-model="password"
           />
           <div class="modal-action">
             <form method="dialog">
@@ -413,79 +415,93 @@ const changeShow = (key: number) => {
       <div class="flex">
         <div role="tablist" class="tabs tabs-bordered tabs-lg mx-auto w-5/6">
           <input
-            id="0"
-            type="radio"
-            name="my_tabs_1"
-            role="tab"
-            class="tab tab-border-3"
-            aria-label="比赛说明"
-            style="white-space: nowrap"
-            @click="changeShow(0)"
+              id="0"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="比赛说明"
+              style="white-space: nowrap"
+              @click="changeShow(0)"
           />
           <div
-            v-show="isShow === 0"
-            role="tabpanel"
-            class="tab-content p-10 bg-gray-100 mt-10"
+              v-show="isShow === 0"
+              role="tabpanel"
+              class="tab-content p-10 bg-gray-100 mt-10"
           >
             <MarkdownView
-              class="bg-gray-100"
-              :generateData="competition_info.description"
+                class="bg-gray-100"
+                :generateData="competition_info.description"
             />
           </div>
 
           <input
-            id="1"
-            type="radio"
-            name="my_tabs_1"
-            role="tab"
-            class="tab tab-border-3"
-            aria-label="题目"
-            checked="checked"
-            style="white-space: nowrap"
-            @click="changeShow(1)"
+              id="1"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="题目"
+              checked="checked"
+              style="white-space: nowrap"
+              @click="changeShow(1)"
           />
           <div v-if="isShow === 1" role="tabpanel" class="tab-content py-10">
             <CompetitionContentProblemShowView />
           </div>
 
           <input
-            id="2"
-            type="radio"
-            name="my_tabs_1"
-            role="tab"
-            class="tab tab-border-3"
-            aria-label="提交记录"
-            style="white-space: nowrap"
-            @click="changeShow(2)"
+              id="2"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="提交记录"
+              style="white-space: nowrap"
+              @click="changeShow(2)"
           />
           <div v-if="isShow === 2" role="tabpanel" class="tab-content py-10">
             <CompetitionContentRecordsView />
           </div>
           <input
-            id="3"
-            type="radio"
-            name="my_tabs_1"
-            role="tab"
-            class="tab tab-border-3"
-            aria-label="榜单"
-            style="white-space: nowrap"
-            @click="changeShow(3)"
+              id="3"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="榜单"
+              style="white-space: nowrap"
+              @click="changeShow(3)"
           />
           <div v-if="isShow === 3" role="tabpanel" class="tab-content py-10">
             <CompetitionContentRankView />
           </div>
           <input
-            id="3"
-            type="radio"
-            name="my_tabs_1"
-            role="tab"
-            class="tab tab-border-3"
-            aria-label="赛后讨论"
-            style="white-space: nowrap"
-            @click="changeShow(4)"
+              id="4"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="赛后讨论"
+              style="white-space: nowrap"
+              @click="changeShow(4)"
           />
           <div v-if="isShow === 4" role="tabpanel" class="tab-content p-10">
             敬请期待......
+          </div>
+          <input
+              v-if="competition_info.isCreated === 0"
+              id="5"
+              type="radio"
+              name="my_tabs_1"
+              role="tab"
+              class="tab tab-border-3"
+              aria-label="管理员管理"
+              style="white-space: nowrap"
+              @click="changeShow(5)"
+          />
+          <div v-if="isShow === 5" role="tabpanel" class="tab-content p-10">
+            <CompetitionContentControlView />
           </div>
         </div>
       </div>
@@ -497,14 +513,14 @@ const changeShow = (key: number) => {
 #header {
   background: #232526; /* fallback for old browsers */
   background: -webkit-linear-gradient(
-    to right,
-    #414345,
-    #232526
+      to right,
+      #414345,
+      #232526
   ); /* Chrome 10-25, Safari 5.1-6 */
   background: linear-gradient(
-    to right,
-    #414345,
-    #232526
+      to right,
+      #414345,
+      #232526
   ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
 }
 

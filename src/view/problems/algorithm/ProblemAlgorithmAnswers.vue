@@ -5,9 +5,7 @@ import router from "@/router";
 import dayjs from "dayjs";
 
 const path = router.currentRoute.value.fullPath;
-// 当前页面的问题ID
 const problem_id = ref(parseInt(path.toString().split("/")[3]));
-// 题解列表信息
 const posts_list: Ref<PostsVo[]> = ref([]);
 
 onMounted(async () => {
@@ -19,6 +17,7 @@ onMounted(async () => {
 
   if (res.code === 0) {
     posts_list.value = res.data;
+    console.log(posts_list.value);
   } else if (res.code === 40101) {
     router.push("/404");
   }

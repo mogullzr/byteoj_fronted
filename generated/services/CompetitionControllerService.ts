@@ -1,4 +1,4 @@
-/* generated using openapi-typescript-codegen -- do not edit */
+/* generated using openapi-typescript-codegen -- do no edit */
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
@@ -7,9 +7,14 @@ import type { BaseResponse_CompetitionInfoVo_ } from "../models/BaseResponse_Com
 import type { BaseResponse_CompetitionRankVo_ } from "../models/BaseResponse_CompetitionRankVo_";
 import type { BaseResponse_List_CompetitionInfoVo_ } from "../models/BaseResponse_List_CompetitionInfoVo_";
 import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_";
+// @ts-ignore
+import type { BaseResponse_List_UserVo_ } from "../models/BaseResponse_List_UserVo_";
 import type { BaseResponse_long_ } from "../models/BaseResponse_long_";
+// @ts-ignore
+import type { BaseResponse_Void_ } from "../models/BaseResponse_Void_";
 import type { CompetitionAddRequest } from "../models/CompetitionAddRequest";
 import type { ProblemAlgorithmRequest } from "../models/ProblemAlgorithmRequest";
+
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
@@ -58,6 +63,29 @@ export class CompetitionControllerService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/competition/admin/delete",
+      query: {
+        competition_id: competitionId,
+      },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+
+  /**
+   * competitionAdminGetRankExcel
+   * @param competitionId competition_id
+   * @returns BaseResponse_Void_ OK
+   * @throws ApiError
+   */
+  public static competitionAdminGetRankExcelUsingGet(
+    competitionId?: number
+  ): CancelablePromise<BaseResponse_Void_> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/competition/get/rank/excel",
       query: {
         competition_id: competitionId,
       },
@@ -214,6 +242,26 @@ export class CompetitionControllerService {
         competition_id: competitionId,
         PageNum: pageNum,
       },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+
+  /**
+   * competitionSearchRankTop10
+   * @returns BaseResponse_List_UserVo_ OK
+   * @returns any Created
+   * @throws ApiError
+   */
+  public static competitionSearchRankTop10UsingPost(): CancelablePromise<
+    BaseResponse_List_UserVo_ | any
+  > {
+    return __request(OpenAPI, {
+      method: "POST",
+      url: "/api/competition/search/top",
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,

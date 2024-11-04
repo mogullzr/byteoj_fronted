@@ -152,22 +152,25 @@
     }"
     @wheel.prevent="handleWheel"
   />
-  <button
-    @click="submitJudge"
-    class="btn float-right text-white m-4 w-28 bg-emerald-400 hover:bg-green-500 active:bg-emerald-600 g-border-b-gray-400"
-  >
-    提交代码
-  </button>
-  <button
-    class="btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
-    @click="judgeTest"
-  >
-    调试代码
-  </button>
+  <div class="bg-white">
+    <button
+      @click="submitJudge"
+      class="btn float-right text-white m-4 w-28 bg-emerald-400 hover:bg-green-500 active:bg-emerald-600 g-border-b-gray-400"
+    >
+      提交代码
+    </button>
+    <button
+      class="btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
+      @click="judgeTest"
+    >
+      调试代码
+    </button>
+  </div>
+
   <div
     v-show="isLoading !== undefined"
     tabindex="0"
-    class="collapse collapse-open border-base-300 border"
+    class="bg-white collapse collapse-open border-base-300 border"
     style=""
   >
     <div
@@ -268,15 +271,15 @@ const options: any = ref({
 });
 const path = router.currentRoute.value.fullPath;
 const problem_id = ref(
-    path.toString().split("/")[1] == "competition"
-        ? parseInt(path.toString().split("/")[2]) +
+  path.toString().split("/")[1] == "competition"
+    ? parseInt(path.toString().split("/")[2]) +
         "-" +
         path.toString().split("/")[4]
-        : parseInt(
-            path.toString().split("/")?.length == 2
-                ? path.toString().split("/")[3]
-                : "1"
-        )
+    : parseInt(
+        path.toString().split("/")?.length != 2
+          ? path.toString().split("/")[3]
+          : "1"
+      )
 );
 
 const languages_options = useStore.languages_options;
@@ -572,6 +575,7 @@ watch(content, (NewValue, OldValue) => {
   );
 });
 
+// 滑轮实现字体大小缩放效果
 // const handleWheel = (event: any) => {
 //   if (event.ctrlKey) {
 //     if (event.deltaY > 0 && font_size.value > 7) {
@@ -588,8 +592,6 @@ watch(content, (NewValue, OldValue) => {
 //     );
 //   }
 // };
-
-// 滑轮实现字体大小缩放效果
 const handleWheel = (event: WheelEvent) => {
   event.preventDefault();
 
@@ -658,8 +660,6 @@ const adjustHeight = async (element: HTMLTextAreaElement) => {
 //   },
 //   { immediate: true }
 // ); // immediate: true 确保初始渲染时也会调整
-
-// 禁止键盘输入
 const preventInput = (event: KeyboardEvent) => {
   // 禁用大键盘输入
   if (event.key.length === 1) {
@@ -667,6 +667,14 @@ const preventInput = (event: KeyboardEvent) => {
   }
 };
 
+const triggerEnterEvent = (element: HTMLTextAreaElement) => {
+  const event = new KeyboardEvent("keydown", {
+    key: "Enter",
+    code: "Enter",
+    bubbles: true,
+  });
+  element.dispatchEvent(event);
+};
 onMounted(() => {
   const textarea1 = document.getElementById(
     "auto-expand-textarea_1"
@@ -694,7 +702,6 @@ onMounted(() => {
     // textarea3.addEventListener("input", () => adjustHeight(textarea3)); // 监听输入事件
   }
 });
-
 // watch监视当前字体大小
 watch(font_size, (NewValue, OldValue) => {
   localStorage.setItem("fontSize", font_size.value.toString());

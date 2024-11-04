@@ -9,6 +9,8 @@ import UserStore from "@/store/user";
 import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import { Ref } from "vue/dist/vue";
 
+let converter = new showdown.Converter();
+const htmlText = ref("");
 // 显示表格
 const MathJax = ref({
   tex: {
@@ -18,27 +20,19 @@ const MathJax = ref({
     ],
   },
 });
-//
+const content = ref("12312123");
 const router = useRouter();
 const useStore = UserStore();
 const path = router.currentRoute.value.fullPath;
-// 问题ID
 const problem_id: Ref<any> = ref(path.toString().split("/")[3]);
-// 问题基本信息
 const problem: any = ref({});
-// 难度名称列表
 const difficulty_list = useStore.difficulty_list;
-// 难度名称对应颜色列表
 const color_list = useStore.color_list;
-//
 const flag = ref(0);
-// 编辑器风格展示类型，0，1，2，3是四种不同类型的风格
 const isShow = ref(localStorage.getItem("EditorStatus"));
-// 是否左右展示
 const isTransform: Ref<number> = ref(
   localStorage.getItem("ControlBlock") != null
 );
-// 当前中间位置距离左边距离大小
 const current_width: Ref<any> = ref(
   localStorage.getItem("ControlBlock") == null
     ? 670

@@ -10,10 +10,9 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 放置自己的图床图片地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     problem_id: 1300,
-    problem_name: "1.A + B",
+    problem_name: "1300.城市街道交通费系统",
     language: "C++",
     ac_num: 74,
     create_time: "2024-08-03 17:07:14",
@@ -23,10 +22,9 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 放置自己的图床图片地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     problem_id: 1300,
-    problem_name: "1.A + B",
+    problem_name: "1300.城市街道交通费系统",
     language: "C++",
     ac_num: 74,
     create_time: "2024-08-03 17:07:14",
@@ -36,10 +34,9 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 放置自己的图床图片地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     problem_id: 1300,
-    problem_name: "1.A + B",
+    problem_name: "1300.城市街道交通费系统",
     language: "C++",
     ac_num: 74,
     create_time: "2024-08-03 17:07:14",
@@ -49,10 +46,9 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 放置自己的图床图片地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     problem_id: 1300,
-    problem_name: "1.A + B",
+    problem_name: "1300.城市街道交通费系统",
     language: "C++",
     ac_num: 74,
     create_time: "2024-08-03 17:07:14",
@@ -62,10 +58,9 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 放置自己的图床图片地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     problem_id: 1300,
-    problem_name: "1.A + B",
+    problem_name: "1300.城市街道交通费系统",
     language: "C++",
     ac_num: 74,
     create_time: "2024-08-03 17:07:14",

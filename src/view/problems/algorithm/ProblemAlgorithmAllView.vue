@@ -6,36 +6,34 @@ import UserStore from "@/store/user";
 
 const router = useRouter();
 const useStore = UserStore();
+let currentRequest: number = useStore.currentRequest;
+let maxRequestCount: number = useStore.maxRequestCount;
 const path = router.currentRoute.value.fullPath;
-// 当前面数
 const currentPage = ref(1);
-// 总面熟
 const PageSum = ref(1);
-// 当前选中标签
-const tag_current_name = ref("");、
-// 当前选中标签id
+const tag_current_name = ref("");
 const tag_current_id = ref(0);
-// 当前选中难度
 const difficulty_current = ref("");
-// 通过简单类型题目数量
 const EasySum = ref();
-// 通过中等类型题目数量
 const MediumSum = ref();
-// 通过困难类型题目数量
 const HardSum = ref();
 // 0表示默认请求状态，1最后点击为表示根据标签查询，2表示最后点击为根据难度查询
 const flag = ref(0);
-// 搜索关键词
 const keyword = ref("");
 
-// 问题信息列表
 let problem_list: Ref<any> = ref([]);
-// 难度名称列表信息
 const difficulty_list = useStore.difficulty_list;
-// 难度名称对应列表信息
 const color_list = useStore.color_list;
 
 onMounted(async () => {
+  if (currentRequest > maxRequestCount) {
+    setTimeout(() => {
+      currentRequest = 0;
+    }, 120000);
+  }
+  // 全局限流配置
+  currentRequest += 1;
+
   // 请求1
   const res =
     await ProblemAlgorithmControllerService.problemAlgorithmSearchByPageUsingPost(
@@ -95,6 +93,9 @@ onMounted(async () => {
   } else {
     console.log(resHard.message);
   }
+
+  // 全局限流配置
+  currentRequest -= 1;
 });
 
 // 挂载完成之后执行
@@ -153,6 +154,14 @@ onUpdated(() => {
 
 // 分页查找
 const PageClick = async (Page: number) => {
+  // 全局限流配置
+  currentRequest += 1;
+  if (currentRequest > maxRequestCount) {
+    setTimeout(() => {
+      currentRequest = 0;
+    }, 120000);
+  }
+
   if (Page <= 0 || Page > PageSum.value) {
     return;
   }
@@ -219,6 +228,8 @@ const PageClick = async (Page: number) => {
       console.log(res.message);
     }
   }
+  // 全局限流配置
+  currentRequest -= 1;
 };
 
 // 根据算法算法标签查找所有符合条件的题目
@@ -242,6 +253,14 @@ const searchByTag = async (tag_name: string) => {
       break;
     }
   }
+
+  // 全局限流配置
+  currentRequest += 1;
+  if (currentRequest > maxRequestCount) {
+    setTimeout(() => {
+      currentRequest = 0;
+    }, 120000);
+  }
   const res1 =
     await ProblemAlgorithmControllerService.problemAlgorithmSearchByTagIdUsingPost(
       1,
@@ -254,6 +273,7 @@ const searchByTag = async (tag_name: string) => {
     }
     tag_current_id.value = tag_id.value;
     flag.value = 1;
+    console.log(currentPage);
   } else {
     console.log(res1.message);
   }
@@ -268,9 +288,21 @@ const searchByTag = async (tag_name: string) => {
   } else {
     console.log(res2.message);
   }
+  // 全局限流配置
+  currentRequest -= 1;
 };
 
 const searchByKeyword = async (keyword: string) => {
+  // 全局限流配置
+  currentRequest += 1;
+  console.log(currentRequest);
+  if (currentRequest > maxRequestCount) {
+    return;
+    // console.log(12312312123);
+    // setTimeout(() => {
+    //   currentRequest = 0;
+    // }, 120000);
+  }
   const res1 =
     await ProblemAlgorithmControllerService.problemAlgorithmSearchByKeywordUsingPost(
       keyword,
@@ -295,9 +327,19 @@ const searchByKeyword = async (keyword: string) => {
   } else {
     console.log(res1.message);
   }
+  // 全局限流配置
+  currentRequest -= 1;
 };
 
 const searchByDifficulty = async (difficulty_name: any) => {
+  // 全局限流配置
+  currentRequest += 1;
+  if (currentRequest > maxRequestCount) {
+    setTimeout(() => {
+      currentRequest = 0;
+    }, 120000);
+  }
+
   const res =
     await ProblemAlgorithmControllerService.problemAlgorithmSearchByDifficultyUsingPost(
       difficulty_name,
@@ -313,6 +355,8 @@ const searchByDifficulty = async (difficulty_name: any) => {
     difficulty_current.value = difficulty_name;
     flag.value = 2;
   }
+  // 全局限流配置
+  currentRequest -= 1;
 };
 </script>
 <template>

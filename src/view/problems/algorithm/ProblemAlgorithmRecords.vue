@@ -7,16 +7,13 @@ import dayjs, { Dayjs } from "dayjs";
 
 const useStore = UserStore();
 
-// 题目提交记录列表
 const problem_records: Ref<any[]> = ref([]);
 const path = router.currentRoute.value.fullPath;
-// 问题ID
 const problem_id = ref(
   path.toString().split("/")[3] == "problem"
     ? path.toString().split("/")[4]
     : parseInt(path.toString().split("/")[3])
 );
-// 时间
 const nowDate = ref<Dayjs>();
 const years = ref();
 const months = ref();
@@ -24,12 +21,10 @@ const days = ref();
 const hours = ref();
 const minutes = ref();
 const seconds = ref();
-let TimeStamp = ref();
 
-// 总面数
 const PageSum = ref(1);
-// 当前面数
 const currentPage = ref(1);
+let TimeStamp = ref();
 
 onMounted(async () => {
   if (problem_id.value === "problem") {
@@ -108,7 +103,7 @@ onMounted(async () => {
   }
 });
 
-// 点击页数
+// 挂载完成之后执行
 const PageClick = async (Page: number) => {
   if (Page <= 0 || Page > PageSum.value) {
     return;
@@ -198,14 +193,14 @@ const PageClick = async (Page: number) => {
           <th>{{ record.submit_time }}{{ record.pattern }}</th>
 
           <th class="text-green-500" v-if="record.result === 'Accepted'">
-            <a
+            <router-link
               class="link link-hover"
-              :href="
+              :to="
                 '/problems/' + problem_id + '/records/' + record.submission_id
               "
             >
               {{ record.result }}
-            </a>
+            </router-link>
           </th>
           <th class="text-red-500" v-else>
             <a

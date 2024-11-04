@@ -3,14 +3,12 @@ import { ref, Ref } from "vue";
 import UserStore from "@/store/user";
 
 const useStore = UserStore();
-// 课程用户排名列表
 const user_rank_list: Ref<any> = ref([
   {
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpegliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -19,8 +17,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpegliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -29,8 +26,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpegliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -39,8 +35,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -49,8 +44,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -59,8 +53,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      // 防止自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",

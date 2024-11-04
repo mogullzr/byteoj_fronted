@@ -20,13 +20,13 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-  BASE: "", // 后端地址
+  BASE: "https://www.byteoj.com",
   VERSION: "1.0",
   WITH_CREDENTIALS: true,
   CREDENTIALS: "include",
+  PASSWORD: undefined,
   TOKEN: undefined,
   USERNAME: undefined,
-  PASSWORD: undefined,
   HEADERS: undefined,
   ENCODE_PATH: undefined,
 };

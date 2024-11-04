@@ -1,16 +1,30 @@
 <script setup lang="ts">
 import ProblemAlgorithmContentView from "@/view/problems/algorithm/ProblemAlgorithmContentView.vue";
 import ProblemAlgorithmRecords from "@/view/problems/algorithm/ProblemAlgorithmRecords.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ProblemAlgorithmAnswers from "@/view/problems/algorithm/ProblemAlgorithmAnswers.vue";
 import ProblemAlgorithmSolutions from "@/view/problems/algorithm/ProblemAlgorithmSolutions.vue";
+import { ProblemAlgorithmControllerService } from "../../../../generated";
+import router from "@/router";
 
+const path = router.currentRoute.value.fullPath;
+const problem_id = ref(parseInt(path.toString().split("/")[3]));
 // 0表示題目内容界面，1表示提交记录，2表示答疑，3表示题解，4表示视频讲解
 const isShow = ref(0);
-
+let url = ref();
 const changeShow = (key: number) => {
   isShow.value = key;
 };
+
+onMounted(async () => {
+  const res =
+    await ProblemAlgorithmControllerService.problemAlgorithmSearchByProblemIdUsingPost(
+      problem_id.value
+    );
+  if (res.code === 0) {
+    url.value = res.data.url;
+  }
+});
 </script>
 
 <template>
@@ -95,7 +109,16 @@ const changeShow = (key: number) => {
       class="tab-content bg-base-100 border-base-200 rounded-box p-6 tabs-lg"
       v-if="isShow === 4"
     >
-      Tab content 3
+      <iframe
+        :src="url"
+        scrolling="no"
+        border="0"
+        width="1400"
+        height="600"
+        frameborder="no"
+        framespacing="0"
+        allowfullscreen="true"
+      ></iframe>
     </div>
   </div>
 </template>

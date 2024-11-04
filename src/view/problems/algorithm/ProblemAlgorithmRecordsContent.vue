@@ -7,26 +7,19 @@ import dayjs from "dayjs";
 import { VAceEditor } from "vue3-ace-editor";
 
 const path = router.currentRoute.value.fullPath;
-// 具体提交记录ID
 const submission_id = ref(parseInt(path.toString().split("/")[4]));
-// 竞赛ID
 const competition_id = ref(parseInt(path.toString().split("/")[2]));
+const problem_id = ref(parseInt(path.toString().split("/")[3]));
 const useStore = UserStore();
-// 各种代码状态的颜色列表
 const status_color_list = useStore.status_color_list;
-// 状态列表
 const status_list = useStore.status_list;
-// 是否允许加载
 const isLoading = ref(true);
 // 如果发出警告则直接展示说明你没有权限访问当前页面
 const auth_status = ref(0);
 
-// 当前提交记录的基本信息
 const record: Ref<any> = ref({} as any);
-// 测试样例数据
 const tests_list: Ref<any> = ref([]);
 
-// 代码编辑器选项，但是不允许编辑，仅仅用于展示用户的代码
 const options = ref({
   useWorker: false, // 启用语法检查,必须为true
   enableSnippets: true, // 启用代码段
@@ -40,14 +33,12 @@ const options = ref({
   readOnly: true,
 });
 
-// 字体大小
 const font_size: Ref<any> = ref(
   localStorage.getItem("fontSize") == null
     ? 18
     : localStorage.getItem("fontSize")
 );
 
-// 是否展示代码显示框
 const isShow: Ref<boolean> = ref(false);
 
 const editorInit = () => {
@@ -149,7 +140,6 @@ const EditorSizeControl = () => {
     isShow.value = true;
   }
 };
-
 // 返回竞赛主页，或者返回home
 const goBack = () => {
   if (competition_id.value != -1) {
@@ -163,11 +153,11 @@ const goBack = () => {
 <template>
   <div v-if="!auth_status" class="flex mx-40">
     <button
-        v-if="competition_id != -1"
-        class="btn font-bold text-xl btn-lg"
-        @click="goBack"
+      v-if="competition_id != -1"
+      class="btn font-bold text-xl btn-lg"
+      @click="goBack"
     >
-      返回
+      返回竞赛
     </button>
     <div class="card-side rounded-xl bg-base-100 shadow-xl mx-5 w-2/3">
       <div class="m-6" v-if="!isLoading">
@@ -359,7 +349,7 @@ const goBack = () => {
           <div class="flex-1">所属题目</div>
           <router-link
             class="link link-hover link-primary"
-            to="/problems/algorithm/1300"
+            to="/problems/algorithm/1"
           >
             {{ record.chinese_name }}
           </router-link>

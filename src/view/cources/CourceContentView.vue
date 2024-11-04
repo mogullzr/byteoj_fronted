@@ -11,10 +11,8 @@ import CourseRankView from "@/view/cources/CourseRankView.vue";
 
 const useStore = UserStore();
 const path = router.currentRoute.value.fullPath;
-// "课程"ID
 const course_id = ref(path.toString().split("/")[2]);
 
-// 假数据，根据这种json结构展示数据
 const plan: Ref<any> = ref({
   plan_id: 1,
   plan_title: "算法基础学习",
@@ -28,7 +26,6 @@ const plan: Ref<any> = ref({
     "    本网站配置了限流功能，大家尽可能不要随便乱点，否则可能会导致锁IP的哦o(*￣︶￣*)o\n",
   create_name: "Mogullzr",
   avatar:
-    // 自己设定自己的图床
     "",
   plan_num: 26982,
   rank_num: 1,
@@ -36,12 +33,11 @@ const plan: Ref<any> = ref({
   end_time: "2024-07-21 16:02:21",
 } as any);
 
-// 0表示显示前言，1表示显示试题，2表示大家的提交记录，3表示排名，4表示学习宝典
 const local: any =
   localStorage.getItem("study-" + course_id.value + "-status") != undefined
     ? localStorage.getItem("study-" + course_id.value + "-status")
     : "1";
-
+// 0表示显示前言，1表示显示试题，2表示大家的提交记录，3表示排名，4表示学习宝典
 const isShow = ref(
   localStorage.getItem("study-" + course_id.value + "-status") == ""
     ? 0
@@ -51,6 +47,7 @@ const isShow = ref(
 // 获取初始选中态
 onMounted(() => {
   let element: any = document.getElementById(isShow.value.toString());
+  console.log(element);
   if (element !== null) {
     element.checked = true;
   }
