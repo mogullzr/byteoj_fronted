@@ -152,25 +152,22 @@
     }"
     @wheel.prevent="handleWheel"
   />
-  <div class="bg-white">
-    <button
-      @click="submitJudge"
-      class="btn float-right text-white m-4 w-28 bg-emerald-400 hover:bg-green-500 active:bg-emerald-600 g-border-b-gray-400"
-    >
-      提交代码
-    </button>
-    <button
-      class="btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
-      @click="judgeTest"
-    >
-      调试代码
-    </button>
-  </div>
-
+  <button
+    @click="submitJudge"
+    class="btn float-right text-white m-4 w-28 bg-emerald-400 hover:bg-green-500 active:bg-emerald-600 g-border-b-gray-400"
+  >
+    提交代码
+  </button>
+  <button
+    class="btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
+    @click="judgeTest"
+  >
+    调试代码
+  </button>
   <div
     v-show="isLoading !== undefined"
     tabindex="0"
-    class="bg-white collapse collapse-open border-base-300 border"
+    class="collapse collapse-open border-base-300 border"
     style=""
   >
     <div
@@ -275,11 +272,7 @@ const problem_id = ref(
     ? parseInt(path.toString().split("/")[2]) +
         "-" +
         path.toString().split("/")[4]
-    : parseInt(
-        path.toString().split("/")?.length != 2
-          ? path.toString().split("/")[3]
-          : "1"
-      )
+    : parseInt(path.toString().split("/")[3])
 );
 
 const languages_options = useStore.languages_options;

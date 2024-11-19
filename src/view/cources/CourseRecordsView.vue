@@ -10,7 +10,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -22,7 +22,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -34,7 +34,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -46,7 +46,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -58,7 +58,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/631098a5a0c746c1bf353eea5f524977.jpeg",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",

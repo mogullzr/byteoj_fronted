@@ -26,7 +26,7 @@ const plan: Ref<any> = ref({
     "    本网站配置了限流功能，大家尽可能不要随便乱点，否则可能会导致锁IP的哦o(*￣︶￣*)o\n",
   create_name: "Mogullzr",
   avatar:
-    "",
+    "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
   plan_num: 26982,
   rank_num: 1,
   start_time: "2024-07-21 16:02:21",

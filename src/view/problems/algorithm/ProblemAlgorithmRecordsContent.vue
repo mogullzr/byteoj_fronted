@@ -385,8 +385,9 @@ const goBack = () => {
   </div>
   <div v-else class="card card-side bg-base-100 shadow-xl">
     <figure style="width: 400px">
+      <!--          修改为自己的OSS地址-->
       <img
-        src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/879a61e96ab7414f909ff14f1f6bf93a.jpeg"
+        src=""
         alt="img"
       />
     </figure>

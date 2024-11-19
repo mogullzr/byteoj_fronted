@@ -1,5 +1,3 @@
-// 静态加载模式：一口气加载所有文件，会导致第一次加载文件极慢
-
 // import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 // import UserLayout from "@/layout/UserLayout.vue";
 // import CompeletionView from "@/view/competitions/CompeletionView.vue";
@@ -375,8 +373,6 @@
 //   }
 // });
 // export default router;
-
-// 懒加载路由模式
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import UserLayout from "@/layout/UserLayout.vue";
 import { ACCESS_ENUM } from "@/access/access";

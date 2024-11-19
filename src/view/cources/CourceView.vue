@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, Ref } from "vue";
 
-// 假数据，根据这种json结构展示课程基本信息
 const plans: Ref<any> = ref([
   {
     plan_id: 1,
@@ -10,8 +9,7 @@ const plans: Ref<any> = ref([
       "如果你完全没有学习过算法，没有接触过算法，please come here",
     create_name: "Mogullzr",
     avatar:
-      // 放置自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     plan_num: 0,
   },
   {
@@ -21,13 +19,11 @@ const plans: Ref<any> = ref([
       "如果你完全没有学习过算法，没有接触过算法，please come here",
     create_name: "Mogullzr",
     avatar:
-      // 放置自己的图床地址
-      "",
+      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
     plan_num: 0,
   },
 ] as any);
 
-// 下载xmind思维导图
 function downloadFile() {
   const iframe = document.createElement("iframe");
   iframe.style.display = "none";

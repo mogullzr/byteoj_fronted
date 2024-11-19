@@ -193,14 +193,14 @@ const PageClick = async (Page: number) => {
           <th>{{ record.submit_time }}{{ record.pattern }}</th>
 
           <th class="text-green-500" v-if="record.result === 'Accepted'">
-            <router-link
+            <a
               class="link link-hover"
-              :to="
+              :href="
                 '/problems/' + problem_id + '/records/' + record.submission_id
               "
             >
               {{ record.result }}
-            </router-link>
+            </a>
           </th>
           <th class="text-red-500" v-else>
             <a
