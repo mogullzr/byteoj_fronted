@@ -479,9 +479,9 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmInfoUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmInfoUserAdd.vue"
+                    ),
           },
           {
             path: "select",
@@ -490,9 +490,9 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSelectUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSelectUserAdd.vue"
+                    ),
           },
           {
             path: "show",
@@ -501,9 +501,9 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmProblemUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmProblemUserAdd.vue"
+                    ),
           },
           {
             path: "success",
@@ -512,9 +512,9 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSuccessUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSuccessUserAdd.vue"
+                    ),
           },
         ],
         meta: {
@@ -528,7 +528,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import("@/view/competitions/CompetitionMath408UserAdd.vue"),
+            import("@/view/competitions/CompetitionMath408UserAdd.vue"),
       },
       {
         path: "3",
@@ -537,7 +537,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import("@/view/competitions/CompetitionMath408UserAdd.vue"),
+            import("@/view/competitions/CompetitionMath408UserAdd.vue"),
       },
     ],
     meta: {
@@ -559,9 +559,9 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import(
-                "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
-              ),
+                import(
+                    "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
+                    ),
           },
           {
             path: "problem/:problem_order",
@@ -570,7 +570,7 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
+                import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
           },
           {
             path: "",
@@ -579,7 +579,7 @@ const routes: Array<RouteRecordRaw> = [
               access: "1",
             },
             component: () =>
-              import("@/view/competitions/CompeletionContentView.vue"),
+                import("@/view/competitions/CompeletionContentView.vue"),
           },
         ],
         meta: {
@@ -633,7 +633,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "0",
         },
         component: () =>
-          import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
+            import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
       },
       {
         path: "math408/:problem_id",
@@ -642,7 +642,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "0",
         },
         component: () =>
-          import("@/view/problems/math/ProblemMath408Content.vue"),
+            import("@/view/problems/math/ProblemMath408Content.vue"),
       },
       {
         path: ":problem_id/records/:submission_id",
@@ -651,9 +651,9 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import(
-            "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
-          ),
+            import(
+                "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
+                ),
       },
       {
         path: "",

@@ -9,7 +9,6 @@ import { VAceEditor } from "vue3-ace-editor";
 const path = router.currentRoute.value.fullPath;
 const submission_id = ref(parseInt(path.toString().split("/")[4]));
 const competition_id = ref(parseInt(path.toString().split("/")[2]));
-const problem_id = ref(parseInt(path.toString().split("/")[3]));
 const useStore = UserStore();
 const status_color_list = useStore.status_color_list;
 const status_list = useStore.status_list;
@@ -140,25 +139,18 @@ const EditorSizeControl = () => {
     isShow.value = true;
   }
 };
-// 返回竞赛主页，或者返回home
+
 const goBack = () => {
   if (competition_id.value != -1) {
     router.push("/competition/" + competition_id.value);
   } else {
-    router.push("home");
+    router.push("/home");
   }
 };
 </script>
 
 <template>
   <div v-if="!auth_status" class="flex mx-40">
-    <button
-      v-if="competition_id != -1"
-      class="btn font-bold text-xl btn-lg"
-      @click="goBack"
-    >
-      返回竞赛
-    </button>
     <div class="card-side rounded-xl bg-base-100 shadow-xl mx-5 w-2/3">
       <div class="m-6" v-if="!isLoading">
         <div class="my-2">
@@ -349,7 +341,7 @@ const goBack = () => {
           <div class="flex-1">所属题目</div>
           <router-link
             class="link link-hover link-primary"
-            to="/problems/algorithm/1"
+            to="/problems/algorithm/1300"
           >
             {{ record.chinese_name }}
           </router-link>
@@ -385,9 +377,8 @@ const goBack = () => {
   </div>
   <div v-else class="card card-side bg-base-100 shadow-xl">
     <figure style="width: 400px">
-      <!--          修改为自己的OSS地址-->
       <img
-        src=""
+        src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/879a61e96ab7414f909ff14f1f6bf93a.jpeg"
         alt="img"
       />
     </figure>

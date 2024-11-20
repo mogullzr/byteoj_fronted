@@ -154,13 +154,15 @@
   />
   <button
     @click="submitJudge"
-    class="btn float-right text-white m-4 w-28 bg-emerald-400 hover:bg-green-500 active:bg-emerald-600 g-border-b-gray-400"
+    class="text-lg btn float-right text-white m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400"
+    :disabled="isShow_2"
   >
     提交代码
   </button>
   <button
-    class="btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
+    class="text-lg btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
     @click="judgeTest"
+    :disabled="isShow_1"
   >
     调试代码
   </button>
@@ -311,6 +313,10 @@ const code_status = ref("");
 const code_message = ref("");
 const code_time = ref(0);
 const isLoading: Ref<boolean | undefined> = ref(undefined);
+
+const isShow_1: Ref<Boolean> = ref(false);
+const isShow_2: Ref<Boolean> = ref(false);
+
 const editorInit = () => {
   require("ace-builds/src-noconflict/ext-language_tools");
   require("ace-builds/src-noconflict/snippets/sql");
@@ -371,6 +377,10 @@ const modify = async () => {
 const judgeTest = async () => {
   let competition_id = ref(parseInt(path.toString().split("/")[2]));
   let problem_index = path.toString().split("/")[4] ?? "";
+
+  isShow_1.value = true;
+  isShow_2.value = true;
+
   code_message.value = "";
   code_time.value = 0;
 
@@ -403,6 +413,9 @@ const judgeTest = async () => {
         code_message.value = res.data[0].output;
       }
       isLoading.value = false;
+
+      isShow_1.value = false;
+      isShow_2.value = false;
     }
   } else {
     const res =
@@ -423,6 +436,9 @@ const judgeTest = async () => {
         code_message.value = res.data[0].output;
       }
       isLoading.value = false;
+
+      isShow_1.value = false;
+      isShow_2.value = false;
     }
   }
 };
@@ -433,6 +449,10 @@ onBeforeUpdate(async () => {
 const submitJudge = async () => {
   let competition_id = ref(parseInt(path.toString().split("/")[2]));
   let problem_index = path.toString().split("/")[4] ?? "";
+
+  isShow_1.value = true;
+  isShow_2.value = true;
+
   input.value = "";
   code_message.value = "";
   code_time.value = 0;
@@ -471,6 +491,9 @@ const submitJudge = async () => {
       }
       isLoading.value = false;
       await modify();
+
+      isShow_1.value = false;
+      isShow_2.value = false;
     }
   } else {
     const res =
@@ -496,6 +519,9 @@ const submitJudge = async () => {
       }
       isLoading.value = false;
       await modify();
+
+      isShow_1.value = false;
+      isShow_2.value = false;
     }
   }
 };

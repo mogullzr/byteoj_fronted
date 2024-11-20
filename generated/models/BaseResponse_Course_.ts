@@ -1,0 +1,12 @@
+/* generated using openapi-typescript-codegen -- do no edit */
+/* istanbul ignore file */
+/* tslint:disable */
+/* eslint-disable */
+
+import type { Course } from './Course';
+
+export type BaseResponse_Course_ = {
+    code?: number;
+    data?: Course;
+    message?: string;
+};

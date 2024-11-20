@@ -3,25 +3,25 @@
 /* tslint:disable */
 /* eslint-disable */
 export type UserVo = {
-  account?: string;
-  avatar?: string;
-  birth?: string;
-  create_time?: string;
-  email?: string;
-  gender?: string;
-  hobby?: string;
-  password?: string;
-  phone?: string;
-  profile?: string;
-  rating?: number;
-  readings?: number;
-  role?: number;
-  school?: string;
-  sessionId?: string;
-  tags?: string;
-  update_time?: string;
-  url?: string;
-  username?: string;
-  uuid?: number;
-  rated?: number;
+    account?: string;
+    avatar?: string;
+    birth?: string;
+    create_time?: string;
+    email?: string;
+    gender?: string;
+    hobby?: string;
+    password?: string;
+    phone?: string;
+    profile?: string;
+    rating?: number;
+    readings?: number;
+    role?: number;
+    school?: string;
+    sessionId?: string;
+    tags?: string;
+    update_time?: string;
+    url?: string;
+    username?: string;
+    uuid?: number;
 };
+

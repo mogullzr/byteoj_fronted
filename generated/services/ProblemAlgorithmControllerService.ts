@@ -14,6 +14,7 @@ import type { BaseResponse_List_string_ } from "../models/BaseResponse_List_stri
 import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_";
 import type { BaseResponse_long_ } from "../models/BaseResponse_long_";
 import type { BaseResponse_ProblemAlgorithmBankVo_ } from "../models/BaseResponse_ProblemAlgorithmBankVo_";
+import type { BaseResponse_ProblemUserLastVo_ } from "../models/BaseResponse_ProblemUserLastVo_";
 import type { BaseResponse_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_SubmissionsAlgorithmRecordsVo_";
 import type { JudgeRequest } from "../models/JudgeRequest";
 import type { ProblemAlgorithmRequest } from "../models/ProblemAlgorithmRequest";
@@ -21,7 +22,6 @@ import type { ProblemAlgorithmTestCaseRequest } from "../models/ProblemAlgorithm
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class ProblemAlgorithmControllerService {
   /**
    * problemAlgorithmAdd
@@ -52,7 +52,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmDelete
    * @param problemId problem_id
@@ -76,7 +75,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmModify
    * @param problemAlgorithmRequest problemAlgorithmRequest
@@ -98,7 +96,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmTestCaseAdd
    * @param problemAlgorithmTestCaseRequestList problemAlgorithmTestCaseRequestList
@@ -125,7 +122,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmTestCaseGet
    * @param problemId problem_id
@@ -151,7 +147,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmGetTags
    * @returns BaseResponse_List_string_ OK
@@ -168,7 +163,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmGetTagsPlusCategory
    * @returns BaseResponse_List_ProblemTagsVo_ OK
@@ -185,7 +179,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmJudgeSubmit
    * @param judgeRequest judgeRequest
@@ -207,7 +200,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmJudge
    * @param judgeRequest judgeRequest
@@ -229,7 +221,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordAdd
    * @param judgeRequest judgeRequest
@@ -251,7 +242,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordsByUUidByPage
    * @param pageNum PageNum
@@ -278,7 +268,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordsSumByUuidByPage
    * @param problemId problem_id
@@ -302,25 +291,24 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordByRecordId
+   * @param competitionId competition_id
    * @param submissionId submission_id
-   * @param competitionId
    * @returns BaseResponse_SubmissionsAlgorithmRecordsVo_ OK
    * @returns any Created
    * @throws ApiError
    */
   public static problemAlgorithmRecordByRecordIdUsingPost(
-    submissionId?: number,
-    competitionId?: number
+    competitionId?: number,
+    submissionId?: number
   ): CancelablePromise<BaseResponse_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/problem/algorithm/records/recordId",
       query: {
-        submission_id: submissionId,
         competition_id: competitionId,
+        submission_id: submissionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -329,7 +317,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordsAllByUuidByPage
    * @param pageNum PageNum
@@ -353,7 +340,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmRecordsAllSumByUuidByPage
    * @returns BaseResponse_long_ OK
@@ -373,7 +359,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchAll
    * @returns BaseResponse_List_ProblemAlgorithmBankVo_ OK
@@ -393,7 +378,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchByDifficulty
    * @param difficulty difficulty
@@ -420,7 +404,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchSumByDifficulty
    * @param difficulty difficulty
@@ -444,7 +427,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchByKeyword
    * @param keyWord keyWord
@@ -471,7 +453,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchByPage
    * @param pageNum pageNum
@@ -495,7 +476,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * competitionSearchProblem
    * @param competitionId competition_id
@@ -522,7 +502,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchByProblemId
    * @param problemId problem_id
@@ -546,7 +525,22 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
+  /**
+   * problemAlgorithmUserLast
+   * @returns BaseResponse_ProblemUserLastVo_ OK
+   * @throws ApiError
+   */
+  public static problemAlgorithmUserLastUsingGet(): CancelablePromise<BaseResponse_ProblemUserLastVo_> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/problem/algorithm/search/problemLast",
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
   /**
    * competitionSearchProblems
    * @param competitionId competition_id
@@ -570,7 +564,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchByTagId
    * @param pageNum PageNum
@@ -597,7 +590,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * problemAlgorithmSearchPagSum
    * @param tagId tag_id
@@ -621,7 +613,6 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
-
   /**
    * getProblemDailyNum
    * @returns BaseResponse_List_ProblemDailyNumVo_ OK
@@ -634,6 +625,37 @@ export class ProblemAlgorithmControllerService {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/problem/algorithm/search/user/daily",
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * problemAlgorithmSetUserLast
+   * @param id
+   * @param problemName
+   * @param url
+   * @param uuid
+   * @returns BaseResponse_boolean_ OK
+   * @throws ApiError
+   */
+  public static problemAlgorithmSetUserLastUsingGet(
+    id: number,
+    problemName?: string,
+    url?: string,
+    uuid?: number
+  ): CancelablePromise<BaseResponse_boolean_> {
+    return __request(OpenAPI, {
+      method: "GET",
+      url: "/api/problem/algorithm/set/problemLast",
+      query: {
+        id: id,
+        problem_name: problemName,
+        url: url,
+        uuid: uuid,
+      },
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,

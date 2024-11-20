@@ -1,483 +1,23 @@
 <script setup lang="ts">
-import { ref, Ref } from "vue";
+import { onMounted, ref, Ref } from "vue";
+import { CourseControllerService } from "../../../generated/services/CourseControllerService";
+import router from "../../router/index";
 
-const algorithm_problems: Ref<any> = ref([
-  {
-    problems_type: "第一章：变量的基本应用",
-    ac_num: 3,
-    problem_num: 12,
-    children_problems: [
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-    ],
-    is_AK: true,
-  },
-  {
-    problems_type: "第一章：变量的基本应用",
-    ac_num: 3,
-    problem_num: 12,
-    children_problems: [
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-    ],
-    is_AK: true,
-  },
-  {
-    problems_type: "第一章：变量的基本应用",
-    ac_num: 3,
-    problem_num: 12,
-    children_problems: [
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-    ],
-    is_AK: true,
-  },
-  {
-    problems_type: "第一章：变量的基本应用",
-    ac_num: 3,
-    problem_num: 12,
-    children_problems: [
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-    ],
-    is_AK: true,
-  },
-  {
-    problems_type: "第一章：变量的基本应用",
-    ac_num: 3,
-    problem_num: 12,
-    children_problems: [
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-      {
-        problems_algorithm_type: "变量的输入输出应用",
-        children_problem: [
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 0,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 1,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 2,
-          },
-          {
-            problem_id: 1300,
-            problem_name: "905.区间选点",
-            ac_num: 53,
-            status: 3,
-          },
-        ],
-      },
-    ],
-    is_AK: true,
-  },
-] as any);
+const path = router.currentRoute.value.fullPath;
+const course_id: Ref<any> = ref(path.toString().split("/")[2]);
+
+const algorithm_problems: Ref<any> = ref([] as any);
+
+onMounted(async () => {
+  const res =
+    await CourseControllerService.courseSearchProblemsByCourseIdUsingPost(
+      course_id.value
+    );
+
+  if (res.code === 0) {
+    algorithm_problems.value = res.data;
+  }
+});
 </script>
 
 <template>
@@ -490,10 +30,10 @@ const algorithm_problems: Ref<any> = ref([
       <input type="checkbox" />
       <div class="collapse-title font-medium p-0">
         <div class="bg-amber-50 p-3 flex">
-          <div class="flex-1 text-lg" style="color: #8a6d3b">
+          <div class="flex-1 text-lg font-bold" style="color: #8a6d3b">
             {{ problems.problems_type }}
           </div>
-          <div class="text-sm" style="color: #337ab7">
+          <div class="text-sm font-bold" style="color: #337ab7">
             <span>完成情况：</span>
             <span>{{ problems.ac_num }} /{{ problems.problem_num }}</span>
           </div>
@@ -501,10 +41,15 @@ const algorithm_problems: Ref<any> = ref([
         <div class="p-3 text-gray-500">
           包括题目类型有：
           <span
-            v-for="children_problem_list in problems.children_problems"
+            v-for="(children_problem_list, index) in problems.courseProblemList"
             :key="children_problem_list"
           >
-            {{ children_problem_list.problems_algorithm_type }}，
+            <span v-if="index == problems.courseProblemList.length - 1">
+              {{ children_problem_list.problem_algorithm_type }}.
+            </span>
+            <span v-else>
+              {{ children_problem_list.problem_algorithm_type }}、
+            </span>
           </span>
         </div>
       </div>
@@ -512,26 +57,32 @@ const algorithm_problems: Ref<any> = ref([
         <div>
           <div
             class="flex flex-row"
-            v-for="children_problem_list in problems.children_problems"
-            :key="children_problem_list"
+            v-for="children_problem_list_1 in problems.courseProblemList"
+            :key="children_problem_list_1"
           >
-            <div class="basis-2/12 text-gray-400" style="font-size: 15px">
+            <div
+              class="basis-2/12 text-gray-400 font-bold"
+              style="font-size: 17px"
+            >
               <div class="line"></div>
-              {{ children_problem_list.problems_algorithm_type }}
+              {{ children_problem_list_1.problem_algorithm_type }}
             </div>
             <div class="basis-10/12">
               <div class="line"></div>
               <div
-                v-for="problem in children_problem_list.children_problem"
+                v-for="problem in children_problem_list_1.courseProblemList"
                 :key="problem"
                 style="color: #337ab7"
               >
                 <div class="flex">
                   <router-link
-                    class="link link-hover text-sm flex-1"
+                    class="link link-hover flex-1"
                     :to="'/problems/algorithm/' + problem.problem_id"
+                    style="font-size: 14px"
                   >
-                    {{ problem.problem_name }}
+                    ByteOJ&nbsp;{{ problem.problem_id }}.{{
+                      problem.problem_name
+                    }}
                   </router-link>
 
                   <div class="text-gray-400 text-sm px-2">

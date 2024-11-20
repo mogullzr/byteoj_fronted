@@ -39,6 +39,9 @@ const current_width: Ref<any> = ref(
     : parseInt(localStorage.getItem("ControlBlock"))
 );
 
+const problem_url: Ref<string> = ref("");
+const problem_name: Ref<string> = ref("");
+
 onMounted(async () => {
   if (!isShow.value) {
     isShow.value = "0";
@@ -55,9 +58,11 @@ onMounted(async () => {
       problem.value = res.data;
       window.document.title =
         problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+      problem_url.value = "/problems/algorithm/" + problem_id.value;
     } else if (res.code === 40101) {
       await router.push("/404");
     }
+    problem_name.value = problem_id.value + "." + problem.value.chinese_name;
   } else {
     let competition_id = parseInt(path.toString().split("/")[2]);
     let index = path.toString().split("/")[4];
@@ -70,8 +75,18 @@ onMounted(async () => {
       problem.value = res.data;
       window.document.title =
         problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+      problem_url.value =
+        "/competition/" + competition_id + "/problem/" + index;
+      problem_name.value = index + "." + problem.value.chinese_name;
     }
   }
+
+  // 设置题目记录
+  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingGet(
+    0,
+    problem_name.value,
+    problem_url.value
+  );
 });
 
 //
@@ -125,6 +140,7 @@ const click = () => {
                       <span style="float: left">难度:</span>
                       <span
                         :class="
+                          'text-white ' +
                           color_list[difficulty_list[problem.difficulty_name]]
                         "
                         style="float: right"

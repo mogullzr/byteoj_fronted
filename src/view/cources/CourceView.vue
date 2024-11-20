@@ -1,29 +1,19 @@
 <script setup lang="ts">
-import { ref, Ref } from "vue";
+import { onMounted, ref, Ref } from "vue";
+import { CourseControllerService } from "../../../generated/services/CourseControllerService";
+import router from "../../router/index";
 
-const plans: Ref<any> = ref([
-  {
-    plan_id: 1,
-    plan_title: "算法基础学习",
-    plan_title_description:
-      "如果你完全没有学习过算法，没有接触过算法，please come here",
-    create_name: "Mogullzr",
-    avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
-    plan_num: 0,
-  },
-  {
-    plan_id: 1,
-    plan_title: "算法基础学习",
-    plan_title_description:
-      "如果你完全没有学习过算法，没有接触过算法，please come here",
-    create_name: "Mogullzr",
-    avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
-    plan_num: 0,
-  },
-] as any);
+// const path = router.currentRoute.value.fullPath;
+// const problem_id = ref(parseInt(path.toString().split("/")[3]));
 
+const courses: Ref<any> = ref([] as any);
+
+onMounted(async () => {
+  const res = await CourseControllerService.courseSearchByPageNumUsingPost(1);
+  if (res.code === 0) {
+    courses.value = res.data;
+  }
+});
 function downloadFile() {
   const iframe = document.createElement("iframe");
   iframe.style.display = "none";
@@ -45,31 +35,31 @@ function downloadFile() {
 
     <div
       class="container hover:bg-gray-100"
-      v-for="plan in plans"
-      :key="plan.plan_id"
+      v-for="course in courses"
+      :key="course.course_id"
     >
       <div class="divider my-0 h-0"></div>
       <router-link
         class="flex flex-row pl-4 py-2"
-        :to="'/study/' + plan.plan_id"
+        :to="'/study/' + course.course_id"
       >
         <div class="basis-7/12">
           <div class="flex">
             <div class="ml-4 flex w-full my-3">
               <div class="avatar p-0">
                 <div class="w-20 rounded-full">
-                  <img :src="plan.avatar" />
+                  <img :src="course.avatar" />
                 </div>
               </div>
               <div class="ml-4">
                 <router-link
                   class="link link-hover text-xl"
-                  :to="'study/' + plan.plan_id"
+                  :to="'study/' + course.course_id"
                   style="color: rgba(2, 132, 199, 0.99)"
-                  >{{ plan.plan_title }}</router-link
+                  >{{ course.course_title }}</router-link
                 >
                 <div class="text-gray-400">
-                  {{ plan.plan_title_description }}
+                  {{ course.course_title_description }}
                 </div>
               </div>
             </div>
@@ -77,11 +67,11 @@ function downloadFile() {
         </div>
         <div class="basis-3/12 text-center m-auto">
           <div class="text-gray-400 font-bold">参加人数</div>
-          <div>{{ plan.plan_num }}</div>
+          <div>{{ course.course_num }}</div>
         </div>
         <div class="basis-2/12 text-center m-auto">
           <div class="text-gray-400 font-bold">创建人</div>
-          <div class="font-bold text-red-500">{{ plan.create_name }}</div>
+          <div class="font-bold text-red-500">{{ course.create_name }}</div>
         </div>
       </router-link>
     </div>

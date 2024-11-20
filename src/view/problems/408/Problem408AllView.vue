@@ -6,20 +6,13 @@ import UserStore from "@/store/user";
 
 const router = useRouter();
 const useStore = UserStore();
-// 当前路由
 const path = router.currentRoute.value.fullPath;
-// 当前面数
 const currentPage = ref(1);
-// 总面数
 const PageSum = ref(1);
 
-// 题目信息列表
 let problem_list: Ref<any> = ref([]);
-// 困难名称列表
 const difficulty_list = useStore.difficulty_list;
-// 各个难度对应颜色列表
 const color_list = useStore.color_list;
-// 当前选中的标签
 const tag_current = ref("");
 
 onMounted(async () => {
