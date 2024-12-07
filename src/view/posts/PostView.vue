@@ -576,7 +576,84 @@ const deletePost = async (post_id: number) => {
     <span>{{ message }}</span>
   </div>
   <div class="flex">
-    <div class="container mx-auto" style="width: 470px">
+    <div class="mx-auto">
+      <div class="card lg:card-side bg-white mt-5" style="width: 650px">
+        <div class="card-body bg-white p-4 rounded-lg" style="width: 650px">
+          <div>
+            <div class="font-bold text-lg">添加帖子</div>
+            <div class="divider"></div>
+            <div>
+              <router-link
+                class="avatar h-auto"
+                :to="'/user/space/' + useStore.loginUser.uuid"
+              >
+                <div class="rounded-full w-12 mx-3">
+                  <img
+                    @dragstart.prevent
+                    :src="useStore.loginUser.avatar"
+                    alt="Mogullzr小刘的OJ项目"
+                  />
+                </div>
+              </router-link>
+              <button
+                class="btn rounded-full text-gray-600"
+                style="width: 500px; background-color: #f0f2f5"
+                onclick="my_modal_4.showModal()"
+              >
+                {{ useStore.loginUser.username }},点击这里发发帖子吧O(∩_∩)O哈哈~
+              </button>
+              <dialog id="my_modal_4" class="modal">
+                <div class="modal-box w-11/12 max-w-5xl">
+                  <h1 class="text-lg font-bold">
+                    你好，欢迎发帖，您可以在下面填写你想要发送的内容
+                  </h1>
+                  <form method="dialog">
+                    <button
+                      class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                    >
+                      ✕
+                    </button>
+                  </form>
+                  <label
+                    class="input input-bordered flex items-center gap-2 my-4"
+                  >
+                    帖子标题
+                    <input
+                      type="text"
+                      class="grow font-bold"
+                      placeholder="填写帖子标题"
+                      v-model="title"
+                    />
+                  </label>
+                  <label
+                    class="input input-bordered flex items-center gap-2 my-4"
+                  >
+                    帖子标签
+                    <input
+                      type="text"
+                      class="grow font-bold"
+                      placeholder="填写帖子标签，注意请您在每个标签前加上#，如#CCPC#天梯赛"
+                      v-model="tag_list"
+                    />
+                  </label>
+                  <div class="font-bold">帖子内容</div>
+                  <textarea
+                    placeholder="在这里写下您需要分享的讨论内容（此处支持markdown，MaxJax语法）"
+                    class="textarea textarea-bordered textarea-lg w-full h-64 my-4"
+                    v-model="content"
+                  ></textarea>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn w-full" @click="PostAdd">发布</button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div
         class="card lg:card-side bg-white mt-5"
         v-for="post in posts_list"
@@ -1073,55 +1150,6 @@ const deletePost = async (post_id: number) => {
         </div>
       </div>
     </div>
-    <button
-      class="btn rounded-l-none bg-white shadow-xl mt-5"
-      onclick="my_modal_4.showModal()"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="50"
-        height="50"
-        viewBox="0 0 24 24"
-      >
-        <path fill="#000000" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z" />
-      </svg>
-    </button>
-    <dialog id="my_modal_4" class="modal">
-      <div class="modal-box w-11/12 max-w-5xl">
-        <h1 class="text-lg font-bold">
-          你好，欢迎发帖，您可以在下面填写你想要发送的内容
-        </h1>
-        <label class="input input-bordered flex items-center gap-2 my-4">
-          帖子标题
-          <input
-            type="text"
-            class="grow font-bold"
-            placeholder="填写帖子标题"
-            v-model="title"
-          />
-        </label>
-        <label class="input input-bordered flex items-center gap-2 my-4">
-          帖子标签
-          <input
-            type="text"
-            class="grow font-bold"
-            placeholder="填写帖子标签，注意请您在每个标签前加上#，如#CCPC#天梯赛"
-            v-model="tag_list"
-          />
-        </label>
-        <div class="font-bold">帖子内容</div>
-        <textarea
-          placeholder="在这里写下您需要分享的讨论内容（此处支持markdown，MaxJax语法）"
-          class="textarea textarea-bordered textarea-lg w-full h-64 my-4"
-          v-model="content"
-        ></textarea>
-        <div class="modal-action">
-          <form method="dialog">
-            <button class="btn w-full" @click="PostAdd">发布</button>
-          </form>
-        </div>
-      </div>
-    </dialog>
   </div>
 </template>
 

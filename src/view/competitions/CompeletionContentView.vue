@@ -12,6 +12,7 @@ import CompetitionContentRecordsView from "@/view/competitions/CompetitionConten
 import CompetitionContentRankView from "@/view/competitions/CompetitionContentComponent/CompetitionContentRankView.vue";
 import { Startup } from "mathjax-full/js/components/startup";
 import elements = Startup.elements;
+import CompetitionContentControlView from "@/view/competitions/CompetitionContentComponent/CompetitionContentControlView.vue";
 
 const dayjs = require("dayjs");
 const useStore = UserStore();
@@ -361,7 +362,8 @@ const changeShow = (key: number) => {
       <button
         v-if="
           (competition_info.user_status === 1 ||
-            competition_info.user_status === 2) &&
+            competition_info.user_status === 2 ||
+            competition_info.user_status === 5) &&
           competition_info.status === 0
         "
         class="btn btn-success w-1/3 m-auto text-white"
@@ -381,9 +383,10 @@ const changeShow = (key: number) => {
       <!-- Open the modal using ID.showModal() method -->
       <button
         v-else-if="
-          competition_info.status === 1 &&
           (competition_info.user_status === 1 ||
-            competition_info.user_status === 2)
+            competition_info.user_status === 2 ||
+            competition_info.user_status === 5) &&
+          competition_info.status === 1
         "
         class="btn btn-success w-1/3 m-auto text-white"
         @click="showModal"
@@ -474,7 +477,7 @@ const changeShow = (key: number) => {
             <CompetitionContentRankView />
           </div>
           <input
-            id="3"
+            id="4"
             type="radio"
             name="my_tabs_1"
             role="tab"
@@ -485,6 +488,20 @@ const changeShow = (key: number) => {
           />
           <div v-if="isShow === 4" role="tabpanel" class="tab-content p-10">
             敬请期待......
+          </div>
+          <input
+            v-if="competition_info.isCreated === 0"
+            id="5"
+            type="radio"
+            name="my_tabs_1"
+            role="tab"
+            class="tab tab-border-3"
+            aria-label="管理员管理"
+            style="white-space: nowrap"
+            @click="changeShow(5)"
+          />
+          <div v-if="isShow === 5" role="tabpanel" class="tab-content p-10">
+            <CompetitionContentControlView />
           </div>
         </div>
       </div>

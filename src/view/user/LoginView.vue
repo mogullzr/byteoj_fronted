@@ -504,7 +504,7 @@ onUnmounted(() => {
       <div class="avatar">
         <div class="w-36 rounded-full">
           <img
-            src="https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg"
+            src="https://aliyun.byteoj.com/2024/11/bbf4b078fc33402f8270b9fd87d69dab.webp"
             alt="注册"
           />
         </div>
@@ -528,7 +528,7 @@ onUnmounted(() => {
       <div class="avatar">
         <div class="w-36 rounded-full">
           <img
-            src="https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg"
+            src="https://aliyun.byteoj.com/2024/11/bbf4b078fc33402f8270b9fd87d69dab.webp"
             alt="登录"
           />
         </div>

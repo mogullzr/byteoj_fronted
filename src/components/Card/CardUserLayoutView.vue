@@ -31,17 +31,17 @@ const friends_list = ref([
   {
     username: "Hu",
     avatar:
-      "https://cdn.jsdelivr.net/gh/mogullzr/Typora_img@main/202403252043995.png",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   },
   {
     username: "Axliu",
     avatar:
-      "https://cdn.jsdelivr.net/gh/mogullzr/Typora_img@main/202403252043995.png",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   },
   {
     username: "Zhang",
     avatar:
-      "https://cdn.jsdelivr.net/gh/mogullzr/Typora_img@main/202403252043995.png",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   },
 ]);
 

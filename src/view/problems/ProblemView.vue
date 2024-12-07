@@ -13,7 +13,11 @@ const changeShow = (key: number) => {
 </script>
 
 <template>
-  <div role="tablist" class="tabs tabs-lifted tabs-lg mx-72 mr-64">
+  <div
+    role="tablist"
+    class="tabs tabs-lifted tabs-lg mx-auto"
+    style="max-width: 1150px"
+  >
     <input
       type="radio"
       name="my_tabs_2"

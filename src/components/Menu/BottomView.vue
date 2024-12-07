@@ -38,7 +38,7 @@ const upLoad_1 = () => {
 };
 
 // 上传图片
-const upLoad_2 = async (event: any) => {
+const upLoad_2 = async () => {
   let upLoadInput: any = document.getElementById("upload");
   let reader = new FileReader();
   reader.onload = async function (e: any) {

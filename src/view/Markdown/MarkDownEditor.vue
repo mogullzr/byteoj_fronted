@@ -51,7 +51,9 @@
     :theme="state.theme"
     :preview-theme="state.previewTheme"
     :codeTheme="state.codeTheme"
+    @onUploadImg="uploadPicture"
     style="height: 720px"
+    pageFullscreen
   />
 </template>
 
@@ -60,7 +62,10 @@ import { reactive, ref } from "vue";
 import { MdEditor } from "md-editor-v3";
 import "md-editor-v3/lib/style.css";
 import router from "@/router";
-import { PostsControllerService } from "../../../generated";
+import {
+  PostsControllerService,
+  UserControllerService,
+} from "../../../generated";
 import UserStore from "@/store/user";
 
 const useStore = UserStore();
@@ -140,6 +145,28 @@ const cancelSubmit = () => {
     state.text
   );
   router.push("/problems/algorithm/" + problem_id.value);
+};
+
+// 上传图片
+const uploadPicture = async (files, callback) => {
+  const res = await Promise.all(
+    files.map((file) => {
+      return new Promise((rev, rej) => {
+        const form = new FormData();
+        form.append("file", file);
+        UserControllerService.userUploadPictureUsingPost(form, 2)
+          .then((res) => rev(res))
+          .catch((error) => rej(error));
+      });
+    })
+  );
+
+  callback(
+    res.map((item) => {
+      item.data;
+      message.value += "\n" + "![" + "]" + "(" + item.data + ")\n";
+    })
+  );
 };
 </script>
 

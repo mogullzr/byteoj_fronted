@@ -8,7 +8,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -17,7 +17,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -26,7 +26,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -35,7 +35,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -44,7 +44,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -53,7 +53,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+      "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",

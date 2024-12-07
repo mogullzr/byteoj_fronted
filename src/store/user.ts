@@ -1960,7 +1960,12 @@ export const UserStore = defineStore("user", {
       "#0F01FF",
       "#AE00AA",
       "#FF8F00",
-      "#FF002F",
+      "#f87b92",
+      "#e85470",
+      "#f8415f",
+      "#b20121",
+      "#bd0126",
+      "#640311",
     ],
     optionTypes: ["简答题", "单选题", "多选题", "编程大题"],
     currentRequest: 0,
@@ -1970,6 +1975,7 @@ export const UserStore = defineStore("user", {
     githubBaseUrl: "https://github.com/login/oauth/authorize",
     client_id: "Ov23li8iaZwfv7KORYKw",
     redirect_uri: "https://www.byteoj.com/authorize/redirect",
+    control_list: ["导出排行榜"],
   }),
 
   actions: {
@@ -1992,23 +1998,23 @@ export const UserStore = defineStore("user", {
           Object.assign(this.loginUser, userData);
           if (this.loginUser.avatar == null || this.loginUser.avatar == "") {
             this.loginUser.avatar =
-              "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg";
+              "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png";
           }
           if (
             this.loginUser.background_picture == null ||
             this.loginUser.background_picture == ""
           ) {
             this.loginUser.background_picture =
-              "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg";
+              "https://aliyun.byteoj.com/2024/11/390dbda3a93b49e8b346468296d80e18.jpeg";
           }
         }
       } else {
         this.loginUser = {
           uuid: -1,
           avatar:
-            "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+            "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
           background_picture:
-            "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+            "https://aliyun.byteoj.com/2024/11/390dbda3a93b49e8b346468296d80e18.jpeg",
         } as User;
       }
 

@@ -7,6 +7,7 @@ const isProduction = process.env.NODE_ENV === "production";
 module.exports = defineConfig({
   configureWebpack: (config) => {
     if (isProduction) {
+      // 进行代码混淆
       // 添加 Gzip 压缩插件
       config.plugins.push(
         new CompressionWebpackPlugin({
@@ -48,6 +49,26 @@ module.exports = defineConfig({
         use: [MiniCssExtractPlugin.loader, "css-loader"],
       });
     }
+  },
+  // 进行代码混淆
+  chainWebpack: (config) => {
+    config.optimization.minimizer("terser").tap((args) => {
+      args[0] = {
+        ...args[0],
+        terserOptions: {
+          compress: {
+            drop_console: true, // 删除所有的 `console` 语句
+            drop_debugger: true, // 删除所有的 `debugger` 语句
+          },
+          mangle: true, // 混淆变量名
+          output: {
+            comments: true, // 删除所有的注释
+          },
+        },
+        extractComments: false, // 不提取注释到单独的文件
+      };
+      return args;
+    });
   },
   publicPath: "/",
   transpileDependencies: true,

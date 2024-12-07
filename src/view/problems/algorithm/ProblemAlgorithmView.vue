@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import ProblemAlgorithmContentView from "@/view/problems/algorithm/ProblemAlgorithmContentView.vue";
 import ProblemAlgorithmRecords from "@/view/problems/algorithm/ProblemAlgorithmRecords.vue";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ProblemAlgorithmAnswers from "@/view/problems/algorithm/ProblemAlgorithmAnswers.vue";
 import ProblemAlgorithmSolutions from "@/view/problems/algorithm/ProblemAlgorithmSolutions.vue";
+import { ProblemAlgorithmControllerService } from "../../../../generated";
 
 // 0表示題目内容界面，1表示提交记录，2表示答疑，3表示题解，4表示视频讲解
 const isShow = ref(0);
+
+// 表示编辑器此时的状态
+const issShow = ref(localStorage.getItem("EditorStatus"));
 
 const changeShow = (key: number) => {
   isShow.value = key;
@@ -14,7 +18,11 @@ const changeShow = (key: number) => {
 </script>
 
 <template>
-  <div role="tablist" class="tabs tabs-lifted tabs-lg mx-72">
+  <div
+    role="tablist"
+    class="tabs tabs-lifted tabs-lg mx-auto"
+    :style="issShow === '1' ? 'width: 1600px' : 'width: 1300px'"
+  >
     <input
       type="radio"
       name="my_tabs_2"

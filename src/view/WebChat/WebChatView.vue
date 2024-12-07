@@ -26,11 +26,11 @@ const ChatRoom: any = ref({
   room_id: 1,
   room_name: "Welcome To Mogullzr’s ChatRoom",
   first_avatar:
-    "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+    "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   second_avatar:
-    "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+    "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   third_avatar:
-    "https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg",
+    "https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png",
   online_num: 4,
 });
 
@@ -340,7 +340,10 @@ const scroll = async () => {
               >{{ dayjs(Chat.create_time).format("YYYY-MM-DD HH:mm:ss") }}
             </time>
           </div>
-          <div class="chat-bubble bg-gray-50 text-black">
+          <div
+            class="chat-bubble bg-gray-50 text-black"
+            style="overflow-wrap: break-word"
+          >
             {{ Chat.message_content }}
           </div>
         </div>
@@ -360,7 +363,7 @@ const scroll = async () => {
               >{{ dayjs(Chat.create_time).format("YYYY-MM-DD HH:mm:ss") }}
             </time>
           </div>
-          <div class="chat-bubble">
+          <div class="chat-bubble" style="overflow-wrap: break-word">
             {{ Chat.message_content }}
           </div>
           <div class="chat-footer opacity-50"></div>

@@ -39,6 +39,9 @@ const current_width: Ref<any> = ref(
     : parseInt(localStorage.getItem("ControlBlock"))
 );
 
+const problem_url: Ref<string> = ref("");
+const problem_name: Ref<string> = ref("");
+
 onMounted(async () => {
   if (!isShow.value) {
     isShow.value = "0";
@@ -55,9 +58,11 @@ onMounted(async () => {
       problem.value = res.data;
       window.document.title =
         problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+      problem_url.value = "/problems/algorithm/" + problem_id.value;
     } else if (res.code === 40101) {
       await router.push("/404");
     }
+    problem_name.value = problem_id.value + "." + problem.value.chinese_name;
   } else {
     let competition_id = parseInt(path.toString().split("/")[2]);
     let index = path.toString().split("/")[4];
@@ -70,8 +75,18 @@ onMounted(async () => {
       problem.value = res.data;
       window.document.title =
         problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+      problem_url.value =
+        "/competition/" + competition_id + "/problem/" + index;
+      problem_name.value = index + "." + problem.value.chinese_name;
     }
   }
+
+  // 设置题目记录
+  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingGet(
+    0,
+    problem_name.value,
+    problem_url.value
+  );
 });
 
 //
@@ -107,13 +122,22 @@ const click = () => {
           'rounded-box p-8 my-8 w-full ' + (isShow === '1' ? 'resize-save' : '')
         "
       >
-        <div class="overflow-x-auto">
+        <div
+          class=""
+          :style="isShow === '1' ? 'overflow-y: auto; max-height: 80vh' : ''"
+        >
+          <!-- 添加滚动条 -->
           <h1>
             {{ problem.problem_id ?? problem.index }}.{{ problem.chinese_name }}
           </h1>
           <div class="flex">
-            <MarkdownView :generateData="problem.description" />
-            <div class="flex-1"></div>
+            <div
+              class="w-full"
+              :style="isShow == '1' ? 'max-width: 670px' : 'width: 900px'"
+            >
+              <MarkdownView :generateData="problem.description" />
+            </div>
+            <div class="flex-1 float-right"></div>
             <div v-if="isShow === '0'" class="float-right">
               <table class="table w-72">
                 <!-- head -->
@@ -125,6 +149,7 @@ const click = () => {
                       <span style="float: left">难度:</span>
                       <span
                         :class="
+                          'text-white ' +
                           color_list[difficulty_list[problem.difficulty_name]]
                         "
                         style="float: right"
@@ -219,19 +244,14 @@ const click = () => {
             <MarkdownEditorView />
           </div>
         </div>
-        <div class="divider"></div>
       </div>
       <div
         class="resize-bar"
         :style="'margin-left: ' + current_width + 'px'"
         v-if="isShow === '1' && !isTransform"
       ></div>
-      <div class="resize-line" v-if="isShow === '1' && !isTransform"></div>
     </div>
-    <div
-      class="w-full shadow-xl rounded-box p-8 m-8 column-right"
-      v-if="isShow === '1'"
-    >
+    <div class="w-full rounded-box p-8 m-8 column-right" v-if="isShow === '1'">
       <MarkdownEditorView />
     </div>
   </div>
@@ -248,52 +268,15 @@ h1 {
   float: left;
 }
 .column-right {
-  overflow: auto;
   box-sizing: border-box;
 }
-.resize-save {
-  overflow: auto;
-  position: absolute;
-}
-.resize-bar {
-  height: 2790px;
-  resize: horizontal;
-  cursor: ew-resize;
-  opacity: 0;
-  overflow: scroll;
-}
-/* 拖拽线 */
-.resize-line {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  border-right: 4px solid lightgray;
-  border-left: 4px solid lightgray;
-  pointer-events: none;
-}
-.resize-bar:hover ~ .resize-line,
-.resize-bar:active ~ .resize-line {
-  border-left: 1px dashed skyblue;
-}
-.resize-bar::-webkit-scrollbar {
-  height: inherit;
-}
 
-/* Firefox只有下面一小块区域可以拉伸 */
-@supports (-moz-user-select: none) {
-  .resize-bar:hover ~ .resize-line,
-  .resize-bar:active ~ .resize-line {
-    border-left: 1px solid #bbb;
-  }
-  .resize-bar:hover ~ .resize-line::after,
-  .resize-bar:active ~ .resize-line::after {
-    content: "";
-    position: absolute;
-    height: 200px;
-    bottom: 0;
-    right: -8px;
-    background-size: 100% 100%;
-  }
+.overlay {
+  position: fixed; /* 固定定位 */
+  top: 0px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999999999999; /* 确保在最顶层 */
 }
 </style>

@@ -67,8 +67,8 @@ onMounted(async () => {
   }
   const res =
     await ProblemAlgorithmControllerService.problemAlgorithmRecordByRecordIdUsingPost(
-      submission_id.value,
-      competition_id.value
+      competition_id.value,
+      submission_id.value
     );
   if (res.code === 0) {
     record.value = res.data;

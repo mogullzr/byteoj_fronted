@@ -17,7 +17,6 @@ import type { UserRegisterRequest } from "../models/UserRegisterRequest";
 import type { CancelablePromise } from "../core/CancelablePromise";
 import { OpenAPI } from "../core/OpenAPI";
 import { request as __request } from "../core/request";
-
 export class UserControllerService {
   /**
    * bossAdminAddAdmin
@@ -40,7 +39,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * bossAdminCancelAdmin
    * @param uuid uuid
@@ -64,7 +62,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * bossAdminGetAdminList
    * @returns BaseResponse_List_User_ OK
@@ -84,7 +81,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * bossAdminSetAdmin
    * @param uuid uuid
@@ -108,7 +104,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * adminBanUserList
    * @param userList user_list
@@ -130,7 +125,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * adminCancelBanUser
    * @param uuid uuid
@@ -154,7 +148,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * adminGetUserList
    * @param pageNum PageNum
@@ -178,7 +171,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * adminGetUserPages
    * @returns BaseResponse_long_ OK
@@ -198,7 +190,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * adminLogin
    * @param userLoginRequest userLoginRequest
@@ -220,7 +211,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userLoginByGithub
    * @param code code
@@ -244,7 +234,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * getCurrentUser
    * @returns BaseResponse_UserVo_ OK
@@ -261,7 +250,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userEmailSend
    * @param receiveEmail receiveEmail
@@ -285,7 +273,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userSetPassword
    * @param userRegisterRequest userRegisterRequest
@@ -307,7 +294,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userLogin
    * @param userLoginRequest userLoginRequest
@@ -329,7 +315,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userLoginByEmail
    * @param userLoginEmailRequest userLoginEmailRequest
@@ -351,7 +336,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userLogout
    * @returns BaseResponse_int_ OK
@@ -371,7 +355,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userModify
    * @param user user
@@ -393,7 +376,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userGetPicture
    * @returns BaseResponse_List_WebsiteBackgroundPictures_ OK
@@ -410,7 +392,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userDeleteBackground
    * @param id id
@@ -434,7 +415,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userGetPictureByUser
    * @returns BaseResponse_string_ OK
@@ -451,7 +431,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userSetPictureBackground
    * @param pictureAddress picture_address
@@ -475,7 +454,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userRegister
    * @param userRegisterRequest userRegisterRequest
@@ -497,7 +475,6 @@ export class UserControllerService {
       },
     });
   }
-
   /**
    * userUploadPicture
    * @param base64Image base64Image
@@ -509,7 +486,7 @@ export class UserControllerService {
   public static userUploadPictureUsingPost(
     base64Image: string,
     status?: number
-  ): CancelablePromise<BaseResponse_boolean_ | any> {
+  ): CancelablePromise<BaseResponse_string_ | any> {
     return __request(OpenAPI, {
       method: "POST",
       url: "/api/user/upload",

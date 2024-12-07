@@ -5,7 +5,7 @@
     <figure>
       <img
         @dragstart.prevent
-        src="https://aliyun.byteoj.com/2024/10/25400fd044b44d4982e5b827654d6bf7.jpeg"
+        src="https://aliyun.byteoj.com/2024/10/69a0ceff1a0c43ffbbe8eed9d58f7e5a.png"
         alt="菜狗"
       />
     </figure>

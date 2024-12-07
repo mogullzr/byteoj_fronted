@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, Ref, ref, UnwrapRef, watch } from "vue";
+import { onBeforeUnmount, onMounted, Ref, ref, UnwrapRef, watch } from "vue";
 import router from "@/router";
 import { PostsControllerService, PostsVo } from "../../../generated";
 import dayjs, { Dayjs } from "dayjs";
@@ -366,9 +366,9 @@ window.addEventListener("scroll", handleScroll);
 // 复制内容实现加上备注声明
 const addCustomText = (event: any) => {
   const customText: string =
-    "————————————————\n" +
+    "\n————————————————\n" +
     "\n" +
-    "                            版权声明：本文为该用户的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。\n" +
+    "版权声明：本文为该用户的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。\n" +
     "                        \n" +
     "原文链接：" +
     window.location.href; // 自定义要添加的内容
@@ -380,8 +380,11 @@ const addCustomText = (event: any) => {
 };
 
 window.addEventListener("copy", addCustomText);
+onBeforeUnmount(() => {
+  window.removeEventListener("copy", addCustomText);
+  window.removeEventListener("scroll", handleScroll);
+});
 </script>
-
 <template>
   <div
     role="alert"
