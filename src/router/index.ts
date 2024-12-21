@@ -375,9 +375,6 @@
 // export default router;
 import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import UserLayout from "@/layout/UserLayout.vue";
-import { ACCESS_ENUM } from "@/access/access";
-import checkAccess from "@/access/check";
-import user from "@/store/user";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -623,6 +620,14 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/search/:key",
+    name: "搜索",
+    component: () => import("@/view/problems/ProblemView.vue"),
+    meta: {
+      access: "0",
+    },
+  },
+  {
     path: "/problems",
     name: "题库",
     children: [
@@ -654,14 +659,6 @@ const routes: Array<RouteRecordRaw> = [
           import(
             "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
           ),
-      },
-      {
-        path: "",
-        name: "题库展示页面",
-        meta: {
-          access: "0",
-        },
-        component: () => import("@/view/problems/ProblemView.vue"),
       },
     ],
   },

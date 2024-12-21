@@ -18,6 +18,7 @@
     "@vuepic/vue-datepicker": "^8.3.1",
     "ace-builds": "^1.35.2",
     "axios": "^1.7.2",
+    "compression-webpack-plugin": "^11.1.0",
     "core-js": "^3.8.3",
     "dayjs": "^1.11.10",
     "echarts": "^5.5.0",

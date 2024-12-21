@@ -89,7 +89,7 @@ const logout = async () => {
           >
         </li>
         <li>
-          <router-link to="/problems">题库</router-link>
+          <router-link to="/search/problem">题库</router-link>
         </li>
         <li>
           <router-link to="/study">学习</router-link>

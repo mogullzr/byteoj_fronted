@@ -21,40 +21,24 @@ const HardSum = ref();
 const flag = ref(0);
 const keyword = ref("");
 
-let problem_list: Ref<any> = ref([]);
+interface Props {
+  problemList: any[];
+}
+const props = withDefaults(defineProps<Props>(),{
+  problemList: () => [],
+});
+
 const difficulty_list = useStore.difficulty_list;
 const color_list = useStore.color_list;
 
 onMounted(async () => {
-  if (currentRequest > maxRequestCount) {
-    setTimeout(() => {
-      currentRequest = 0;
-    }, 120000);
-  }
-  // 全局限流配置
-  currentRequest += 1;
-
-  // 请求1
-  const res =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchByPageUsingPost(
-      1
-    );
-  if (res.code === 0) {
-    if (res.data != undefined) {
-      for (let item = 0; item < res.data.length; item++) {
-        problem_list.value.push(res.data[item]);
-      }
-    }
-  } else if (res.code === 40101) {
-    router.push("/404");
-  }
 
   // 请求2
   const response =
     await ProblemAlgorithmControllerService.problemAlgorithmSearchPagSumUsingPost();
   if (response.code === 0) {
     PageSum.value = response.data;
-  } else if (res.code === 40101) {
+  } else if (response.code === 40101) {
     router.push("/404");
   }
 
@@ -66,7 +50,7 @@ onMounted(async () => {
 
   if (resEasy.code === 0) {
     EasySum.value = resEasy.data;
-  } else if (res.code === 40101) {
+  } else if (response.code === 40101) {
     router.push("/404");
   }
 
@@ -94,8 +78,6 @@ onMounted(async () => {
     console.log(resHard.message);
   }
 
-  // 全局限流配置
-  currentRequest -= 1;
 });
 
 // 挂载完成之后执行
@@ -155,13 +137,6 @@ onUpdated(() => {
 // 分页查找
 const PageClick = async (Page: number) => {
   // 全局限流配置
-  currentRequest += 1;
-  if (currentRequest > maxRequestCount) {
-    setTimeout(() => {
-      currentRequest = 0;
-    }, 120000);
-  }
-
   if (Page <= 0 || Page > PageSum.value) {
     return;
   }
@@ -173,9 +148,9 @@ const PageClick = async (Page: number) => {
       );
 
     if (res.code === 0) {
-      problem_list.value = [];
+      props.problemList = [];
       for (let item = 0; item < res.data.length; item++) {
-        problem_list.value.push(res.data[item]);
+        props.problemList.push(res.data[item]);
       }
       currentPage.value = Page;
     } else {
@@ -188,9 +163,9 @@ const PageClick = async (Page: number) => {
         tag_current_id.value
       );
     if (res.code === 0) {
-      problem_list.value = [];
+      props.problemList = [];
       for (let item = 0; item < res.data.length; item++) {
-        problem_list.value.push(res.data[item]);
+        props.problemList.push(res.data[item]);
       }
       currentPage.value = Page;
     } else {
@@ -204,9 +179,9 @@ const PageClick = async (Page: number) => {
       );
 
     if (res.code === 0) {
-      problem_list.value = [];
+      props.problemList = [];
       for (let item = 0; item < res.data.length; item++) {
-        problem_list.value.push(res.data[item]);
+        props.problemList.push(res.data[item]);
       }
       currentPage.value = Page;
     }
@@ -218,9 +193,9 @@ const PageClick = async (Page: number) => {
       );
 
     if (res.code === 0) {
-      problem_list.value = [];
+      props.problemList = [];
       for (let item = 0; item < res.data.length; item++) {
-        problem_list.value.push(res.data[item]);
+        props.problemList.push(res.data[item]);
       }
       currentPage.value = Page;
       tag_current_name.value = keyword.value;
@@ -228,8 +203,6 @@ const PageClick = async (Page: number) => {
       console.log(res.message);
     }
   }
-  // 全局限流配置
-  currentRequest -= 1;
 };
 
 // 根据算法算法标签查找所有符合条件的题目
@@ -267,9 +240,9 @@ const searchByTag = async (tag_name: string) => {
       tag_id.value
     );
   if (res1.code === 0) {
-    problem_list.value = [];
+    props.problemList = [];
     for (let item = 0; item < res1.data.length; item++) {
-      problem_list.value.push(res1.data[item]);
+      props.problemList.push(res1.data[item]);
     }
     tag_current_id.value = tag_id.value;
     flag.value = 1;
@@ -292,44 +265,6 @@ const searchByTag = async (tag_name: string) => {
   currentRequest -= 1;
 };
 
-const searchByKeyword = async (keyword: string) => {
-  // 全局限流配置
-  currentRequest += 1;
-  console.log(currentRequest);
-  if (currentRequest > maxRequestCount) {
-    return;
-    // console.log(12312312123);
-    // setTimeout(() => {
-    //   currentRequest = 0;
-    // }, 120000);
-  }
-  const res1 =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchByKeywordUsingPost(
-      keyword,
-      1
-    );
-
-  if (res1.code === 0) {
-    problem_list.value = [];
-    for (let item = 0; item < res1.data.length; item++) {
-      problem_list.value.push(res1.data[item]);
-    }
-    flag.value = 3;
-    let tags: any = document.getElementsByClassName(tag_current_name.value);
-    if (tags != null) {
-      for (let tag of tags) {
-        tag.classList.remove("badge-error");
-        tag.classList.remove("text-white");
-        tag.classList.add("badge-ghost");
-      }
-    }
-    tag_current_name.value = keyword;
-  } else {
-    console.log(res1.message);
-  }
-  // 全局限流配置
-  currentRequest -= 1;
-};
 
 const searchByDifficulty = async (difficulty_name: any) => {
   // 全局限流配置
@@ -347,9 +282,9 @@ const searchByDifficulty = async (difficulty_name: any) => {
     );
 
   if (res.code === 0) {
-    problem_list.value = [];
+    props.problemList = [];
     for (let item = 0; item < res.data.length; item++) {
-      problem_list.value.push(res.data[item]);
+      props.problemList.push(res.data[item]);
     }
     currentPage.value = 1;
     difficulty_current.value = difficulty_name;
@@ -361,31 +296,6 @@ const searchByDifficulty = async (difficulty_name: any) => {
 </script>
 <template>
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
-    <div class="w-7/12 m-auto">
-      <div class="font-bold text-center text-4xl">ByteOJ编程题库</div>
-      <div class="w-full my-4 flex">
-        <input
-          v-model="keyword"
-          type="text"
-          placeholder="搜索题目"
-          class="input input-bordered input-md input-s w-full m-auto"
-          @keyup.enter="searchByKeyword(keyword)"
-        />
-        <button class="svg-hover mx-2" @click="searchByKeyword(keyword)">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="40"
-            height="40"
-            viewBox="0 0 24 24"
-          >
-            <path
-              fill="#999999"
-              d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
-            />
-          </svg>
-        </button>
-      </div>
-    </div>
     <div class="overflow-x-auto">
       <div class="flex flex-row-reverse">
         <div>
@@ -422,7 +332,7 @@ const searchByDifficulty = async (difficulty_name: any) => {
           <span>道题目</span>
         </div>
       </div>
-      <table class="table" v-if="problem_list.length !== 0">
+      <table class="table" v-if="props.problemList.length !== 0">
         <!-- head -->
         <thead>
           <tr>
@@ -437,7 +347,7 @@ const searchByDifficulty = async (difficulty_name: any) => {
         </thead>
         <tbody class="problemBody">
           <tr
-            v-for="problem in problem_list"
+            v-for="problem in props.problemList"
             :key="problem.problem_id"
             class="hover"
           >
@@ -533,12 +443,12 @@ const searchByDifficulty = async (difficulty_name: any) => {
       </table>
     </div>
     <div
-      v-if="problem_list.length === 0"
+      v-if="props.problemList.length === 0"
       class="mx-auto font-bold text-gray-400"
     >
       <span class="my-4" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
     </div>
-    <div class="join m-auto" v-if="PageSum > 1 && problem_list.length > 0">
+    <div class="join m-auto" v-if="PageSum > 1 && props.problemList.length > 0">
       <button class="join-item btn" @click="PageClick(1)">«</button>
       <button
         class="join-item btn"
