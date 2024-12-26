@@ -4,11 +4,7 @@ import ProblemMathAllView from "@/view/problems/math/ProblemMathAllView.vue";
 import Problem408AllView from "@/view/problems/408/Problem408AllView.vue";
 import { onMounted, Ref, ref, watchEffect } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  ProblemAlgorithmControllerService,
-  SearchRequest,
-} from "../../../generated";
-import Pagination from "@/view/components/Pagination.vue";
+import { SearchRequest } from "../../../generated";
 
 // 0表示显示算法题库，1表示显示数学题库，2表示显示408题库
 const router = useRouter();
@@ -33,7 +29,6 @@ const category_relation = {
 let category = route.path.split("/")[2];
 
 const isShow: any = ref(category_relation[category] ?? 0);
-const data_list: Ref<any[]> = ref([] as any);
 
 onMounted(async () => {
   let checkBox: any = document.getElementById(category);

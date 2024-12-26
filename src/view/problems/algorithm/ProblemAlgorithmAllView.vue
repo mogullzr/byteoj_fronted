@@ -15,12 +15,9 @@ const router = useRouter();
 const route = useRoute();
 const useStore = UserStore();
 let category = route.path.split("/")[2];
-let currentRequest: number = useStore.currentRequest;
 const path = router.currentRoute.value.fullPath;
 const currentPage = ref(1);
-const PageSum = ref(1);
 const tag_current_name = ref("");
-const tag_current_id = ref(0);
 const EasySum = ref();
 const MediumSum = ref();
 const HardSum = ref();
@@ -30,6 +27,8 @@ const flag = ref(0);
 let problem_list: Ref<any> = ref([]);
 const difficulty_list = useStore.difficulty_list;
 const difficulties = useStore.difficulties;
+// 获取分页组件的引用
+const paginationRef: any = ref(null);
 
 const color_list = useStore.color_list;
 
@@ -39,6 +38,7 @@ const initKeyWordParam: SearchRequest = {
   keyword: "",
   pageNum: 1,
   pageSize: 50,
+  pages: 1,
   sourceList: [] as Array<string>,
   status: 0,
   tagsList: [] as Array<number>,
@@ -52,13 +52,23 @@ const loadData = async () => {
   );
   if (res.code === 0) {
     problem_list.value = res.data.dataList;
+    keywordParam.value.pages = problem_list.value[0].pages;
+    for (let item = 0; item < problem_list.value?.length; item++) {
+      if (problem_list.value[item]?.difficulty == "困难") {
+        problem_list.value[item].difficulty = "difficult";
+      } else if (problem_list.value[item]?.difficulty == "中等") {
+        problem_list.value[item].difficulty = "medium";
+      } else {
+        problem_list.value[item].difficulty = "easy";
+      }
+    }
   }
   let tags = route.query.tagsList?.split(",");
   keywordParam.value.tagsList = tags.slice(0, tags.length - 1);
-  console.log(keywordParam.value);
 };
 
 watchEffect(() => {
+  console.log(keywordParam.value);
   let sourceList: any = route.query.sourceList;
   let tagsList: any = route.query.tagsList;
 
@@ -89,16 +99,19 @@ watchEffect(() => {
   } else {
     tagsList = [];
   }
+  console.log(keywordParam.value);
   keywordParam.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
     keyword: route.query.keyword ?? "",
     pageNum: parseInt(route.query.pageNum ?? "1"),
     pageSize: parseInt(route.query.pageSize ?? "50"),
+    pages: parseInt(route.query.pages ?? "1"),
     sourceList: sourceList ?? [],
     status: route.query.status,
     tagsList: tagsList ?? [],
   } as any;
+  console.log(keywordParam.value);
 
   loadData();
 });
@@ -238,7 +251,6 @@ const PageClick = (page: any) => {
   ) {
     key.sourceList += ",";
   }
-  console.log(key);
   router.push({
     path: `${category}`,
     query: key,
@@ -246,11 +258,16 @@ const PageClick = (page: any) => {
 };
 
 const searchByKeyword = () => {
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
+  let key = keywordParam.value;
   if (
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
   ) {
-    keywordParam.value.tagsList += ",";
+    key.tagsList += ",";
   }
   if (
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
@@ -258,20 +275,25 @@ const searchByKeyword = () => {
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
       ","
   ) {
-    keywordParam.value.sourceList += ",";
+    key.sourceList += ",";
   }
   router.push({
     path: `${category}`,
-    query: keywordParam.value,
+    query: key,
   });
 };
 
 const checkDifficulty = () => {
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
+  let key = keywordParam.value;
   if (
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
   ) {
-    keywordParam.value.tagsList += ",";
+    key.tagsList += ",";
   }
   if (
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
@@ -279,11 +301,11 @@ const checkDifficulty = () => {
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
       ","
   ) {
-    keywordParam.value.sourceList += ",";
+    key.sourceList += ",";
   }
   router.push({
     path: `${category}`,
-    query: keywordParam.value,
+    query: key,
   });
 };
 const tagSelector: any = ref(null);
@@ -317,6 +339,10 @@ const selectedTags1: Ref<any> = ref(
 
 // 1.来源标签：处理从子组件传回来的选中标签
 const handleSelectedTagsUpdate1 = (newSelectedTags: any) => {
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
   let sources: any = "";
   selectedTags1.value = newSelectedTags;
   newSelectedTags?.map((source: any) => {
@@ -328,7 +354,7 @@ const handleSelectedTagsUpdate1 = (newSelectedTags: any) => {
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
     keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
   ) {
-    keywordParam.value.tagsList += ",";
+    key.tagsList += ",";
   }
   if (
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
@@ -336,7 +362,7 @@ const handleSelectedTagsUpdate1 = (newSelectedTags: any) => {
     keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
       ","
   ) {
-    keywordParam.value.sourceList += ",";
+    key.sourceList += ",";
   }
   router.push({
     path: `${category}`,
@@ -346,6 +372,10 @@ const handleSelectedTagsUpdate1 = (newSelectedTags: any) => {
 
 // 2.算法标签：处理从子组件传回来的选中标签
 const handleSelectedTagsUpdate0 = (newSelectedTags: any) => {
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
   let tags: any = "";
   selectedTags0.value = newSelectedTags;
   newSelectedTags?.map((tag: any) => {
@@ -375,8 +405,13 @@ const handleSelectedTagsUpdate0 = (newSelectedTags: any) => {
 
 // 添加算法标签
 const addAlgorithmTag = (tag: any) => {
+  console.log(keywordParam.value);
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
   let tags: any = "";
-  keywordParam.value.tagsList?.push(tag);
+
   selectedTags0.value = keywordParam.value?.tagsList;
   if (tagSelector.value) {
     // 触发事件
@@ -396,6 +431,10 @@ const addAlgorithmTag = (tag: any) => {
 
 // 添加来源标签
 const addSourceTag = (tag: any) => {
+  if (paginationRef.value) {
+    paginationRef.value.jumpToPage(1);
+  }
+  keywordParam.value.pageNum = 1;
   let tags: any = "";
   keywordParam.value.sourceList?.push(tag);
   selectedTags0.value = keywordParam.value?.sourceList;
@@ -408,6 +447,29 @@ const addSourceTag = (tag: any) => {
   });
   let key = keywordParam.value;
   key.sourceList = tags;
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
+};
+
+const searchByDifficulty = (difficulty: string) => {
+  keywordParam.value.difficulty = difficulty;
+  let key = keywordParam.value;
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    key.tagsList += ",";
+  }
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    keywordParam.value.sourceList += ",";
+  }
   router.push({
     path: `${category}`,
     query: key,
@@ -486,7 +548,7 @@ const addSourceTag = (tag: any) => {
       <div class="flex flex-row-reverse">
         <div>
           <button>
-            <span class="text-error" @click="searchByDifficulty('困难')"
+            <span class="text-error" @click="searchByDifficulty('difficult')"
               >困难题</span
             >
             <span class="font-bold">{{ HardSum }}</span>
@@ -495,7 +557,7 @@ const addSourceTag = (tag: any) => {
         </div>
         <div>
           <button>
-            <span class="text-warning" @click="searchByDifficulty('中等')"
+            <span class="text-warning" @click="searchByDifficulty('medium')"
               >中等题</span
             >
             <span class="font-bold">{{ MediumSum }}</span>
@@ -505,7 +567,7 @@ const addSourceTag = (tag: any) => {
         <div>
           其中
           <button>
-            <span class="text-success" @click="searchByDifficulty('简单')"
+            <span class="text-success" @click="searchByDifficulty('easy')"
               >简单题</span
             >
           </button>
@@ -655,9 +717,9 @@ const addSourceTag = (tag: any) => {
       <span class="my-4" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
     </div>
     <Pagination
-      :totalItems="100"
-      :pageSize="10"
+      ref="paginationRef"
       :currentPage="keywordParam.pageNum"
+      :totalPages="keywordParam.pages"
       @update:currentPage="keywordParam.pageNum = $event"
       @pageChanged="PageClick"
     />
