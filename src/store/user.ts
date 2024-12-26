@@ -34,6 +34,11 @@ export const UserStore = defineStore("user", {
       困难: 2,
       未知难度: 3,
     },
+    difficulties: [
+      { label: "简单", value: "easy" },
+      { label: "中等", value: "medium" },
+      { label: "困难", value: "difficult" },
+    ],
     color_list: [
       "badge-lg badge badge-success",
       "badge-lg badge badge-warning",
@@ -160,7 +165,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 65,
-          tag_name: "珂朵莉树,颜色段均摊,ODT",
+          tag_name: "珂朵莉树",
         },
         {
           tag_id: 66,
@@ -200,7 +205,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 101,
-          tag_name: "后缀自动机,SAM",
+          tag_name: "后缀自动机",
         },
         {
           tag_id: 110,
@@ -224,11 +229,11 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 126,
-          tag_name: "广度优先搜索,BFS",
+          tag_name: "BFS",
         },
         {
           tag_id: 127,
-          tag_name: "深度优先搜索,DFS",
+          tag_name: "DFS",
         },
         {
           tag_id: 128,
@@ -248,7 +253,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 132,
-          tag_name: "启发式迭代加深搜索,IDA*",
+          tag_name: "启发式迭代加深搜索",
         },
         {
           tag_id: 133,
@@ -256,15 +261,15 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 134,
-          tag_name: "爬山算法,Localsearch",
+          tag_name: "爬山算法,",
         },
         {
           tag_id: 135,
-          tag_name: "模拟退火,SA",
+          tag_name: "模拟退火",
         },
         {
           tag_id: 136,
-          tag_name: "随机调整,Rounding",
+          tag_name: "随机调整",
         },
         {
           tag_id: 137,
@@ -316,7 +321,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 153,
-          tag_name: "凸完全单调性,wqs二分",
+          tag_name: "凸完全单调性",
         },
         {
           tag_id: 154,
@@ -428,7 +433,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 211,
-          tag_name: "最近公共祖先,LCA",
+          tag_name: "最近公共祖先",
         },
         {
           tag_id: 213,
@@ -452,7 +457,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 229,
-          tag_name: "Link-CutTree,LCT",
+          tag_name: "Link-CutTree",
         },
         {
           tag_id: 230,
@@ -476,11 +481,11 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 235,
-          tag_name: "哈希,hash",
+          tag_name: "哈希",
         },
         {
           tag_id: 239,
-          tag_name: "素数判断,质数,筛法",
+          tag_name: "素数判断",
         },
         {
           tag_id: 240,
@@ -488,11 +493,11 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 241,
-          tag_name: "最大公约数,gcd",
+          tag_name: "最大公约数",
         },
         {
           tag_id: 242,
-          tag_name: "扩展欧几里德算法,exgcd",
+          tag_name: "扩展欧几里德算法",
         },
         {
           tag_id: 243,
@@ -524,7 +529,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 250,
-          tag_name: "中国剩余定理,CRT",
+          tag_name: "中国剩余定理",
         },
         {
           tag_id: 251,
@@ -560,15 +565,15 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 260,
-          tag_name: "斐波那契,Fibonacci",
+          tag_name: "斐波那契",
         },
         {
           tag_id: 261,
-          tag_name: "卡特兰数,Catalan",
+          tag_name: "卡特兰数",
         },
         {
           tag_id: 262,
-          tag_name: "斯特林数,Stirling",
+          tag_name: "斯特林数",
         },
         {
           tag_id: 263,
@@ -700,7 +705,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 300,
-          tag_name: "字典树,Trie",
+          tag_name: "字典树",
         },
         {
           tag_id: 301,
@@ -712,7 +717,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 303,
-          tag_name: "后缀数组,SA",
+          tag_name: "后缀数组",
         },
         {
           tag_id: 304,
@@ -776,15 +781,15 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 325,
-          tag_name: "回文自动机,PAM",
+          tag_name: "回文自动机",
         },
         {
           tag_id: 326,
-          tag_name: "快速沃尔什变换,FWT",
+          tag_name: "快速沃尔什变换",
         },
         {
           tag_id: 327,
-          tag_name: "快速莫比乌斯变换,FMT",
+          tag_name: "快速莫比乌斯变换",
         },
         {
           tag_id: 329,
@@ -916,7 +921,7 @@ export const UserStore = defineStore("user", {
         },
         {
           tag_id: 391,
-          tag_name: "Berlekamp-Massey算法,BM",
+          tag_name: "Berlekamp-Massey算法",
         },
         {
           tag_id: 396,
@@ -1187,6 +1192,48 @@ export const UserStore = defineStore("user", {
           tag_name: "Flood",
         },
       ],
+    ],
+    SourceList: [
+      {
+        tag_id: "PAT",
+        tag_name: "PAT",
+      },
+      {
+        tag_id: "ByteOJ",
+        tag_name: "ByteOJ",
+      },
+      {
+        tag_id: "ByteOJ原创",
+        tag_name: "ByteOJ原创",
+      },
+      {
+        tag_id: "蓝桥杯",
+        tag_name: "蓝桥杯",
+      },
+      {
+        tag_id: "信息学奥赛一本通",
+        tag_name: "信息学奥赛一本通",
+      },
+      {
+        tag_id: "剑指Offer",
+        tag_name: "剑指Offer",
+      },
+      {
+        tag_id: "Codeforces",
+        tag_name: "Codeforces",
+      },
+      {
+        tag_id: "luogu",
+        tag_name: "luogu",
+      },
+      {
+        tag_id: "清华大学考研机试题",
+        tag_name: "清华大学考研机试题",
+      },
+      {
+        tag_id: "北京大学考研机试题",
+        tag_name: "北京大学考研机试题",
+      },
     ],
     Math408TagsRelation: [
       [

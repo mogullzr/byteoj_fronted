@@ -1,46 +1,133 @@
 <script setup lang="ts">
-import { onMounted, onUpdated, Ref, ref } from "vue";
-import { useRouter } from "vue-router";
-import { ProblemAlgorithmControllerService } from "../../../../generated";
+import { onMounted, onUpdated, Ref, ref, watchEffect } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import {
+  ProblemAlgorithmControllerService,
+  SearchControllerService,
+  SearchRequest,
+} from "../../../../generated";
 import UserStore from "@/store/user";
+import Dropdown from "@/view/components/Dropdown.vue";
+import TagSelector from "@/view/components/TagSelector.vue";
+import Pagination from "@/view/components/Pagination.vue";
 
 const router = useRouter();
+const route = useRoute();
 const useStore = UserStore();
+let category = route.path.split("/")[2];
 let currentRequest: number = useStore.currentRequest;
-let maxRequestCount: number = useStore.maxRequestCount;
 const path = router.currentRoute.value.fullPath;
 const currentPage = ref(1);
 const PageSum = ref(1);
 const tag_current_name = ref("");
 const tag_current_id = ref(0);
-const difficulty_current = ref("");
 const EasySum = ref();
 const MediumSum = ref();
 const HardSum = ref();
 // 0表示默认请求状态，1最后点击为表示根据标签查询，2表示最后点击为根据难度查询
 const flag = ref(0);
-const keyword = ref("");
 
-interface Props {
-  problemList: any[];
-}
-const props = withDefaults(defineProps<Props>(),{
-  problemList: () => [],
-});
-
+let problem_list: Ref<any> = ref([]);
 const difficulty_list = useStore.difficulty_list;
+const difficulties = useStore.difficulties;
+
 const color_list = useStore.color_list;
 
+const initKeyWordParam: SearchRequest = {
+  category: "",
+  difficulty: "",
+  keyword: "",
+  pageNum: 1,
+  pageSize: 50,
+  sourceList: [] as Array<string>,
+  status: 0,
+  tagsList: [] as Array<number>,
+} as SearchRequest;
+
+const keywordParam: Ref<SearchRequest> = ref(initKeyWordParam);
+
+const loadData = async () => {
+  const res = await SearchControllerService.searchAllUsingPost(
+    keywordParam.value
+  );
+  if (res.code === 0) {
+    problem_list.value = res.data.dataList;
+  }
+  let tags = route.query.tagsList?.split(",");
+  keywordParam.value.tagsList = tags.slice(0, tags.length - 1);
+  console.log(keywordParam.value);
+};
+
+watchEffect(() => {
+  let sourceList: any = route.query.sourceList;
+  let tagsList: any = route.query.tagsList;
+
+  if (sourceList != undefined && sourceList != "") {
+    sourceList = sourceList?.split(",");
+    sourceList = sourceList?.splice(0, sourceList.length - 1);
+
+    if (sourceList[0] == "") {
+      sourceList = [];
+    }
+  } else {
+    sourceList = [];
+  }
+
+  if (tagsList != undefined && tagsList != "") {
+    tagsList = tagsList?.split(",");
+    tagsList = tagsList?.splice(0, tagsList.length - 1);
+    tagsList = tagsList?.map((tags: any) => {
+      let tag_id;
+      useStore.AlgorithmTagsRelation[0].map((algorithmTag: any) => {
+        if (tags === algorithmTag.tag_name) tag_id = algorithmTag.tag_id;
+      });
+      return tag_id ?? "";
+    });
+    if (tagsList[0] == "") {
+      tagsList = [];
+    }
+  } else {
+    tagsList = [];
+  }
+  keywordParam.value = {
+    category: route.query.category ?? "algorithm",
+    difficulty: route.query.difficulty ?? "",
+    keyword: route.query.keyword ?? "",
+    pageNum: parseInt(route.query.pageNum ?? "1"),
+    pageSize: parseInt(route.query.pageSize ?? "50"),
+    sourceList: sourceList ?? [],
+    status: route.query.status,
+    tagsList: tagsList ?? [],
+  } as any;
+
+  loadData();
+});
+
 onMounted(async () => {
+  if (selectedTags0.value[0] === "") selectedTags0.value = [];
+  if (selectedTags1.value[0] === "") selectedTags1.value = []; // 请求1
+  // const res =
+  //   await ProblemAlgorithmControllerService.problemAlgorithmSearchByPageUsingPost(
+  //     1
+  //   );
+  // if (res.code === 0) {
+  //   if (res.data != undefined) {
+  //     for (let item = 0; item < res.data.len gth; item++) {
+  //       problem_list.value.push(res.data[item]);
+  //     }
+  //   }
+  // } else if (res.code === 40101) {
+  //   router.push("/404");
+  // }
 
   // 请求2
-  const response =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchPagSumUsingPost();
-  if (response.code === 0) {
-    PageSum.value = response.data;
-  } else if (response.code === 40101) {
-    router.push("/404");
-  }
+  // const response =
+  //   await ProblemAlgorithmControllerService.problemAlgorithmSearchPagSumUsingPost();
+  // if (response.code === 0) {
+  //   PageSum.value = response.data;
+  // } else if (res.code === 40101) {
+  //   router.push("/404");
+  // }
 
   // 请求3
   const resEasy =
@@ -50,8 +137,8 @@ onMounted(async () => {
 
   if (resEasy.code === 0) {
     EasySum.value = resEasy.data;
-  } else if (response.code === 40101) {
-    router.push("/404");
+  } else if (resEasy.code === 40101) {
+    await router.push("/404");
   }
 
   // 请求4
@@ -77,7 +164,6 @@ onMounted(async () => {
   } else {
     console.log(resHard.message);
   }
-
 });
 
 // 挂载完成之后执行
@@ -135,167 +221,267 @@ onUpdated(() => {
 });
 
 // 分页查找
-const PageClick = async (Page: number) => {
-  // 全局限流配置
-  if (Page <= 0 || Page > PageSum.value) {
-    return;
+const PageClick = (page: any) => {
+  let key = keywordParam.value;
+  key.pageNum = page;
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    key.tagsList += ",";
   }
-
-  if (flag.value === 0) {
-    const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmSearchByPageUsingPost(
-        Page
-      );
-
-    if (res.code === 0) {
-      props.problemList = [];
-      for (let item = 0; item < res.data.length; item++) {
-        props.problemList.push(res.data[item]);
-      }
-      currentPage.value = Page;
-    } else {
-      console.log(res.message);
-    }
-  } else if (flag.value === 1) {
-    const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmSearchByTagIdUsingPost(
-        Page,
-        tag_current_id.value
-      );
-    if (res.code === 0) {
-      props.problemList = [];
-      for (let item = 0; item < res.data.length; item++) {
-        props.problemList.push(res.data[item]);
-      }
-      currentPage.value = Page;
-    } else {
-      console.log(res.message);
-    }
-  } else if (flag.value === 2) {
-    const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmSearchByDifficultyUsingPost(
-        difficulty_current.value,
-        Page
-      );
-
-    if (res.code === 0) {
-      props.problemList = [];
-      for (let item = 0; item < res.data.length; item++) {
-        props.problemList.push(res.data[item]);
-      }
-      currentPage.value = Page;
-    }
-  } else if (flag.value === 3) {
-    const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmSearchByKeywordUsingPost(
-        keyword.value,
-        Page
-      );
-
-    if (res.code === 0) {
-      props.problemList = [];
-      for (let item = 0; item < res.data.length; item++) {
-        props.problemList.push(res.data[item]);
-      }
-      currentPage.value = Page;
-      tag_current_name.value = keyword.value;
-    } else {
-      console.log(res.message);
-    }
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    key.sourceList += ",";
   }
+  console.log(key);
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
 };
 
-// 根据算法算法标签查找所有符合条件的题目
-const searchByTag = async (tag_name: string) => {
-  if (tag_current_name.value != "" || !tag_current_name.value) {
-    let tags: any = document.getElementsByClassName(tag_current_name.value);
-    if (tags != null) {
-      for (let tag of tags) {
-        tag.classList.remove("badge-error");
-        tag.classList.remove("text-white");
-        tag.classList.add("badge-ghost");
-      }
-    }
+const searchByKeyword = () => {
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    keywordParam.value.tagsList += ",";
   }
-
-  tag_current_name.value = tag_name;
-  let tag_id = ref(0);
-  for (let item = 0; item < useStore.AlgorithmTagsRelation[0].length; item++) {
-    if (useStore.AlgorithmTagsRelation[0][item].tag_name == tag_name) {
-      tag_id.value = useStore.AlgorithmTagsRelation[0][item].tag_id;
-      break;
-    }
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    keywordParam.value.sourceList += ",";
   }
-
-  // 全局限流配置
-  currentRequest += 1;
-  if (currentRequest > maxRequestCount) {
-    setTimeout(() => {
-      currentRequest = 0;
-    }, 120000);
-  }
-  const res1 =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchByTagIdUsingPost(
-      1,
-      tag_id.value
-    );
-  if (res1.code === 0) {
-    props.problemList = [];
-    for (let item = 0; item < res1.data.length; item++) {
-      props.problemList.push(res1.data[item]);
-    }
-    tag_current_id.value = tag_id.value;
-    flag.value = 1;
-    console.log(currentPage);
-  } else {
-    console.log(res1.message);
-  }
-
-  const res2 =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchPagSumUsingPost(
-      tag_id.value
-    );
-
-  if (res2.code === 0) {
-    PageSum.value = res2.data;
-  } else {
-    console.log(res2.message);
-  }
-  // 全局限流配置
-  currentRequest -= 1;
+  router.push({
+    path: `${category}`,
+    query: keywordParam.value,
+  });
 };
 
-
-const searchByDifficulty = async (difficulty_name: any) => {
-  // 全局限流配置
-  currentRequest += 1;
-  if (currentRequest > maxRequestCount) {
-    setTimeout(() => {
-      currentRequest = 0;
-    }, 120000);
+const checkDifficulty = () => {
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    keywordParam.value.tagsList += ",";
   }
-
-  const res =
-    await ProblemAlgorithmControllerService.problemAlgorithmSearchByDifficultyUsingPost(
-      difficulty_name,
-      1
-    );
-
-  if (res.code === 0) {
-    props.problemList = [];
-    for (let item = 0; item < res.data.length; item++) {
-      props.problemList.push(res.data[item]);
-    }
-    currentPage.value = 1;
-    difficulty_current.value = difficulty_name;
-    flag.value = 2;
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    keywordParam.value.sourceList += ",";
   }
-  // 全局限流配置
-  currentRequest -= 1;
+  router.push({
+    path: `${category}`,
+    query: keywordParam.value,
+  });
+};
+const tagSelector: any = ref(null);
+
+const allTags0 = ref(
+  useStore.AlgorithmTagsRelation[0].map((tag: any) => {
+    return tag.tag_name;
+  })
+);
+
+const allTags1 = ref(
+  useStore.SourceList.map((source) => {
+    return source.tag_name;
+  })
+);
+let selectedTags00: any =
+  (route.query.tagsList as any)?.split(",")[0] == ""
+    ? []
+    : (route.query.tagsList as any)?.split(",");
+const selectedTags0: Ref<any> = ref(
+  selectedTags00?.splice(0, selectedTags00?.length - 1)
+);
+
+let selectedTags11: any =
+  (route.query.sourceList as any)?.split(",")[0] == ""
+    ? []
+    : (route.query.sourceList as any)?.split(",");
+const selectedTags1: Ref<any> = ref(
+  selectedTags11?.splice(0, selectedTags11?.length - 1)
+);
+
+// 1.来源标签：处理从子组件传回来的选中标签
+const handleSelectedTagsUpdate1 = (newSelectedTags: any) => {
+  let sources: any = "";
+  selectedTags1.value = newSelectedTags;
+  newSelectedTags?.map((source: any) => {
+    sources += source + ",";
+  });
+  let key = keywordParam.value;
+  key.sourceList = sources;
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    keywordParam.value.tagsList += ",";
+  }
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    keywordParam.value.sourceList += ",";
+  }
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
+};
+
+// 2.算法标签：处理从子组件传回来的选中标签
+const handleSelectedTagsUpdate0 = (newSelectedTags: any) => {
+  let tags: any = "";
+  selectedTags0.value = newSelectedTags;
+  newSelectedTags?.map((tag: any) => {
+    tags += tag + ",";
+  });
+  let key = keywordParam.value;
+  key.tagsList = tags;
+  if (
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != "" &&
+    keywordParam.value.tagsList[keywordParam.value.tagsList.length - 1] != ","
+  ) {
+    key.tagsList += ",";
+  }
+  if (
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      "" &&
+    keywordParam.value.sourceList[keywordParam.value.sourceList.length - 1] !=
+      ","
+  ) {
+    keywordParam.value.sourceList += ",";
+  }
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
+};
+
+// 添加算法标签
+const addAlgorithmTag = (tag: any) => {
+  let tags: any = "";
+  keywordParam.value.tagsList?.push(tag);
+  selectedTags0.value = keywordParam.value?.tagsList;
+  if (tagSelector.value) {
+    // 触发事件
+    tagSelector.value.$emit("update:selectedTags", selectedTags0.value);
+  }
+  keywordParam.value?.tagsList?.map((tag: any) => {
+    tags += tag + ",";
+  });
+  let key = keywordParam.value;
+  key.tagsList = tags;
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
+  router.go(0);
+};
+
+// 添加来源标签
+const addSourceTag = (tag: any) => {
+  let tags: any = "";
+  keywordParam.value.sourceList?.push(tag);
+  selectedTags0.value = keywordParam.value?.sourceList;
+  if (tagSelector.value) {
+    // 触发事件
+    tagSelector.value.$emit("update:selectedTags", selectedTags0.value);
+  }
+  keywordParam.value?.sourceList?.map((tag: any) => {
+    tags += tag + ",";
+  });
+  let key = keywordParam.value;
+  key.sourceList = tags;
+  router.push({
+    path: `${category}`,
+    query: key,
+  });
 };
 </script>
 <template>
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
+    <div class="w-7/12 m-auto">
+      <div class="font-bold text-center text-4xl">ByteOJ编程题库</div>
+      <div class="w-full my-4 flex">
+        <input
+          v-model="keywordParam.keyword"
+          type="text"
+          placeholder="搜索题目"
+          class="input input-bordered input-md input-s w-full m-auto"
+          style="height: 40px"
+          @keyup.enter="searchByKeyword"
+        />
+        <button class="svg-hover mx-2" @click="searchByKeyword">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+          >
+            <path
+              fill="#999999"
+              d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="mx-12 flex">
+      <div class="flex-1">
+        <Dropdown
+          class="mr-4"
+          v-model="keywordParam.difficulty"
+          :options="difficulties"
+          placeholder="选择题目难度"
+          @click="checkDifficulty"
+        />
+      </div>
+      <div class="w-2/3 flex">
+        <div
+          class="flex-1 text-sm"
+          style="padding: 24px 10px; font-weight: bold; white-space: nowrap"
+        >
+          算法
+        </div>
+        <TagSelector
+          ref="tagSelector"
+          :allTags="allTags0"
+          :defaultSelectedTags="selectedTags0"
+          tagType="algorithm"
+          @update:selectedTags="handleSelectedTagsUpdate0"
+        />
+      </div>
+      <div class="w-2/3 flex">
+        <div
+          class="flex-1 text-sm"
+          style="padding: 24px 10px; font-weight: bold; white-space: nowrap"
+        >
+          来源
+        </div>
+        <TagSelector
+          :allTags="allTags1"
+          :defaultSelectedTags="selectedTags1"
+          tagType="source"
+          @update:selectedTags="handleSelectedTagsUpdate1"
+        />
+      </div>
+    </div>
     <div class="overflow-x-auto">
       <div class="flex flex-row-reverse">
         <div>
@@ -332,7 +518,7 @@ const searchByDifficulty = async (difficulty_name: any) => {
           <span>道题目</span>
         </div>
       </div>
-      <table class="table" v-if="props.problemList.length !== 0">
+      <table class="table" v-if="problem_list.length !== 0">
         <!-- head -->
         <thead>
           <tr>
@@ -347,7 +533,7 @@ const searchByDifficulty = async (difficulty_name: any) => {
         </thead>
         <tbody class="problemBody">
           <tr
-            v-for="problem in props.problemList"
+            v-for="problem in problem_list"
             :key="problem.problem_id"
             class="hover"
           >
@@ -404,13 +590,33 @@ const searchByDifficulty = async (difficulty_name: any) => {
               <button
                 v-for="tag in problem.algorithm_tags"
                 :key="tag"
-                @click="searchByTag(tag)"
+                @click="addAlgorithmTag(tag)"
               >
-                <span :class="'badge badge-ghost ' + tag">{{ tag }}</span>
+                <span
+                  v-if="
+                    keywordParam.tagsList?.some((item:any) => item.includes(tag))
+                  "
+                  :class="'badge text-red-500 bg-gray-100 ' + tag"
+                  >{{ tag }}</span
+                >
+                <span v-else :class="'badge bg-gray-100 ' + tag">{{
+                  tag
+                }}</span>
               </button>
             </td>
             <td>
-              <span class="badge badge-ghost">{{ problem.source }}</span>
+              <button @click="addSourceTag(problem.source)">
+                <span
+                  v-if="
+                    keywordParam.sourceList?.some((item:any) => item.includes(problem.source))
+                  "
+                  class="badge text-red-500 bg-gray-100"
+                  >{{ problem.source }}</span
+                >
+                <span v-else class="badge bg-gray-100">{{
+                  problem.source
+                }}</span>
+              </button>
             </td>
             <td
               v-if="
@@ -443,49 +649,18 @@ const searchByDifficulty = async (difficulty_name: any) => {
       </table>
     </div>
     <div
-      v-if="props.problemList.length === 0"
+      v-if="problem_list.length === 0"
       class="mx-auto font-bold text-gray-400"
     >
       <span class="my-4" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
     </div>
-    <div class="join m-auto" v-if="PageSum > 1 && props.problemList.length > 0">
-      <button class="join-item btn" @click="PageClick(1)">«</button>
-      <button
-        class="join-item btn"
-        v-if="currentPage - 1 > 0"
-        @click="PageClick(currentPage - 1)"
-      >
-        {{ currentPage - 1 }}
-      </button>
-      <button class="join-item btn">
-        {{ currentPage }}
-      </button>
-      <button
-        v-if="currentPage + 1 < PageSum"
-        class="join-item btn"
-        @click="PageClick(currentPage + 1)"
-      >
-        {{ currentPage + 1 }}
-      </button>
-      <button class="join-item btn btn-disabled" v-if="currentPage != PageSum">
-        ...
-      </button>
-      <button
-        class="join-item btn"
-        v-if="currentPage + 2 < PageSum"
-        @click="PageClick(PageSum - 1)"
-      >
-        {{ PageSum - 1 }}
-      </button>
-      <button
-        v-if="currentPage != PageSum"
-        class="join-item btn"
-        @click="PageClick(PageSum)"
-      >
-        {{ PageSum }}
-      </button>
-      <button class="join-item btn" @click="PageClick(PageSum)">»</button>
-    </div>
+    <Pagination
+      :totalItems="100"
+      :pageSize="10"
+      :currentPage="keywordParam.pageNum"
+      @update:currentPage="keywordParam.pageNum = $event"
+      @pageChanged="PageClick"
+    />
   </div>
 </template>
 

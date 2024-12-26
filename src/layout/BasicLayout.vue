@@ -7,7 +7,7 @@
   </div>
   <div class="mx-auto">
     <div class="pt-20 pb-32 mx-auto">
-      <PlaneGame />
+      <!--      <PlaneGame />-->
       <router-view />
     </div>
   </div>
@@ -22,7 +22,7 @@ import BottomView from "@/components/Menu/BottomView.vue";
 import PlaneGame from "@/view/components/PlaneGame.vue";
 
 export default defineComponent({
-  components: {PlaneGame, BottomView, NavbarView },
+  components: { PlaneGame, BottomView, NavbarView },
   setup() {
     const debounce = (callback: (...args: any[]) => void, delay: number) => {
       let tid: any;
