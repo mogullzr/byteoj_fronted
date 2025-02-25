@@ -92,7 +92,7 @@ const changeShow = (key: number) => {
               class="bg-neutral text-neutral-content w-12 rounded-full mx-auto"
             >
               <router-link :to="'/user/space/' + useStore.loginUser.uuid">
-                <img :src="useStore.loginUser.avatar" alt="Mogullzr的网站" />
+                <img :src="useStore.loginUser.avatar" alt="ByteOJ出品" />
               </router-link>
             </div>
           </div>

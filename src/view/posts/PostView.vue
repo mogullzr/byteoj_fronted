@@ -5,7 +5,7 @@ import { PostsControllerService } from "../../../generated";
 import dayjs, { Dayjs } from "dayjs";
 import UserStore from "@/store/user";
 import FontLittleComponent from "@/view/components/font/FontLittleComponent.vue";
-import {useMessageBox} from "@/view/components/alert/useMessageBox";
+import { useMessageBox } from "@/view/components/alert/useMessageBox";
 const useStore = UserStore();
 const { success, error, warning } = useMessageBox();
 
@@ -108,8 +108,7 @@ onMounted(async () => {
 const PostAdd = async () => {
   if (tag_list.value[0] != "#") {
     error("标签内容填写有误，请注意#");
-    setTimeout(() => {
-    }, 3000);
+    setTimeout(() => {}, 3000);
   } else if (
     title.value.length == 0 ||
     content.value.length == 0 ||
@@ -126,7 +125,7 @@ const PostAdd = async () => {
     });
 
     if (res.code === 0) {
-      success("恭喜你发帖成功！！！")
+      success("恭喜你发帖成功！！！");
       content.value = "";
       tag_list.value = [];
       title.value = "";
@@ -232,7 +231,7 @@ const scroll = () => {
         }
       } else {
         isLoading = false;
-        error(res.message)
+        error(res.message);
       }
     }
   };
@@ -512,7 +511,7 @@ const deletePost = async (post_id: number) => {
                   <img
                     @dragstart.prevent
                     :src="useStore.loginUser.avatar"
-                    alt="Mogullzr小刘的OJ项目"
+                    alt="ByteOJ出品"
                   />
                 </div>
               </router-link>
@@ -596,17 +595,13 @@ const deletePost = async (post_id: number) => {
             <div class="flex mt-4">
               <router-link class="avatar" :to="'/user/space/' + post.uuid">
                 <div class="rounded-full w-12 mx-3">
-                  <img
-                    @dragstart.prevent
-                    :src="post.avatar"
-                    alt="Mogullzr小刘的OJ项目"
-                  />
+                  <img @dragstart.prevent :src="post.avatar" alt="ByteOJ出品" />
                 </div>
               </router-link>
               <div class="flex-1">
                 <div class="font-bold">{{ post.author }}</div>
                 <div class="text-gray-500">
-<!--                  <FontLittleComponent v-if="post.school === '豫章师范学院'" :text="post.school" />-->
+                  <!--                  <FontLittleComponent v-if="post.school === '豫章师范学院'" :text="post.school" />-->
                   <div>{{ post.school }}</div>
                 </div>
               </div>
@@ -749,7 +744,7 @@ const deletePost = async (post_id: number) => {
                       <img
                         @dragstart.prevent
                         :src="useStore.loginUser.avatar"
-                        alt="Mogullzr小刘的OJ项目"
+                        alt="ByteOJ出品"
                       />
                     </div>
                   </div>
@@ -784,7 +779,7 @@ const deletePost = async (post_id: number) => {
                           <img
                             @dragstart.prevent
                             :src="comment.avatar"
-                            alt="Mogullzr小刘的OJ项目"
+                            alt="ByteOJ出品"
                           />
                         </div>
                       </div>
@@ -883,7 +878,7 @@ const deletePost = async (post_id: number) => {
                               <div class="rounded-full w-16 h-16 mx-2">
                                 <img
                                   :src="useStore.loginUser.avatar"
-                                  alt="Mogullzr小刘的OJ项目"
+                                  alt="ByteOJ出品"
                                 />
                               </div>
                             </div>
@@ -916,7 +911,7 @@ const deletePost = async (post_id: number) => {
                           <img
                             @dragstart.prevent
                             :src="comment.avatar"
-                            alt="Mogullzr小刘的OJ项目"
+                            alt="ByteOJ出品"
                           />
                         </div>
                       </div>
@@ -1024,7 +1019,7 @@ const deletePost = async (post_id: number) => {
                                 <img
                                   @dragstart.prevent
                                   :src="useStore.loginUser.avatar"
-                                  alt="Mogullzr小刘的OJ项目"
+                                  alt="ByteOJ出品"
                                 />
                               </div>
                             </div>

@@ -6,7 +6,7 @@ import dayjs, { Dayjs } from "dayjs";
 import MarkdownEditorView from "@/view/Markdown/MarkdownView.vue";
 import UserStore from "@/store/user";
 import { marked } from "marked";
-import {useMessageBox} from "@/view/components/alert/useMessageBox";
+import { useMessageBox } from "@/view/components/alert/useMessageBox";
 
 const useStore = UserStore();
 const path = router.currentRoute.value.fullPath;
@@ -44,7 +44,7 @@ onMounted(async () => {
     post.value = res1.data;
     getTitleContent(post.value.content);
   } else {
-    error(res1.message)
+    error(res1.message);
   }
 
   const res2 = await PostsControllerService.postThumbsStatusUsingPost(
@@ -369,11 +369,7 @@ onBeforeUnmount(() => {
         <div class="flex">
           <div class="avatar">
             <div class="rounded-full w-12 mx-3">
-              <img
-                @dragstart.prevent
-                :src="post.avatar"
-                alt="Mogullzr小刘的OJ项目"
-              />
+              <img @dragstart.prevent :src="post.avatar" alt="ByteOJ出品" />
             </div>
           </div>
           <div class="flex-col">
@@ -389,7 +385,12 @@ onBeforeUnmount(() => {
           {{ post.title }}
         </div>
         <div v-if="post.status === 3">
-          <a :href="post.url" class="float-right btn btn-primary text-white" style="font-size: 18px" >点击下载</a>
+          <a
+            :href="post.url"
+            class="float-right btn btn-primary text-white"
+            style="font-size: 18px"
+            >点击下载</a
+          >
         </div>
 
         <div class="divider"></div>
@@ -460,7 +461,7 @@ onBeforeUnmount(() => {
               <img
                 @dragstart.prevent
                 :src="useStore.loginUser.avatar"
-                alt="Mogullzr小刘的OJ项目"
+                alt="ByteOJ出品"
               />
             </div>
           </div>
@@ -492,7 +493,7 @@ onBeforeUnmount(() => {
                   <img
                     @dragstart.prevent
                     :src="comment.avatar"
-                    alt="Mogullzr小刘的OJ项目"
+                    alt="ByteOJ出品"
                   />
                 </div>
               </div>
@@ -588,7 +589,7 @@ onBeforeUnmount(() => {
                         <img
                           @dragstart.prevent
                           :src="useStore.loginUser.avatar"
-                          alt="Mogullzr小刘的OJ项目"
+                          alt="ByteOJ出品"
                         />
                       </div>
                     </div>
@@ -621,7 +622,7 @@ onBeforeUnmount(() => {
                   <img
                     @dragstart.prevent
                     :src="comment.avatar"
-                    alt="Mogullzr小刘的OJ项目"
+                    alt="ByteOJ出品"
                   />
                 </div>
               </div>
@@ -723,7 +724,7 @@ onBeforeUnmount(() => {
                         <img
                           @dragstart.prevent
                           :src="useStore.loginUser.avatar"
-                          alt="Mogullzr小刘的OJ项目"
+                          alt="ByteOJ出品"
                         />
                       </div>
                     </div>

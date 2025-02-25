@@ -34,20 +34,12 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
-        path: "register",
-        name: "用户注册",
-        component: () => import("@/view/user/UserRegisterView.vue"),
-        meta: {
-          access: "0",
-        },
-      },
-      {
         path: "space/:uuid",
         name: "用户信息中心",
         component: () => import("@/view/user/UserCenterView.vue"),
         meta: {
           access: "1",
-        }
+        },
       },
       {
         path: "",
@@ -269,7 +261,7 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/components/search/TogetherSearchView.vue"),
     meta: {
       access: "0",
-    }
+    },
   },
   {
     path: "/problems",
@@ -327,17 +319,17 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/font",
     name: "font",
-    component: () => import("@/view/components/font/FontView.vue")
+    component: () => import("@/view/components/font/FontView.vue"),
   },
   {
     path: "/chatbot",
     name: "AI学习问答机器人",
-    component: () => import("@/view/AI/ChatBoxView.vue")
+    component: () => import("@/view/AI/ChatBoxView.vue"),
   },
   {
     path: "/special",
     name: "专栏",
-    component: () => import("@/view/special/SpecialBoxView.vue")
+    component: () => import("@/view/special/SpecialBoxView.vue"),
   },
   {
     path: "/test",

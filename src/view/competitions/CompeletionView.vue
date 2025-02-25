@@ -441,7 +441,7 @@ const checkCompetition = (num: number) => {
               <img
                 @dragstart.prevent
                 :src="competition.avatar"
-                alt="Mogullzr小刘的OJ项目"
+                alt="ByteOJ出品"
               />
             </div>
           </div>

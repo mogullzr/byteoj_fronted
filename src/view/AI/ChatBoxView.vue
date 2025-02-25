@@ -56,7 +56,7 @@
           <img
             v-if="message.role === 'system'"
             src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502121127266.jpg"
-            alt="AI Avatar"
+            alt="ByteOJ出品"
             class="avatar"
           />
           <!-- 消息内容 -->
@@ -79,7 +79,7 @@
           <img
             v-if="message.role === 'user'"
             :src="useStore.loginUser.avatar"
-            alt="BByteOJ出品"
+            alt="ByteOJ出品"
             class="avatar"
           />
         </div>

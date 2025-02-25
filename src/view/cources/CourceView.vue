@@ -23,7 +23,10 @@ function downloadFile() {
 }
 </script>
 <template>
-  <div class="flex card card-compact bg-base-100 shadow-xl mx-auto" style="max-width: 1150px">
+  <div
+    class="flex card card-compact bg-base-100 shadow-xl mx-auto"
+    style="max-width: 1150px"
+  >
     <div class="font-bold mx-auto text-4xl pt-6">ByteOJ原创路线学习</div>
     <a
       class="mx-auto btn bg-blue-300 hover:bg-blue-500 active:bg-blue-600 text-white text-lg m-4"
@@ -48,7 +51,7 @@ function downloadFile() {
             <div class="ml-4 flex w-full my-3">
               <div class="avatar p-0">
                 <div class="w-20 rounded-full">
-                  <img :src="course.avatar" />
+                  <img :src="course.avatar" alt="ByteOJ出品" />
                 </div>
               </div>
               <div class="ml-4">

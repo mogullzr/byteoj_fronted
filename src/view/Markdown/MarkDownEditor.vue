@@ -39,10 +39,20 @@
       style="font-size: 32px"
       v-model="title"
     />
-    <button class="btn btn-outline btn-success mx-2 w-24" @click="cancelSubmit">
+    <button
+      class="btn btn-outline btn-success mx-2 w-24"
+      @click="cancelSubmit"
+      aria-label="取消"
+      aria-pressed="false"
+    >
       取消
     </button>
-    <button class="btn btn-success text-white w-24" @click="submitPost">
+    <button
+      class="btn btn-success text-white w-24"
+      @click="submitPost"
+      aria-label="发布"
+      aria-pressed="false"
+    >
       发布
     </button>
   </div>

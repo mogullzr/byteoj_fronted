@@ -2,7 +2,7 @@
   <div class="user-profile">
     <!-- 头像和用户名 -->
     <div class="profile-header">
-      <img :src="avatarUrl" alt="User Avatar" class="avatar" />
+      <img :src="avatarUrl" alt="ByteOJ出品" class="avatar" />
       <div class="username">{{ username }}</div>
     </div>
 
@@ -33,7 +33,9 @@
       <span style="font-weight: bold">个人标签</span>
     </div>
     <div class="tags">
-      <span v-for="(tag, index) in tags" :key="index" class="tag">{{ tag }}</span>
+      <span v-for="(tag, index) in tags" :key="index" class="tag">{{
+        tag
+      }}</span>
     </div>
 
     <!-- 个人网站链接 -->
@@ -45,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue';
+import { defineProps } from "vue";
 
 // 定义 props
 const props = defineProps({

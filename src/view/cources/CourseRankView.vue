@@ -74,7 +74,7 @@ const user_rank_list: Ref<any> = ref([
           <div class="ml-4 flex w-full my-3">
             <div class="avatar p-0">
               <div class="w-16 rounded-full">
-                <img :src="user.avatar" />
+                <img :src="user.avatar" alt="ByteOJ出品" />
               </div>
             </div>
             <div class="ml-4">

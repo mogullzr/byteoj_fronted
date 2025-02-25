@@ -50,7 +50,7 @@ onMounted(async () => {
       <div class="flex mt-4">
         <div class="avatar">
           <div class="rounded-full w-12 mx-3">
-            <img @dragstart.prevent :src="post.avatar" alt="" />
+            <img @dragstart.prevent :src="post.avatar" alt="ByteOJ出品" />
           </div>
         </div>
         <div class="w-36">

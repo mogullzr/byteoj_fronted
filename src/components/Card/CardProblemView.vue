@@ -175,9 +175,25 @@ const nextLoad = async () => {
       </table>
     </div>
     <div class="join">
-      <button class="join-item btn" @click="preLoad">«</button>
-      <button class="join-item btn">Page {{ currentPage }}</button>
-      <button class="join-item btn" @click="nextLoad">»</button>
+      <button
+        class="join-item btn"
+        @click="preLoad"
+        aria-label="上一页"
+        aria-pressed="true"
+      >
+        «
+      </button>
+      <button class="join-item btn" aria-label="当前页" aria-pressed="true">
+        Page {{ currentPage }}
+      </button>
+      <button
+        class="join-item btn"
+        aria-label="下一页"
+        aria-pressed="true"
+        @click="nextLoad"
+      >
+        »
+      </button>
     </div>
     <!--    <div v-for="item in items" :key="item">-->
     <!--      {{ item.message }}-->

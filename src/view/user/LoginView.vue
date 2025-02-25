@@ -9,7 +9,7 @@ import {
 import UserStore from "@/store/user";
 import Vcode from "vue3-puzzle-vcode";
 import { JSEncrypt } from "jsencrypt";
-import {useMessageBox} from "@/view/components/alert/useMessageBox";
+import { useMessageBox } from "@/view/components/alert/useMessageBox";
 
 const Account = ref("");
 const Password = ref("");
@@ -74,7 +74,7 @@ const onLoginSubmit = async () => {
         window.location.replace("/font");
       }, 1500);
     } else {
-      error(res.message)
+      error(res.message);
     }
   }
 };
@@ -89,13 +89,13 @@ const onRegisterSubmit = async () => {
   });
 
   if (res.code === 0) {
-    success("注册成功")
+    success("注册成功");
     setTimeout(function () {
       window.location.reload();
       router.push("/login");
     }, 1500);
   } else {
-    error(res.message)
+    error(res.message);
   }
 };
 
@@ -104,7 +104,6 @@ const QQMessageSend = (num: number) => {
   check.value = num;
   blockIsShow.value = true;
 };
-
 
 const { success, error, warning } = useMessageBox();
 onMounted(() => {
@@ -184,7 +183,6 @@ onUnmounted(() => {
     clearInterval(timer);
   }
 });
-
 </script>
 
 <template>
@@ -493,7 +491,7 @@ onUnmounted(() => {
         <div class="w-36 rounded-full">
           <img
             src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502091611291.png"
-            alt="注册"
+            alt="ByteOJ出品"
           />
         </div>
       </div>
@@ -517,7 +515,7 @@ onUnmounted(() => {
         <div class="w-36 rounded-full">
           <img
             src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502091611291.png"
-            alt="登录"
+            alt="ByteOJ出品"
           />
         </div>
       </div>

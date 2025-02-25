@@ -84,7 +84,7 @@ const records: Ref<any> = ref([
           <div class="ml-4 flex w-full my-3">
             <div class="avatar p-0">
               <div class="w-16 rounded-full">
-                <img :src="record.avatar" />
+                <img :src="record.avatar" alt="ByteOJ出品" />
               </div>
             </div>
             <div class="ml-4">

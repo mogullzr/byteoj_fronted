@@ -274,7 +274,10 @@ const scroll = async () => {
     </svg>
     <span>{{ message }}</span>
   </div>
-  <div class="card bg-neutral text-neutral-content mx-auto" style="max-width: 1200px">
+  <div
+    class="card bg-neutral text-neutral-content mx-auto"
+    style="max-width: 1200px"
+  >
     <div
       class="card-body text-black overflow-y-auto"
       style="height: 700px"
@@ -287,17 +290,29 @@ const scroll = async () => {
         <div class="avatar-group -space-x-6 rtl:space-x-reverse">
           <div class="avatar" v-if="ChatRoom.online_num >= 3">
             <div class="w-12">
-              <img @dragstart.prevent :src="ChatRoom.first_avatar" />
+              <img
+                @dragstart.prevent
+                :src="ChatRoom.first_avatar"
+                alt="ByteOJ出品"
+              />
             </div>
           </div>
           <div class="avatar">
             <div class="w-12" v-if="ChatRoom.online_num >= 1">
-              <img @dragstart.prevent :src="ChatRoom.second_avatar" />
+              <img
+                @dragstart.prevent
+                :src="ChatRoom.second_avatar"
+                alt="ByteOJ出品"
+              />
             </div>
           </div>
           <div class="avatar" v-if="ChatRoom.online_num >= 2">
             <div class="w-12">
-              <img @dragstart.prevent :src="ChatRoom.third_avatar" />
+              <img
+                @dragstart.prevent
+                :src="ChatRoom.third_avatar"
+                alt="ByteOJ出品"
+              />
             </div>
           </div>
           <div class="avatar placeholder">
@@ -310,7 +325,11 @@ const scroll = async () => {
         </div>
         <div class="avatar online">
           <div class="w-16 rounded-full">
-            <img @dragstart.prevent :src="useStore.loginUser.avatar" />
+            <img
+              @dragstart.prevent
+              :src="useStore.loginUser.avatar"
+              alt="ByteOJ出品"
+            />
           </div>
         </div>
       </div>
@@ -327,11 +346,7 @@ const scroll = async () => {
         >
           <div class="chat-image avatar">
             <div class="w-10 rounded-full">
-              <img
-                @dragstart.prevent
-                alt="Mogullzr小刘的OJ项目"
-                :src="Chat.avatar"
-              />
+              <img @dragstart.prevent alt="ByteOJ出品" :src="Chat.avatar" />
             </div>
           </div>
           <div class="chat-header text-black">
@@ -350,11 +365,7 @@ const scroll = async () => {
         <div class="chat chat-end my-2" v-else>
           <div class="chat-image avatar">
             <div class="w-10 rounded-full">
-              <img
-                @dragstart.prevent
-                alt="Mogullzr小刘的OJ项目"
-                :src="Chat.avatar"
-              />
+              <img @dragstart.prevent alt="ByteOJ出品" :src="Chat.avatar" />
             </div>
           </div>
           <div class="chat-header">

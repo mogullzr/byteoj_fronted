@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import {onMounted, Ref, ref, watchEffect} from "vue";
+import { onMounted, Ref, ref, watchEffect } from "vue";
 import UserLoginView from "@/view/user/UserLoginView.vue";
 import UserRegisterView from "@/view/user/UserRegisterView.vue";
-import {SearchRequest, UserControllerService} from "../../../generated";
+import { SearchRequest, UserControllerService } from "../../../generated";
 import { useRoute, useRouter } from "vue-router";
 import UserStore from "@/store/user";
 import { ACCESS_ENUM } from "@/access/access";
@@ -14,19 +14,23 @@ const useStore = UserStore();
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "post",
   difficulty: route.query.difficulty ?? "",
-  keyword:  route.query.keyword ?? "",
+  keyword: route.query.keyword ?? "",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
   sourceList: route.query.sourceList ?? "",
-  tagsList: route.query.tagsList ?? ""
+  tagsList: route.query.tagsList ?? "",
 } as any);
 
 onMounted(() => {
   darkTheme.value = "ByteOJLight";
 });
 
-watchEffect(async ()=>{
-  let tagsList:any= [parseInt(route.query.tagsList ?? "0") == 0  ? "" :   parseInt(route.query.tagsList)];
+watchEffect(async () => {
+  let tagsList: any = [
+    parseInt(route.query.tagsList ?? "0") == 0
+      ? ""
+      : parseInt(route.query.tagsList),
+  ];
   let sourceList: any = route.query.sourceList?.toString() ?? "";
   if (sourceList == "") {
     sourceList = [];
@@ -36,13 +40,13 @@ watchEffect(async ()=>{
   searchRequest.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
-    keyword: decodeURIComponent(<string>route.query.keyword || '') ?? "",
+    keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
     pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
     pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
-    sourceList: sourceList[0] == '' ? [] : sourceList,
-    tagsList: tagsList[0] == 0 ? [] : tagsList
+    sourceList: sourceList[0] == "" ? [] : sourceList,
+    tagsList: tagsList[0] == 0 ? [] : tagsList,
   } as any;
-})
+});
 const handleChangeTheme = () => {
   const html = document.getElementsByTagName("html")[0];
   darkTheme.value = html.dataset.theme;
@@ -69,12 +73,23 @@ const logout = async () => {
 
 const searchInfo = () => {
   searchRequest.value.pageNum = 1;
-  router.push('/together/search?category=' + searchRequest.value.category
-      + '&keyword=' + searchRequest.value.keyword + '&difficulty=' + searchRequest.value.difficulty
-      + '&tagsList' + searchRequest.value.tagsList + '&sourceList=' + searchRequest.value.sourceList
-      + '&pageNum=' + searchRequest.value.pageNum + '&pageSize=' + searchRequest.value.pageSize
-  )
-}
+  router.push(
+    "/together/search?category=" +
+      searchRequest.value.category +
+      "&keyword=" +
+      searchRequest.value.keyword +
+      "&difficulty=" +
+      searchRequest.value.difficulty +
+      "&tagsList" +
+      searchRequest.value.tagsList +
+      "&sourceList=" +
+      searchRequest.value.sourceList +
+      "&pageNum=" +
+      searchRequest.value.pageNum +
+      "&pageSize=" +
+      searchRequest.value.pageSize
+  );
+};
 </script>
 
 <template>
@@ -130,9 +145,9 @@ const searchInfo = () => {
         <li>
           <router-link to="/study">学习</router-link>
         </li>
-<!--        <li>-->
-<!--          <router-link to="/discussion">讨论</router-link>-->
-<!--        </li>-->
+        <!--        <li>-->
+        <!--          <router-link to="/discussion">讨论</router-link>-->
+        <!--        </li>-->
         <li>
           <router-link to="/competition">竞赛</router-link>
         </li>
@@ -151,24 +166,30 @@ const searchInfo = () => {
     <div class="lg:flex">
       <div class="form-control pr-2 flex-1">
         <input
-            v-model="searchRequest.keyword"
-            type="text"
-            placeholder="请输入关键词"
-            class="input input-bordered w-80"
-            @keyup.enter="searchInfo"
+          v-model="searchRequest.keyword"
+          type="text"
+          placeholder="请输入关键词"
+          class="input input-bordered w-80"
+          @keyup.enter="searchInfo"
         />
       </div>
       <div>
-        <button @click="searchInfo" class="svg-hover mx-2 flex-1">
+        <button
+          @click="searchInfo"
+          class="svg-hover mx-2 flex-1"
+          aria-label="搜索"
+          aria-pressed="false"
+        >
           <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="40"
-              height="40"
-              viewBox="0 0 24 24"
+            aria-hidden="true"
+            xmlns="http://www.w3.org/2000/svg"
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
           >
             <path
-                fill="#999999"
-                d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
+              fill="#999999"
+              d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"
             />
           </svg>
         </button>
@@ -185,6 +206,7 @@ const searchInfo = () => {
               @dragstart.prevent
               v-if="useStore.loginUser.avatar != ''"
               :src="useStore.loginUser.avatar"
+              alt="ByteOJ出品"
             />
             <span v-else class="loading loading-dots loading-sm"></span>
           </div>
@@ -284,8 +306,13 @@ const searchInfo = () => {
                 useStore.loginUser.role != ACCESS_ENUM.NOT_LOGIN
               "
             >
-              <button @click.prevent="logout">
+              <button
+                @click.prevent="logout"
+                aria-label="切换主题颜色"
+                aria-pressed="false"
+              >
                 <svg
+                  aria-hidden="true"
                   t="1711436415500"
                   v-if="darkTheme === 'ByteOJDark'"
                   class="ml-4 icon"
@@ -367,19 +394,6 @@ const searchInfo = () => {
                 登陆/注册
               </router-link>
             </li>
-            <span>
-              <dialog
-                id="my_modal_5"
-                class="modal modal-bottom sm:modal-middle mx-auto"
-              >
-                <UserLoginView />
-              </dialog>
-            </span>
-            <span>
-              <dialog id="my_modal_2" class="modal">
-                <UserRegisterView />
-              </dialog>
-            </span>
           </ul>
         </div>
       </div>
@@ -392,15 +406,7 @@ const searchInfo = () => {
     fill: rgba(2, 132, 199, 0.99);
   }
 }
-.container {
-  width: 70%;
-  display: flex;
-}
-
 .bg-base-100 {
   padding: 0;
-}
-.a {
-  position: absolute;
 }
 </style>

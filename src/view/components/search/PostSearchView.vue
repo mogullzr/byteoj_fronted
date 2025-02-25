@@ -2,11 +2,11 @@
 import { onMounted, ref, Ref, watch } from "vue";
 import dayjs, { Dayjs } from "dayjs";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
-import {useRoute, useRouter} from "vue-router";
-import {PostsControllerService, SearchRequest} from "../../../../generated";
+import { useRoute, useRouter } from "vue-router";
+import { PostsControllerService, SearchRequest } from "../../../../generated";
 
 const props = defineProps<{
-  dataList: any
+  dataList: any;
 }>();
 const router = useRouter();
 const route = useRoute();
@@ -23,17 +23,24 @@ const dataListDeal = () => {
   const seconds = ref();
 
   for (let item = 0; item < dataList.value?.length; item++) {
-    dataList.value[item].create_time = ref<Dayjs>(dataList.value[item].create_time);
+    dataList.value[item].create_time = ref<Dayjs>(
+      dataList.value[item].create_time
+    );
 
     if (dataList.value[item].content?.length > 200) {
       dataList.value[item].is_hidden = 1;
-      dataList.value[item].extra_content = dataList.value[item].content.substring(200);
-      dataList.value[item].content = dataList.value[item].content.substring(0, 200);
+      dataList.value[item].extra_content =
+        dataList.value[item].content.substring(200);
+      dataList.value[item].content = dataList.value[item].content.substring(
+        0,
+        200
+      );
     } else {
       dataList.value[item].is_hidden = 2;
     }
 
-    TimeStamp.value = dayjs(nowDate.value).diff(dayjs(dataList.value[item].create_time)) / 1000;
+    TimeStamp.value =
+      dayjs(nowDate.value).diff(dayjs(dataList.value[item].create_time)) / 1000;
 
     if (TimeStamp.value < 0) {
       dataList.value[item].create_time = ref("");
@@ -81,30 +88,36 @@ const dataListDeal = () => {
   }
 };
 
-watch(() => props.dataList, (newVal) => {
-  dataList.value = newVal;
-  dataListDeal();
-});
+watch(
+  () => props.dataList,
+  (newVal) => {
+    dataList.value = newVal;
+    dataListDeal();
+  }
+);
 
 onMounted(() => {
   dataListDeal();
 });
 
-const num:Ref<number> = ref(0);
+const num: Ref<number> = ref(0);
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "algorithm",
   difficulty: route.query.difficulty ?? "",
-  keyword:  route.query.keyword ?? "",
+  keyword: route.query.keyword ?? "",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
   sourceList: route.query.sourceList ?? [],
-  tagsList: route.query.tagsList ?? []
+  tagsList: route.query.tagsList ?? [],
 } as any);
 </script>
 
 <template>
-  <div class="mx-auto font-bold text-gray-400 text-center" v-if="dataList?.length === 0">
-      <span class="my-4" style="font-size: 4em"> 没有搜索到任何信息┭┮﹏┭┮ </span>
+  <div
+    class="mx-auto font-bold text-gray-400 text-center"
+    v-if="dataList?.length === 0"
+  >
+    <span class="my-4" style="font-size: 4em"> 没有搜索到任何信息┭┮﹏┭┮ </span>
   </div>
   <div v-for="data in dataList" class="post-item">
     <div class="font-bold">
@@ -113,11 +126,7 @@ const searchRequest: Ref<SearchRequest> = ref({
     <div class="flex mt-4">
       <router-link class="avatar" :to="'/user/space/' + data.uuid">
         <div class="rounded-full w-12 mx-3">
-          <img
-              @dragstart.prevent
-              :src="data.avatar"
-              alt="Mogullzr小刘的OJ项目"
-          />
+          <img @dragstart.prevent :src="data.avatar" alt="ByteOJ出品" />
         </div>
       </router-link>
       <div class="flex-1">
@@ -126,9 +135,7 @@ const searchRequest: Ref<SearchRequest> = ref({
           {{ data.school }}
         </div>
       </div>
-      <div class="text-gray-500">
-        {{ data.create_time }}{{ data.pattern }}
-      </div>
+      <div class="text-gray-500">{{ data.create_time }}{{ data.pattern }}</div>
     </div>
     <div class="m-6 flex">
       <div class="mx-4">
@@ -141,7 +148,12 @@ const searchRequest: Ref<SearchRequest> = ref({
     </div>
     <!-- 悬浮选股按钮 -->
     <div class="hover-button">
-      <button @click="router.push('/posts/' + data.post_id)" class="select-button font-bold">点击进入帖子</button>
+      <button
+        @click="router.push('/posts/' + data.post_id)"
+        class="select-button font-bold"
+      >
+        点击进入帖子
+      </button>
     </div>
   </div>
 </template>
@@ -174,7 +186,7 @@ const searchRequest: Ref<SearchRequest> = ref({
 }
 
 .select-button {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
   border: none;
   padding: 8px 16px;

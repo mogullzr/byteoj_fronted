@@ -180,7 +180,11 @@ const goBack = () => {
                 >
                   <div class="avatar">
                     <div class="w-12 rounded-full">
-                      <img @dragstart.prevent :src="record.avatar" />
+                      <img
+                        @dragstart.prevent
+                        :src="record.avatar"
+                        alt="ByteOJ出品"
+                      />
                     </div>
                   </div>
                   {{ record.user_name }}
@@ -328,7 +332,7 @@ const goBack = () => {
       <div v-if="!isLoading" class="flex-none m-10">
         <button class="avatar">
           <div class="rounded-full w-24 align-center">
-            <img @dragstart.prevent :src="record.avatar" />
+            <img @dragstart.prevent :src="record.avatar" alt="ByteOJ出品" />
           </div>
           <router-link
             class="link link-hover link-primary font-bold text-blue-500 mx-4 py-8 text-2xl"
@@ -379,7 +383,7 @@ const goBack = () => {
     <figure style="width: 400px">
       <img
         src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/879a61e96ab7414f909ff14f1f6bf93a.jpeg"
-        alt="img"
+        alt="ByteOJ出品"
       />
     </figure>
     <div class="card-body">
