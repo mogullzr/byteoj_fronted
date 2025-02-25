@@ -7,7 +7,6 @@ import {
 
 import UserStore from "@/store/user";
 import router from "@/router";
-import DraggableWindowView from "@/components/Card/DraggableWindowView.vue";
 
 const emit = defineEmits(["toggle-navbar"]);
 const useStore = UserStore();
@@ -30,7 +29,6 @@ const changeShow = async (key: number) => {
     }
   }
 };
-
 // 上传图片
 const upLoad_1 = () => {
   let upLoadInput: any = document.getElementById("upload");
@@ -38,30 +36,34 @@ const upLoad_1 = () => {
 };
 
 // 上传图片
+// 上传图片
 const upLoad_2 = async () => {
   let upLoadInput: any = document.getElementById("upload");
-  let reader = new FileReader();
-  reader.onload = async function (e: any) {
-    if (reader.readyState === 2) {
-      // 加载完毕后赋值
-      upLoadInput.src = e.target.result;
-      const res = await UserControllerService.userUploadPictureUsingPost(
-        upLoadInput.src,
-        1
-      );
+  const fileList = upLoadInput.files; // 获取 FileList 对象
 
-      if (res.code === 0) {
-        pictures.value = [];
-        pictures.value.push(res.data);
-        console.log("图片上传成功！！！");
-      } else {
-        console.log("图片上传失败！！！");
-      }
+  if (!fileList || fileList.length === 0) {
+    console.log("未选择文件");
+    return;
+  }
+
+  // 从 FileList 中获取第一个文件
+  try {
+    const res = await UserControllerService.userUploadPictureUsingPost(
+      fileList, // 直接传递 File 对象
+      1
+    );
+
+    if (res.code === 0) {
+      pictures.value = [];
+      pictures.value.push(res.data);
+      console.log("图片上传成功！！！");
+    } else {
+      console.log("图片上传失败！！！");
     }
-  };
-  reader.readAsDataURL(upLoadInput.files[0]);
+  } catch (error) {
+    console.error("上传过程中发生错误:", error);
+  }
 };
-
 // 设置背景图片查看效果
 const userSetPicture = async (picture_address: undefined | string) => {
   useStore.loginUser.background_picture = picture_address;
@@ -77,7 +79,6 @@ const SetPicture = async () => {
     console.log("ok");
   }
 };
-
 // 删除上传过的图片
 const DeletePicture = async (id: number | undefined) => {
   const res = await UserControllerService.userDeleteBackgroundUsingPost(id);
@@ -239,6 +240,7 @@ onUnmounted(() => {
                       @change="upLoad_2"
                       id="upload"
                       type="file"
+                      accept="image/*"
                       style="display: none"
                     />
                   </button>

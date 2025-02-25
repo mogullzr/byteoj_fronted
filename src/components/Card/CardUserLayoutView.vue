@@ -243,26 +243,29 @@ const upLoadAvatar = () => {
 const LoadAvatar = async (event: any) => {
   isLoading.value = true;
   let upLoadInput: any = document.getElementById("uploadAvatar");
-  let reader = new FileReader();
-  reader.onload = async function (e: any) {
-    if (reader.readyState === 2) {
-      //加载完毕后赋值
-      upLoadInput.src = e.target.result;
-      userStore.loginUser.avatar = upLoadInput.src;
-      const res = await UserControllerService.userUploadPictureUsingPost(
-        upLoadInput.src,
-        0
-      );
+  const fileList = upLoadInput.files; // 获取 FileList 对象
 
-      if (res.code === 0) {
-        console.log("信息上传成功！！！");
-      } else {
-        console.log("信息上传失败！！！");
-      }
+  if (!fileList || fileList.length === 0) {
+    console.log("未选择文件");
+    return;
+  }
+
+  // 从 FileList 中获取第一个文件
+  try {
+    const res = await UserControllerService.userUploadPictureUsingPost(
+      fileList, // 直接传递 File 对象
+      0
+    );
+
+    if (res.code === 0) {
+      loginUser.avatar = res.data;
       isLoading.value = false;
+    } else {
+      console.log("图片上传失败！！！");
     }
-  };
-  reader.readAsDataURL(upLoadInput.files[0]);
+  } catch (error) {
+    console.error("上传过程中发生错误:", error);
+  }
 };
 </script>
 
