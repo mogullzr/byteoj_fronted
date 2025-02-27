@@ -173,119 +173,43 @@ const fillInput = (question: string) => {
 const updateModel = () => {
   deepSeekRequest.value.model = selectedModel.value;
 };
-//
-// // 处理 SSE 数据流
-// const handleSSEData = async (
-//   reader: ReadableStreamDefaultReader<Uint8Array>
-// ) => {
-//   const decoder = new TextDecoder();
-//   let buffer = "";
-//   let aiResponse = "";
-//   // 添加 AI 消息占位符
-//   chatHistory.value.push({
-//     role: "system",
-//     content: aiResponse,
-//   });
-//   while (true) {
-//     const { done, value } = await reader.read();
-//     if (done) break;
-//     buffer += decoder.decode(value, { stream: true });
-//     const lines = buffer.split("\n");
-//     buffer = lines.pop() || "";
-//     for (const line of lines) {
-//       if (line.startsWith("data:")) {
-//         try {
-//           const jsonString = line.slice(5).trim();
-//           const data = JSON.parse(jsonString);
-//           if (data.content) {
-//             if (data.content === "[DONE]") {
-//               return; // 结束流
-//             } else {
-//               aiResponse += data.content;
-//               // 更新最后一条 AI 消息的内容
-//               chatHistory.value[chatHistory.value.length - 1].content =
-//                 aiResponse;
-//             }
-//           }
-//         } catch (message) {}
-//       }
-//     }
-//   }
-// };
-//
-// // 开始聊天
-// const startChat = async () => {
-//   if (currentChat.value.content.trim() === "") {
-//     warning("请输入问题！！！");
-//     return;
-//   }
-//
-//   // 添加用户消息
-//   chatHistory.value.push({
-//     role: "user",
-//     content: currentChat.value.content,
-//   });
-//   isLoading.value = true; // 开始加载
-//   currentChat.value.content = ""; // 清空输入框
-//   try {
-//     // 必要信息
-//     let competition_id = parseInt(path.toString().split("/")[2]);
-//     const current_language: Ref<string> = ref(
-//       localStorage.getItem("current_language") ?? "C++"
-//     );
-//     let index = path.toString().split("/")[4];
-//
-//     // 创建 DeepSeekRequest 对象
-//     const requestBody: DeepSeekRequest = {
-//       messageList: chatHistory.value,
-//       model: deepSeekRequest.value.model, // 使用当前选中的模型状态
-//       problem_id: problem_id.value,
-//       status: props.status ?? 0,
-//       code:
-//         localStorage.getItem(
-//           competition_id +
-//             "-" +
-//             index +
-//             "-" +
-//             useStore.loginUser.uuid +
-//             "-" +
-//             current_language.value
-//         ) ?? "",
-//     };
-//     const response = await fetch("http://localhost:7091/api/ai/ask", {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: JSON.stringify(requestBody),
-//     });
-//     if (!response.ok) {
-//       throw new Error(`请求失败：${response.statusText}`);
-//     }
-//     const reader = response.body?.getReader();
-//     if (!reader) {
-//       throw new Error("无法读取响应流！");
-//     }
-//     await handleSSEData(reader); // 处理 SSE 数据流
-//   } catch (err) {
-//     console.error("Error:", err);
-//     error("请求失败，请稍后重试！");
-//   } finally {
-//     isLoading.value = false; // 结束加载
-//   }
-// };
-// 创建 WebSocket 连接
-const socket = new WebSocket("ws://localhost:7091/ws");
-let aiResponse = "";
-// 处理 WebSocket 消息
-socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.content === "[DONE]") {
-    return; // 结束流
-  } else {
-    aiResponse += data.content;
-    // 更新最后一条 AI 消息的内容
-    chatHistory.value[chatHistory.value.length - 1].content = aiResponse;
+
+// 处理 SSE 数据流
+const handleSSEData = async (
+  reader: ReadableStreamDefaultReader<Uint8Array>
+) => {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let aiResponse = "";
+  // 添加 AI 消息占位符
+  chatHistory.value.push({
+    role: "system",
+    content: aiResponse,
+  });
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        try {
+          const jsonString = line.slice(5).trim();
+          const data = JSON.parse(jsonString);
+          if (data.content) {
+            if (data.content === "[DONE]") {
+              return; // 结束流
+            } else {
+              aiResponse += data.content;
+              // 更新最后一条 AI 消息的内容
+              chatHistory.value[chatHistory.value.length - 1].content =
+                aiResponse;
+            }
+          }
+        } catch (message) {}
+      }
+    }
   }
 };
 
@@ -293,13 +217,6 @@ socket.onmessage = (event) => {
 const startChat = async () => {
   if (currentChat.value.content.trim() === "") {
     warning("请输入问题！！！");
-    return;
-  }
-
-  // 检查 WebSocket 连接状态
-  if (socket.readyState !== WebSocket.OPEN) {
-    console.error("WebSocket 连接未打开，当前状态:", socket.readyState);
-    error("WebSocket 连接未打开，请重试！");
     return;
   }
 
@@ -335,9 +252,23 @@ const startChat = async () => {
             current_language.value
         ) ?? "",
     };
-
-    // 发送 WebSocket 消息
-    socket.send(JSON.stringify(requestBody));
+    const response = await fetch("https://www.byteoj.com/api/ai/ask", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: document.cookie, // 添加 Cookie 到请求头
+      },
+      body: JSON.stringify(requestBody),
+      credentials: "include", // 确保发送跨域请求时包含 Cookie
+    });
+    if (!response.ok) {
+      throw new Error(`请求失败：${response.statusText}`);
+    }
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error("无法读取响应流！");
+    }
+    await handleSSEData(reader); // 处理 SSE 数据流
   } catch (err) {
     console.error("Error:", err);
     error("请求失败，请稍后重试！");
@@ -345,6 +276,77 @@ const startChat = async () => {
     isLoading.value = false; // 结束加载
   }
 };
+// 创建 WebSocket 连接
+// const socket = new WebSocket("ws://localhost:7091/ws");
+// let aiResponse = "";
+// // 处理 WebSocket 消息
+// socket.onmessage = (event) => {
+//   const data = JSON.parse(event.data);
+//   if (data.content === "[DONE]") {
+//     return; // 结束流
+//   } else {
+//     aiResponse += data.content;
+//     // 更新最后一条 AI 消息的内容
+//     chatHistory.value[chatHistory.value.length - 1].content = aiResponse;
+//   }
+// };
+//
+// // 开始聊天
+// const startChat = async () => {
+//   if (currentChat.value.content.trim() === "") {
+//     warning("请输入问题！！！");
+//     return;
+//   }
+//
+//   // 检查 WebSocket 连接状态
+//   if (socket.readyState !== WebSocket.OPEN) {
+//     console.error("WebSocket 连接未打开，当前状态:", socket.readyState);
+//     error("WebSocket 连接未打开，请重试！");
+//     return;
+//   }
+//
+//   // 添加用户消息
+//   chatHistory.value.push({
+//     role: "user",
+//     content: currentChat.value.content,
+//   });
+//   isLoading.value = true; // 开始加载
+//   currentChat.value.content = ""; // 清空输入框
+//   try {
+//     // 必要信息
+//     let competition_id = parseInt(path.toString().split("/")[2]);
+//     const current_language: Ref<string> = ref(
+//       localStorage.getItem("current_language") ?? "C++"
+//     );
+//     let index = path.toString().split("/")[4];
+//
+//     // 创建 DeepSeekRequest 对象
+//     const requestBody: DeepSeekRequest = {
+//       messageList: chatHistory.value,
+//       model: deepSeekRequest.value.model, // 使用当前选中的模型状态
+//       problem_id: problem_id.value,
+//       status: props.status ?? 0,
+//       code:
+//         localStorage.getItem(
+//           competition_id +
+//             "-" +
+//             index +
+//             "-" +
+//             useStore.loginUser.uuid +
+//             "-" +
+//             current_language.value
+//         ) ?? "",
+//     };
+//
+//     // 发送 WebSocket 消息
+//     socket.send(JSON.stringify(requestBody));
+//   } catch (err) {
+//     console.error("Error:", err);
+//     error("请求失败，请稍后重试！");
+//   } finally {
+//     isLoading.value = false; // 结束加载
+//   }
+// };
 // 监听 chatHistory 的变化，自动滚动到底部
 watch(
   chatHistory,
