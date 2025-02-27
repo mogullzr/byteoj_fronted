@@ -174,12 +174,7 @@ const searchInfo = () => {
         />
       </div>
       <div>
-        <button
-          @click="searchInfo"
-          class="svg-hover mx-2 flex-1"
-          aria-label="搜索"
-          aria-pressed="false"
-        >
+        <button @click="searchInfo" class="svg-hover mx-2 flex-1">
           <svg
             aria-hidden="true"
             xmlns="http://www.w3.org/2000/svg"
@@ -306,11 +301,7 @@ const searchInfo = () => {
                 useStore.loginUser.role != ACCESS_ENUM.NOT_LOGIN
               "
             >
-              <button
-                @click.prevent="logout"
-                aria-label="切换主题颜色"
-                aria-pressed="false"
-              >
+              <button @click.prevent="logout">
                 <svg
                   aria-hidden="true"
                   t="1711436415500"

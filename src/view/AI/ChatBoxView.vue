@@ -5,11 +5,11 @@
     <div class="model-selector">
       <label for="model-select">选择模型：</label>
       <select id="model-select" v-model="selectedModel" @change="updateModel">
-        <option value="deepseek-chat">DeepSeek V3 线路一</option>
-        <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 线路二</option>
         <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
           DeepSeek Reasoner
         </option>
+        <option value="deepseek-chat">DeepSeek V3 线路一</option>
+        <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 线路二</option>
       </select>
     </div>
     <!-- 常见问题按钮组 -->
@@ -99,6 +99,14 @@
         @keyup.enter="startChat"
         :disabled="isLoading"
       />
+      <button
+        :disabled="isLoading"
+        @click="clearMessage"
+        class="ask-button"
+        style="background-color: #ff6a6b"
+      >
+        {{ isLoading ? "禁用中..." : "清空记录" }}
+      </button>
       <button @click="startChat" class="ask-button" :disabled="isLoading">
         {{ isLoading ? "发送中..." : "发送" }}
       </button>
@@ -142,7 +150,7 @@ const problem_id: Ref<any> = ref(path.toString().split("/")[3]);
 
 const deepSeekRequest: Ref<DeepSeekRequest> = ref({
   messageList: [],
-  model: "deepseek-chat", // 默认模型
+  model: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B", // 默认模型
   problem_id: problem_id.value,
   status: 0,
   code: "",
@@ -152,9 +160,9 @@ const currentChat: Ref<ChatMessage> = ref({
   content: "",
 } as ChatMessage);
 const chatHistory: Ref<ChatMessage[]> = ref([]);
-const selectedModel = ref("deepseek-chat"); // 默认选中第一个模型
+const selectedModel = ref("deepseek-ai/DeepSeek-R1-Distill-Llama-70B"); // 默认选中第一个模型
 const isLoading = ref(false); // 加载状态
-const chatOutput = ref<HTMLElement | null>(); // 聊天输出容器的引用
+const chatOutput = ref<any>(); // 聊天输出容器的引用
 
 // 常见问题列表
 const quickQuestions = ref([
@@ -236,23 +244,50 @@ const startChat = async () => {
     let index = path.toString().split("/")[4];
 
     // 创建 DeepSeekRequest 对象
-    const requestBody: DeepSeekRequest = {
-      messageList: chatHistory.value,
-      model: deepSeekRequest.value.model, // 使用当前选中的模型状态
-      problem_id: problem_id.value,
-      status: props.status ?? 0,
-      code:
-        localStorage.getItem(
-          competition_id +
-            "-" +
-            index +
-            "-" +
-            useStore.loginUser.uuid +
-            "-" +
-            current_language.value
-        ) ?? "",
-    };
-    const response = await fetch("https://www.byteoj.com/api/ai/ask", {
+    let requestBody: DeepSeekRequest = {} as DeepSeekRequest;
+    if (route.path.split("/")[1] == "problems") {
+      requestBody = {
+        messageList: chatHistory.value,
+        model: deepSeekRequest.value.model, // 使用当前选中的模型状态
+        problem_id: problem_id.value,
+        status: props.status ?? 0,
+        code:
+          localStorage.getItem(
+            problem_id.value +
+              "-" +
+              useStore.loginUser.uuid +
+              "-" +
+              current_language.value
+          ) ?? "",
+      };
+    } else if (route.path.split("/")[1] == "competition") {
+      error("对不起，不允许在竞赛模式下使用该功能！！！");
+      return;
+      // requestBody = {
+      //   messageList: chatHistory.value,
+      //   model: deepSeekRequest.value.model, // 使用当前选中的模型状态
+      //   problem_id: problem_id.value,
+      //   status: props.status ?? 0,
+      //   code:
+      //     localStorage.getItem(
+      //       competition_id +
+      //         "-" +
+      //         index +
+      //         "-" +
+      //         useStore.loginUser.uuid +
+      //         "-" +
+      //         current_language.value
+      //     ) ?? "",
+      // };
+    } else {
+      requestBody = {
+        messageList: chatHistory.value,
+        model: deepSeekRequest.value.model, // 使用当前选中的模型状态
+        status: props.status ?? 0,
+      } as any;
+    }
+
+    const response: any = await fetch("https://www.byteoj.com/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -262,7 +297,8 @@ const startChat = async () => {
       credentials: "include", // 确保发送跨域请求时包含 Cookie
     });
     if (!response.ok) {
-      throw new Error(`请求失败：${response.statusText}`);
+      error(response.message);
+      return;
     }
     const reader = response.body?.getReader();
     if (!reader) {
@@ -413,6 +449,13 @@ onMounted(() => {
     }
   }
 });
+
+const clearMessage = () => {
+  localStorage.removeItem(
+    problem_id.value + "-" + useStore.loginUser.uuid + "-AI"
+  );
+  chatHistory.value = [];
+};
 </script>
 
 <style scoped>
@@ -555,6 +598,7 @@ onMounted(() => {
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
+  font-weight: bold;
   transition: background-color 0.3s ease;
 }
 

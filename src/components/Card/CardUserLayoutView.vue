@@ -381,11 +381,7 @@ const LoadAvatar = async (event: any) => {
     <!--    右侧卡片-->
     <div class="card bg-base-100 w-7/12 shadow-xl">
       <div class="card-body">
-        <button
-          @click="upLoadAvatar"
-          aria-label="上传头像"
-          aria-pressed="false"
-        >
+        <button @click="upLoadAvatar">
           <div class="avatar">
             <div
               :class="
@@ -597,8 +593,6 @@ const LoadAvatar = async (event: any) => {
                 v-for="tag in user_tags_list"
                 :key="tag"
                 @click="tagsRemove(tag)"
-                aria-label="删除标签"
-                aria-pressed="false"
               >
                 <div class="badge badge-success gap-2">
                   <svg
@@ -624,8 +618,6 @@ const LoadAvatar = async (event: any) => {
               v-for="(tag, index) in tags_list"
               :key="tag"
               @click="tagsAdd(tag)"
-              aria-label="添加标签"
-              aria-pressed="false"
             >
               <div
                 :class="'badge badge-lg gap-2 ' + tags_list_color[index]"
@@ -637,14 +629,7 @@ const LoadAvatar = async (event: any) => {
           </div>
         </div>
         <!-- 保存-->
-        <button
-          class="btn btn-success"
-          @click="modifyUserLogin"
-          aria-label="保存"
-          aria-pressed="false"
-        >
-          保存
-        </button>
+        <button class="btn btn-success" @click="modifyUserLogin">保存</button>
       </div>
     </div>
   </div>
