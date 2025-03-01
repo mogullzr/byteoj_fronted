@@ -21,7 +21,7 @@ const changeShow = (key: number) => {
   <div
     role="tablist"
     class="tabs tabs-lifted tabs-lg mx-auto"
-    style="width: 1300px"
+    style="width: 1150px"
   >
     <input
       type="radio"
@@ -35,12 +35,12 @@ const changeShow = (key: number) => {
     />
     <div
       role="tabpanel"
-      class="tab-content bg-base-100 border-base-200 rounded-box tabs-lg"
+      class="tab-content bg-base-100 border-base-200 rounded-box tabs-lg mx-auto"
       style="width: 100%; height: 100%"
       v-if="isShow === 0"
     >
-      <ProblemAlgorithmContentView v-if="issShow == '0'"/>
-      <ProblemAlgorithmTransformContentView v-else/>
+      <ProblemAlgorithmContentView v-if="issShow == '0'" />
+      <ProblemAlgorithmTransformContentView v-else />
     </div>
     <input
       type="radio"

@@ -3,7 +3,7 @@ import CardLayoutView from "@/components/Card/CardUserLayoutView.vue";
 </script>
 
 <template>
-  <div class="grid">
+  <div class="grid mx-auto" style="width: 1150px">
     <card-layout-view />
   </div>
 </template>

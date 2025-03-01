@@ -74,8 +74,8 @@ const checkCompetition = (num: number) => {
 </script>
 
 <template>
-  <div class="flex mx-auto" style="max-width: 1550px">
-    <div class="flex-1 ml-28 mr-12 w-2/3">
+  <div class="flex mx-auto" style="max-width: 1150px">
+    <div class="flex-1 mr-12 w-5/12">
       <div class="card align-center bg-white w-full my-4 p-4">
         <div class="flex">
           <div class="flex">
@@ -101,7 +101,6 @@ const checkCompetition = (num: number) => {
           >
             创建比赛
           </button>
-          <!-- You can open the modal using ID.showModal() method -->
           <dialog id="my_modal_3" class="modal">
             <div class="modal-box w-11/12 max-w-2xl">
               <form method="dialog">
@@ -529,8 +528,8 @@ const checkCompetition = (num: number) => {
         </button>
       </div>
     </div>
-    <div class="w-1/4">
-      <div class="card card-compact bg-base-100 w-96 shadow-2xl pt-4 my-4">
+    <div style="width: 30%">
+      <div class="card card-compact bg-base-100 w-80 shadow-2xl pt-4 my-4">
         <div class="card-body">
           <div class="card-title align-center text-blue-600 text-3xl">
             <div>
@@ -540,7 +539,7 @@ const checkCompetition = (num: number) => {
           </div>
           <div>
             <router-link
-              class="w-full btn btn-primary text-white text-2xl"
+              class="w-full btn btn-primary text-white text-xl"
               :to="last_problem.problem_url"
             >
               继续刷题
@@ -548,7 +547,7 @@ const checkCompetition = (num: number) => {
           </div>
         </div>
       </div>
-      <div class="card card-compact bg-base-100 w-96 shadow-2xl pt-4">
+      <div class="card card-compact bg-base-100 w-80 shadow-2xl pt-4">
         <div class="card-body">
           <div class="card-title align-center text-red-600 text-3xl">
             巅峰Rating排行榜

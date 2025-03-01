@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from "vue";
 import OfficialBoxView from "@/view/special/OfficialBoxView.vue";
 
-const activeTab = ref('官网');
+const activeTab = ref("官网");
 
-const tabs = [
-  { id: '官网', label: '官网' },
-];
+const tabs = [{ id: "官网", label: "官网" }];
 
 const setActiveTab = (tabId: string) => {
   activeTab.value = tabId;
@@ -14,18 +12,18 @@ const setActiveTab = (tabId: string) => {
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow-xl mx-40">
+  <div class="card bg-base-100 shadow-xl mx-auto" style="width: 1150px">
     <div class="card-body">
       <h2 class="text-5xl font-bold text-center">ByteOJ应用中心</h2>
       <div class="mt-6">
         <!-- Tab 栏 -->
         <div class="tab-container">
           <button
-              style="font-size: 20px"
-              v-for="tab in tabs"
-              :key="tab.id"
-              @click="setActiveTab(tab.id)"
-              :class="[
+            style="font-size: 20px"
+            v-for="tab in tabs"
+            :key="tab.id"
+            @click="setActiveTab(tab.id)"
+            :class="[
               'tab-button',
               'font-bold',
               activeTab === tab.id ? 'active' : '',

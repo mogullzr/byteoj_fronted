@@ -464,7 +464,7 @@ const clearMessage = () => {
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  max-width: 1000px;
+  max-width: 1150px;
   margin: 0 auto;
   background-color: #ffffff;
   border-radius: 12px;

@@ -363,8 +363,8 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="container flex mx-auto">
-    <div class="card lg:card-side shadow-xl ml-72 bg-white">
+  <div class="container flex mx-auto" style="width: 1150px">
+    <div class="card lg:card-side shadow-xl bg-white">
       <div class="card-body flex">
         <div class="flex">
           <div class="avatar">
@@ -759,13 +759,13 @@ onBeforeUnmount(() => {
     <div
       class="card lg:card-side shadow-lg bg-gradient-to-r bg-white lg:w-1/4 fixed flex overflow-auto scrollable-div"
       style="
-        width: 400px;
+        width: 350px;
         max-height: 720px;
         overflow-y: auto;
         border: 2px solid #1976d2;
         z-index: 9999;
         position: fixed;
-        margin-left: 1080px;
+        margin-left: 780px;
       "
     >
       <nav class="p-6 w-full">

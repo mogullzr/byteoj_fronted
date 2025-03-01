@@ -150,7 +150,7 @@ const goBack = () => {
 </script>
 
 <template>
-  <div v-if="!auth_status" class="flex mx-40">
+  <div v-if="!auth_status" class="flex mx-auto" style="width: 1150px">
     <div class="card-side rounded-xl bg-base-100 shadow-xl mx-5 w-2/3">
       <div class="m-6" v-if="!isLoading">
         <div class="my-2">

@@ -34,7 +34,7 @@ onMounted(async () => {
             {{ problems.problems_type }}
           </div>
           <div class="text-sm font-bold" style="color: #337ab7">
-            <span>完成情况：</span>
+            <span>情况：</span>
             <span>{{ problems.ac_num }} /{{ problems.problem_num }}</span>
           </div>
         </div>
@@ -78,7 +78,6 @@ onMounted(async () => {
                   <router-link
                     class="link link-hover flex-1"
                     :to="'/problems/algorithm/' + problem.problem_id"
-                    style="font-size: 14px"
                   >
                     ByteOJ&nbsp;{{ problem.problem_id }}.{{
                       problem.problem_name

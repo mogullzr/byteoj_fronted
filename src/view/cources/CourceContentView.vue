@@ -54,7 +54,7 @@ const changeShow = (key: number) => {
 </script>
 
 <template>
-  <div class="card bg-base-100 shadow-xl mx-36">
+  <div class="card bg-base-100 shadow-xl mx-auto" style="width: 1150px">
     <div class="flex p-4 w-full">
       <div
         class="text-sky-500 link link-hover hover:text-sky-400 text-2xl flex-1 float-left my-auto"

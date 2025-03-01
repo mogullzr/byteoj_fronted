@@ -263,7 +263,7 @@ const changeShow = (key: number) => {
     </svg>
     <span>{{ message }}</span>
   </div>
-  <div class="mx-auto" style="max-width: 1250px">
+  <div class="mx-auto" style="max-width: 1150px">
     <div class="card-plus card shadow-xl bg-white rounded-2xl">
       <div id="header" class="rounded-2xl flex">
         <div id="header-content" class="mx-auto text-white w-7/12">

@@ -276,7 +276,7 @@ const scroll = async () => {
   </div>
   <div
     class="card bg-neutral text-neutral-content mx-auto"
-    style="max-width: 1200px"
+    style="max-width: 1150px"
   >
     <div
       class="card-body text-black overflow-y-auto"

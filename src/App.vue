@@ -17,6 +17,7 @@
 
 <style scoped>
 .background-container {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont;
   /* 背景图片固定 */
   background-attachment: fixed;
   /* 背景图片覆盖整个容器 */

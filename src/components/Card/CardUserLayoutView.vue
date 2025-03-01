@@ -270,11 +270,7 @@ const LoadAvatar = async (event: any) => {
 </script>
 
 <template>
-  <div
-    role="alert"
-    class="alert alert-success w-10/12 mx-36"
-    v-if="status == 0"
-  >
+  <div role="alert" class="alert alert-success w-10/12" v-if="status == 0">
     <svg
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
@@ -290,32 +286,11 @@ const LoadAvatar = async (event: any) => {
     </svg>
     <span>{{ message }}</span>
   </div>
-
-  <div
-    role="alert"
-    class="alert alert-error w-10/12 mx-36"
-    v-else-if="status == 1"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      class="h-6 w-6 shrink-0 stroke-current"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <path
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        stroke-width="2"
-        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-    <span>{{ message }}</span>
-  </div>
-  <div class="flex ml-32 gap-4">
+  <div class="flex gap-4">
     <!--    左侧卡片-->
-    <div class="card bg-base-100 w-3/12 shadow-xl">
-      <div class="card-body avatar">
-        <div class="rounded-full">
+    <div class="card bg-base-100 w-3/12 shadow-xl" style="height: 700px">
+      <div class="avatar m-4">
+        <div class="rounded-xl">
           <img
             @dragstart.prevent
             v-if="loginUser.avatar != ''"
@@ -326,23 +301,20 @@ const LoadAvatar = async (event: any) => {
         </div>
       </div>
       <div class="divider"></div>
-      <span
-        class="card-body m-auto p-5 py-1"
-        style="font-weight: bold; font-size: 20px"
-      >
+      <span class="m-auto p-5 py-1" style="font-weight: bold; font-size: 20px">
         {{ loginUser.account }}
       </span>
       <div class="divider"></div>
-      <div style="overflow: hidden" class="m-auto">
-        <div style="float: left; margin: 0 50px">
-          <div>好友数</div>
-          <div style="margin: 0 auto">{{ friends_list.length }}</div>
+      <div class="flex w-full">
+        <div class="flex-1 w-1/3" style="margin: 0 50px">
+          <div class="text-gray-500">好友</div>
+          <div style="text-align: center">{{ friends_list.length }}</div>
         </div>
-        <div style="float: left; margin: 0 50px">
-          <div>阅读量</div>
-          <span>
+        <div style="margin: 0 50px">
+          <div class="text-gray-500">阅读量</div>
+          <div style="text-align: center">
             {{ loginUser.readings }}
-          </span>
+          </div>
         </div>
       </div>
       <div class="divider"></div>
@@ -379,7 +351,7 @@ const LoadAvatar = async (event: any) => {
       </div>
     </div>
     <!--    右侧卡片-->
-    <div class="card bg-base-100 w-7/12 shadow-xl">
+    <div class="card bg-base-100 w-9/12 shadow-xl">
       <div class="card-body">
         <button @click="upLoadAvatar">
           <div class="avatar">
