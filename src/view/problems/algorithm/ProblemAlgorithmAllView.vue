@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import {onBeforeUpdate, onMounted, onUpdated, Ref, ref, watchEffect} from "vue";
-import {useRoute, useRouter} from "vue-router";
-import {ProblemAlgorithmControllerService, SearchControllerService, SearchRequest} from "../../../../generated";
+import { onBeforeUpdate, onMounted, Ref, ref, watchEffect } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import {
+  ProblemAlgorithmControllerService,
+  SearchControllerService,
+  SearchRequest,
+} from "../../../../generated";
 import UserStore from "@/store/user";
 import Pagination from "@/view/components/Pagination.vue";
 import TagSelector from "@/view/components/TagSelector.vue";
@@ -21,7 +25,7 @@ const HardSum = ref();
 // 0表示默认请求状态，1最后点击为表示根据标签查询，2表示最后点击为根据难度查询
 const flag = ref(0);
 // 用于存储当前选中标签
-const tags_name_list:Ref<string[]> = ref([]);
+const tags_name_list: Ref<string[]> = ref([]);
 // 问题列表
 let problem_list: Ref<any> = ref([]);
 const difficulty_list = useStore.difficulty_list;
@@ -30,41 +34,47 @@ const tagsRelation = useStore.AlgorithmTagsRelation[0];
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "algorithm",
   difficulty: route.query.difficulty ?? "",
-  keyword:  route.query.keyword ?? "",
+  keyword: route.query.keyword ?? "",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
   sourceList: route.query.sourceList ?? [],
-  tagsList: route.query.tagsList ?? []
+  tagsList: route.query.tagsList ?? [],
 } as any);
 // 初始选中的标签
-const initSelected:Ref<any[]> = ref([]);
-const initSource:Ref<any[]> = ref([]);
+const initSelected: Ref<any[]> = ref([]);
+const initSource: Ref<any[]> = ref([]);
 
 // 来源所有标签
-const sourceList:Ref<string[]> = ref(useStore.source_List);
+const sourceList: Ref<string[]> = ref(useStore.source_List);
 const getTagNameById = (id: number, tags: any): string | undefined => {
-  const tag = tags.find(tag => tag.tag_id === id);
+  const tag = tags.find((tag) => tag.tag_id === id);
 
   return tag?.tag_name; // 如果找到，返回 tag_name；否则返回 undefined
 };
-const getTagNamesByIds = (ids: Array<number> | undefined, tags: any): (string | undefined)[] => {
-  return ids.map(id => getTagNameById(id, tags));
+const getTagNamesByIds = (
+  ids: Array<number> | undefined,
+  tags: any
+): (string | undefined)[] => {
+  return ids.map((id) => getTagNameById(id, tags));
 };
 onMounted(async () => {
-  searchRequest.value.keyword = searchRequest.value.keyword?.repl
+  searchRequest.value.keyword = searchRequest.value.keyword?.repl;
 
   await initData();
-  tags_name_list.value = getTagNamesByIds(searchRequest.value.tagsList, tagsRelation);
+  tags_name_list.value = getTagNamesByIds(
+    searchRequest.value.tagsList,
+    tagsRelation
+  );
 
-  for (let item = 0; item < tags_name_list.value.length; item ++) {
+  for (let item = 0; item < tags_name_list.value.length; item++) {
     initSelected.value.push({
       tag_id: searchRequest.value.tagsList[item],
-      tag_name: tags_name_list.value[item]
-    })
+      tag_name: tags_name_list.value[item],
+    });
   }
-  initSelected.value = initSelected.value.map(item => ({
+  initSelected.value = initSelected.value.map((item) => ({
     tag_id: item.id,
-    tag_name: item.name
+    tag_name: item.name,
   }));
   initSource.value = searchRequest.value.sourceList;
   // 请求1
@@ -98,28 +108,42 @@ onMounted(async () => {
 
   if (resHard.code === 0) {
     HardSum.value = resHard.data;
-  } else if (resHard.code === 40101){
+  } else if (resHard.code === 40101) {
     await router.push("/404");
   }
 });
 
 // 挂载完成之后执行
 onBeforeUpdate(() => {
-  initSource.value = searchRequest.value.sourceList
+  initSource.value = searchRequest.value.sourceList;
 });
 
 const convertToFrameNumbers = (str: any): number[] => {
-  if (str.includes(',')) {
-    return str.split(',')
-        .map(item => Number(item))
-        .filter(item => !isNaN(item)); // 过滤无效的数字
+  if (str.includes(",")) {
+    return str
+      .split(",")
+      .map((item: any) => Number(item))
+      .filter((item: any) => !isNaN(item)); // 过滤无效的数字
   } else {
     return [Number(str)]; // 如果没有逗号，直接将单个数字转为数组
   }
 };
+const initData = async () => {
+  const res = await SearchControllerService.searchAllUsingPost(
+    searchRequest.value
+  );
+  if (res.code === 0) {
+    problem_list.value = res.data.dataList;
+    if (problem_list.value.length !== 0) {
+      PageSum.value = res.data.dataList[0].pages;
+    } else {
+      PageSum.value = 1;
+    }
+  }
+};
 
-watchEffect(async ()=>{
-  let tagsList:any= convertToFrameNumbers(route.query.tagsList ?? "");
+watchEffect(async () => {
+  let tagsList: any = convertToFrameNumbers(route.query.tagsList ?? "");
   let sourceList: any = route.query.sourceList?.toString() ?? "";
   if (sourceList.includes(",")) {
     sourceList = sourceList.split(",");
@@ -129,26 +153,15 @@ watchEffect(async ()=>{
   searchRequest.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
-    keyword: decodeURIComponent(<string>route.query.keyword || '') ?? "",
+    keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
     pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
     pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
-    sourceList: sourceList[0] == '' ? [] : sourceList,
-    tagsList: tagsList[0] == 0 ? [] : tagsList
+    sourceList: sourceList[0] == "" ? [] : sourceList,
+    tagsList: tagsList[0] == 0 ? [] : tagsList,
   } as any;
-  console.log(searchRequest.value)
+
   await initData();
-})
-const initData = async () => {
-  const res = await SearchControllerService.searchAllUsingPost(searchRequest.value);
-  if (res.code === 0) {
-    problem_list.value = res.data.dataList;
-    if (problem_list.value.length !== 0) {
-      PageSum.value = res.data.dataList[0].pages;
-    } else{
-      PageSum.value = 1;
-    }
-  }
-}
+});
 
 const searchByDifficulty = async (difficulty_name: string) => {
   searchRequest.value.difficulty = difficulty_name;
@@ -157,102 +170,107 @@ const searchByDifficulty = async (difficulty_name: string) => {
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
   await router.push({
-    query: searchRequest.value
+    query: searchRequest.value,
   });
-}
+};
 
 const findTagIds = (tagNames: string, data: any): (number | null)[] => {
-  let tagNameList:any = [];
+  let tagNameList: any = [];
   if (tagNames.includes(",")) {
-    tagNameList = tagNames.split(',');
+    tagNameList = tagNames.split(",");
   } else {
     tagNameList.push(tagNames);
   }
   tags_name_list.value = tagNameList;
-  return tagNameList.map(name =>
-      data.flat().find(tag => tag.tag_name.split(',').includes(name))?.tag_id ?? null
+  return tagNameList.map(
+    (name) =>
+      data.flat().find((tag) => tag.tag_name.split(",").includes(name))
+        ?.tag_id ?? null
   );
 };
 // 根据算法算法标签查找所有符合条件的题目
 const searchByTag = async (tag_name_list: string) => {
-  searchRequest.value.tagsList = findTagIds(tag_name_list,tagsRelation);
+  searchRequest.value.tagsList = findTagIds(tag_name_list, tagsRelation);
   searchRequest.value.pageNum = 1;
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
   await router.push({
-    query: searchRequest.value
+    query: searchRequest.value,
   });
 };
 
-const highlightKeyword = (text:string, keyword:string) => {
+const highlightKeyword = (text: string, keyword: string) => {
   if (!keyword) return text; // 如果没有关键字，则返回原始文本
 
   // 处理 keyword：去掉多余空格并转义特殊字符
   const escapedKeyword = keyword
-      .trim()
-      .replace(/\s+/g, '\\s+') // 把多个空格转换为 `\s+`
-      .replace(/[-[\]{}()*+?.,\\^$|#]/g, '\\$&'); // 转义正则特殊字符
+    .trim()
+    .replace(/\s+/g, "\\s+") // 把多个空格转换为 `\s+`
+    .replace(/[-[\]{}()*+?.,\\^$|#]/g, "\\$&"); // 转义正则特殊字符
 
   // 创建正则匹配关键字
-  const regExp = new RegExp(`(${escapedKeyword})`, 'gi');
+  const regExp = new RegExp(`(${escapedKeyword})`, "gi");
 
   // 替换匹配部分并高亮显示
   return text.replace(regExp, '<span style="color: red;">$1</span>');
-}
+};
 const searchByKeyword = async () => {
-  searchRequest.value.keyword = searchRequest.value.keyword?.replace("   ", " + ").replace(" ", "")
+  searchRequest.value.keyword = searchRequest.value.keyword
+    ?.replace("   ", " + ")
+    .replace(" ", "");
   searchRequest.value.pageNum = 1;
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
   await router.push({
-    query: searchRequest.value
+    query: searchRequest.value,
   });
 };
 
-const handlePageChange = (page:number) => {
+const handlePageChange = (page: number) => {
   // 修改当前指向的页数
   searchRequest.value.pageNum = page;
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
   router.push({
-    query: searchRequest.value
+    query: searchRequest.value,
   });
-}
+};
 
 // 提取其中的tag_id和tag_name
-const handleSelectedTags = (tags:any) => {
+const handleSelectedTags = (tags: any) => {
   let tags_id_list = "";
   tags_name_list.value = [];
   for (let item = 0; item < tags.length; item++) {
     if (item !== 0) {
-      tags_id_list += ","
+      tags_id_list += ",";
     }
     tags_id_list += tags[item].tag_id;
-    tags_name_list.value.push(tags[item].tag_name)
+    tags_name_list.value.push(tags[item].tag_name);
   }
-  searchRequest.value.tagsList = tags_id_list
+  searchRequest.value.tagsList = tags_id_list;
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   router.push({
-    query: searchRequest.value
+    query: searchRequest.value,
   });
-}
+};
 
 // 点击来源进行搜索
-const handleSourceSelectedTags = (sourceList:string[]) => {
+const handleSourceSelectedTags = (sourceList: string[]) => {
   searchRequest.value.sourceList = sourceList.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString() ?? "";
   router.push({
-    query:searchRequest.value
-  })
-}
+    query: searchRequest.value,
+  });
+};
 </script>
 <template>
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
     <div class="w-7/12 m-auto">
       <div class="font-bold text-center text-4xl">ByteOJ编程题库</div>
+      --- {{ route.query.keyword }} ---
       <div class="w-full my-4 flex">
         <input
           v-model="searchRequest.keyword"
@@ -280,17 +298,17 @@ const handleSourceSelectedTags = (sourceList:string[]) => {
       <div class="flex">
         <div class="flex-1">
           <TagSelector
-              :all-tags="tagsRelation"
-              :selected-tags="initSelected"
-              @update:selectedTags="handleSelectedTags"
+            :all-tags="tagsRelation"
+            :selected-tags="initSelected"
+            @update:selectedTags="handleSelectedTags"
           />
         </div>
-        <div class="hidden">{{initSource = searchRequest.sourceList}}</div>
+        <div class="hidden">{{ (initSource = searchRequest.sourceList) }}</div>
         <div class="flex-1">
           <OtherTagSelector
-              :all-tags="sourceList"
-              :selected-tags="initSource"
-              @update:selectedTags="handleSourceSelectedTags"
+            :all-tags="sourceList"
+            :selected-tags="initSource"
+            @update:selectedTags="handleSourceSelectedTags"
           />
         </div>
       </div>
@@ -393,7 +411,9 @@ const handleSourceSelectedTags = (sourceList:string[]) => {
               class="link link-hover text-sky-600"
               :to="'/problems/algorithm/' + problem.problem_id"
             >
-              <td v-html="highlightKeyword(problem.chinese_name, <string>searchRequest.keyword)"></td>
+              <td
+                v-html="highlightKeyword(problem.chinese_name, <string>searchRequest.keyword)"
+              ></td>
             </router-link>
             <td class="w-64">
               <button
@@ -401,8 +421,15 @@ const handleSourceSelectedTags = (sourceList:string[]) => {
                 :key="tag"
                 @click="searchByTag(tag)"
               >
-                <span v-if="tags_name_list.includes(tag)" class="badge text-red-500" style="background-color: #F4F4F4">{{ tag }}</span>
-                <span v-else class="badge" style="background-color: #F4F4F4">{{ tag }}</span>
+                <span
+                  v-if="tags_name_list.includes(tag)"
+                  class="badge text-red-500"
+                  style="background-color: #f4f4f4"
+                  >{{ tag }}</span
+                >
+                <span v-else class="badge" style="background-color: #f4f4f4">{{
+                  tag
+                }}</span>
               </button>
             </td>
             <td>
@@ -422,7 +449,17 @@ const handleSourceSelectedTags = (sourceList:string[]) => {
               {{ ((problem.ac_total * 100) / problem.test_total).toFixed(1) }}%
             </td>
             <td>
-              <button @click="searchByDifficulty(problem.difficulty_name == '简单' ? 'easy' : (problem.difficulty_name == '中等' ? 'medium' : 'difficult'))">
+              <button
+                @click="
+                  searchByDifficulty(
+                    problem.difficulty_name == '简单'
+                      ? 'easy'
+                      : problem.difficulty_name == '中等'
+                      ? 'medium'
+                      : 'difficult'
+                  )
+                "
+              >
                 <span
                   :class="
                     color_list[difficulty_list[problem.difficulty_name]] +
@@ -445,12 +482,11 @@ const handleSourceSelectedTags = (sourceList:string[]) => {
       <span class="my-4" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
     </div>
     <Pagination
-        :total-pages="PageSum ?? 1"
-        :current-page="searchRequest.pageNum ?? 1"
-        @current-page="handlePageChange"
+      :total-pages="PageSum ?? 1"
+      :current-page="searchRequest.pageNum ?? 1"
+      @current-page="handlePageChange"
     />
   </div>
-
 </template>
 
 <style scoped>

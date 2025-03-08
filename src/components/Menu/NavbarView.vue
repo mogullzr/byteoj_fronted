@@ -24,29 +24,29 @@ const searchRequest: Ref<SearchRequest> = ref({
 onMounted(() => {
   darkTheme.value = "ByteOJLight";
 });
-
-watchEffect(async () => {
-  let tagsList: any = [
-    parseInt(route.query.tagsList ?? "0") == 0
-      ? ""
-      : parseInt(route.query.tagsList),
-  ];
-  let sourceList: any = route.query.sourceList?.toString() ?? "";
-  if (sourceList == "") {
-    sourceList = [];
-  } else {
-    sourceList = [sourceList];
-  }
-  searchRequest.value = {
-    category: route.query.category ?? "algorithm",
-    difficulty: route.query.difficulty ?? "",
-    keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
-    pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
-    pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
-    sourceList: sourceList[0] == "" ? [] : sourceList,
-    tagsList: tagsList[0] == 0 ? [] : tagsList,
-  } as any;
-});
+//
+// watchEffect(async () => {
+//   let tagsList: any = [
+//     parseInt(route.query.tagsList ?? "0") == 0
+//       ? ""
+//       : parseInt(route.query.tagsList),
+//   ];
+//   let sourceList: any = route.query.sourceList?.toString() ?? "";
+//   if (sourceList == "") {
+//     sourceList = [];
+//   } else {
+//     sourceList = [sourceList];
+//   }
+//   searchRequest.value = {
+//     category: route.query.category ?? "algorithm",
+//     difficulty: route.query.difficulty ?? "",
+//     keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
+//     pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
+//     pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
+//     sourceList: sourceList[0] == "" ? [] : sourceList,
+//     tagsList: tagsList[0] == 0 ? [] : tagsList,
+//   } as any;
+// });
 const handleChangeTheme = () => {
   const html = document.getElementsByTagName("html")[0];
   darkTheme.value = html.dataset.theme;

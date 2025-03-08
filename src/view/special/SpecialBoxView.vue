@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import OfficialBoxView from "@/view/special/OfficialBoxView.vue";
+import OJBoxView from "@/view/special/OJBoxView.vue";
+import { useRoute } from "vue-router";
+const route = useRoute();
+const activeTab = ref(route.query.category ?? "官网");
 
-const activeTab = ref("官网");
-
-const tabs = [{ id: "官网", label: "官网" }];
+const tabs = [
+  { id: "官网", label: "官网" },
+  { id: "oj", label: "OJ竞赛" },
+];
 
 const setActiveTab = (tabId: string) => {
   activeTab.value = tabId;
@@ -36,6 +41,9 @@ const setActiveTab = (tabId: string) => {
         <div>
           <div v-if="activeTab == '官网'">
             <OfficialBoxView />
+          </div>
+          <div v-else-if="activeTab == 'oj'">
+            <OJBoxView />
           </div>
         </div>
       </div>

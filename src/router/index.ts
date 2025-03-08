@@ -375,7 +375,7 @@ router.beforeEach(async (to, from, next) => {
     to.meta.title === undefined ? "ByteOJ" : to.meta.title + " - ByteOJ";
   const userStore = user();
   let loginUser = userStore.loginUser;
-  await userStore.getUserLocationInfo();
+  // await userStore.getUserLocationInfo();
 
   // 如果之前没有登录，自动登录
   if (String(loginUser.role) == "0") {
