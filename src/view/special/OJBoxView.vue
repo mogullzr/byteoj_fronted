@@ -71,7 +71,7 @@ const searchRequest: Ref<SearchRequest> = ref({
   pageSize: parseInt(<string>route.query.pageSize ?? "9") ?? 9,
   sourceList: route.query.sourceList ?? [],
 } as any);
-const platorm: Ref<string> = ref(route.query.sourceList ?? "选择平台");
+const platorm: Ref<any> = ref(route.query.sourceList ?? "选择平台");
 
 const dataList: Ref<OJCompetitionVo[]> = ref([]);
 const initData = async () => {
@@ -153,10 +153,11 @@ const searchByKeyword = () => {
 
 /* 选择框样式 */
 .platform-select {
+  font-weight: bold;
   padding: 12px 36px 12px 12px;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 16px;
   color: #333;
   background-color: #ffffff;
   cursor: pointer;

@@ -1,24 +1,24 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from "vue";
 import CardDiscussView from "@/components/Card/CardDiscussView.vue";
 import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import ChatBoxView from "@/view/AI/ChatBoxView.vue";
 
 const problem = {
-  description: "12w213333333333333",
+  description: "",
   problem_id: 1,
-  chinese_name: "A + B"
-}
+  chinese_name: "",
+};
 
 // 定义左右两个侧边栏的宽度
-const leftWidth = ref('33%');
-const rightWidth = ref('33%');
+const leftWidth = ref("33%");
+const rightWidth = ref("33%");
 
 // 从 localStorage 中读取保存的宽度
 onMounted(() => {
-  const savedLeftWidth = localStorage.getItem('leftWidth');
-  const savedRightWidth = localStorage.getItem('rightWidth');
+  const savedLeftWidth = localStorage.getItem("leftWidth");
+  const savedRightWidth = localStorage.getItem("rightWidth");
   if (savedLeftWidth) leftWidth.value = savedLeftWidth;
   if (savedRightWidth) rightWidth.value = savedRightWidth;
 });
@@ -31,8 +31,8 @@ let startRightWidth: number;
 const handleLeftResizeStart = (event: MouseEvent) => {
   startX = event.clientX;
   startLeftWidth = parseInt(leftWidth.value);
-  document.addEventListener('mousemove', handleLeftResize);
-  document.addEventListener('mouseup', handleResizeEnd);
+  document.addEventListener("mousemove", handleLeftResize);
+  document.addEventListener("mouseup", handleResizeEnd);
 };
 
 // 处理左侧鼠标移动时调整大小
@@ -40,15 +40,15 @@ const handleLeftResize = (event: MouseEvent) => {
   const dx = event.clientX - startX;
   const newWidth = Math.max(100, startLeftWidth + dx);
   leftWidth.value = `${newWidth}px`;
-  localStorage.setItem('leftWidth', leftWidth.value);
+  localStorage.setItem("leftWidth", leftWidth.value);
 };
 
 // 处理右侧调整大小开始
 const handleRightResizeStart = (event: MouseEvent) => {
   startX = event.clientX;
   startRightWidth = parseInt(rightWidth.value);
-  document.addEventListener('mousemove', handleRightResize);
-  document.addEventListener('mouseup', handleResizeEnd);
+  document.addEventListener("mousemove", handleRightResize);
+  document.addEventListener("mouseup", handleResizeEnd);
 };
 
 // 处理右侧鼠标移动时调整大小
@@ -56,22 +56,20 @@ const handleRightResize = (event: MouseEvent) => {
   const dx = startX - event.clientX;
   const newWidth = Math.max(100, startRightWidth + dx);
   rightWidth.value = `${newWidth}px`;
-  localStorage.setItem('rightWidth', rightWidth.value);
+  localStorage.setItem("rightWidth", rightWidth.value);
 };
 
 // 结束拖拽，移除事件监听器
 const handleResizeEnd = () => {
-  document.removeEventListener('mousemove', handleLeftResize);
-  document.removeEventListener('mousemove', handleRightResize);
-  document.removeEventListener('mouseup', handleResizeEnd);
+  document.removeEventListener("mousemove", handleLeftResize);
+  document.removeEventListener("mousemove", handleRightResize);
+  document.removeEventListener("mouseup", handleResizeEnd);
 };
 </script>
 
 <template>
   <div class="mx-20">
-    <div>
-      123
-    </div>
+    <div>123</div>
   </div>
 </template>
 
@@ -135,9 +133,9 @@ section {
 
 /* 添加图案 */
 .resize::before {
-  content: '⋮';  /* 使用 Unicode 来表示图案，类似三点菜单 */
+  content: "⋮"; /* 使用 Unicode 来表示图案，类似三点菜单 */
   font-size: 18px;
-  color: #1890FF;
+  color: #1890ff;
   display: block;
   opacity: 0.6;
   transition: opacity 0.3s ease;
@@ -150,7 +148,7 @@ section {
 }
 
 .resize:hover::before {
-  opacity: 1;  /* 悬停时图标的透明度增加 */
+  opacity: 1; /* 悬停时图标的透明度增加 */
 }
 
 /* 按下时的效果 */
@@ -177,7 +175,7 @@ section {
   bottom: 0;
   background-color: grey;
   opacity: 0;
-  transition: .3s;
+  transition: 0.3s;
   pointer-events: none;
 }
 

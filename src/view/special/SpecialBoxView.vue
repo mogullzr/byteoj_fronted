@@ -2,8 +2,9 @@
 import { ref } from "vue";
 import OfficialBoxView from "@/view/special/OfficialBoxView.vue";
 import OJBoxView from "@/view/special/OJBoxView.vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 const route = useRoute();
+const router = useRouter();
 const activeTab = ref(route.query.category ?? "官网");
 
 const tabs = [
@@ -12,6 +13,8 @@ const tabs = [
 ];
 
 const setActiveTab = (tabId: string) => {
+  if (tabId == "oj") router.push(route.path + "?category=" + tabId);
+  else router.push(route.path);
   activeTab.value = tabId;
 };
 </script>

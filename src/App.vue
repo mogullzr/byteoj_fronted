@@ -52,7 +52,7 @@ import BasicLayout from "@/layout/BasicLayout.vue";
 import UserStore from "@/store/user";
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-
+import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 const router = useRouter();
 // 随机数生成方法
 const r = (function () {

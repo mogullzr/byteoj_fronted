@@ -55,7 +55,7 @@ const onLoginSubmit = async () => {
 
   if (resPublicGet.code === 0) {
     if (resPublicGet.data != null) {
-      encrypt.setPublicKey(resPublicGet.data);
+      encrypt.setPublicKey(resPublicGet.data.replace("Mogul/", ""));
     }
   } else {
     return;

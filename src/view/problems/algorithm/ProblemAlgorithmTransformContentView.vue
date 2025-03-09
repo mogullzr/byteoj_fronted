@@ -1,29 +1,30 @@
 <script setup lang="ts">
-import {ref, onMounted, onBeforeUnmount, Ref} from 'vue';
-import CardDiscussView from "@/components/Card/CardDiscussView.vue";
+import { ref, onMounted, Ref } from "vue";
 import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
-import ChatBoxView from "@/view/AI/ChatBoxView.vue";
 import router from "@/router";
-import {ProblemAlgorithmControllerService, UserLastEnter} from "../../../../generated";
+import {
+  ProblemAlgorithmControllerService,
+  UserLastEnter,
+} from "../../../../generated";
 
 const path = router.currentRoute.value.fullPath;
 const problem_id: Ref<any> = ref(path.toString().split("/")[3]);
 const problem: any = ref({});
 // 是否显示AI问答页面
-const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == 'true');
+const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == "true");
 
 // 定义左右两个侧边栏的宽度
-const leftWidth = ref('33%');
-const rightWidth = ref('33%');
+const leftWidth = ref("33%");
+const rightWidth = ref("33%");
 const flag = ref(0);
 const problem_url: Ref<string> = ref("");
 const problem_name: Ref<string> = ref("");
 
 // 从 localStorage 中读取保存的宽度
 onMounted(async () => {
-  const savedLeftWidth = localStorage.getItem('leftWidth');
-  const savedRightWidth = localStorage.getItem('rightWidth');
+  const savedLeftWidth = localStorage.getItem("leftWidth");
+  const savedRightWidth = localStorage.getItem("rightWidth");
   if (savedLeftWidth) leftWidth.value = savedLeftWidth;
   else leftWidth.value = String(window.innerWidth * 0.33);
   if (savedRightWidth) rightWidth.value = savedRightWidth;
@@ -31,14 +32,14 @@ onMounted(async () => {
   if (problem_id?.value != "problem") {
     problem_id.value = parseInt(problem_id?.value);
     const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmSearchByProblemIdUsingPost(
-            problem_id.value
-        );
+      await ProblemAlgorithmControllerService.problemAlgorithmSearchByProblemIdUsingPost(
+        problem_id.value
+      );
 
     if (res.code === 0) {
       problem.value = res.data;
       window.document.title =
-          problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+        problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
       problem_url.value = "/problems/algorithm/" + problem_id.value;
     } else if (res.code === 40101) {
       await router.push("/404");
@@ -48,26 +49,28 @@ onMounted(async () => {
     let competition_id = parseInt(path.toString().split("/")[2]);
     let index = path.toString().split("/")[4];
     const res =
-        await ProblemAlgorithmControllerService.competitionSearchProblemUsingPost(
-            competition_id,
-            index
-        );
+      await ProblemAlgorithmControllerService.competitionSearchProblemUsingPost(
+        competition_id,
+        index
+      );
     if (res.code === 0) {
       problem.value = res.data;
       window.document.title =
-          problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
+        problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
       problem_url.value =
-          "/competition/" + competition_id + "/problem/" + index;
+        "/competition/" + competition_id + "/problem/" + index;
       problem_name.value = index + "." + problem.value.chinese_name;
     }
   }
 
-  const userLastEnter:Ref<UserLastEnter> = ref({
+  const userLastEnter: Ref<UserLastEnter> = ref({
     problem_name: problem_name.value,
     url: problem_url.value,
   } as UserLastEnter);
   // 设置题目记录
-  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingGet(userLastEnter.value);
+  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingGet(
+    userLastEnter.value
+  );
 });
 
 let startX: number;
@@ -78,8 +81,8 @@ let startRightWidth: number;
 const handleLeftResizeStart = (event: MouseEvent) => {
   startX = event.clientX;
   startLeftWidth = parseInt(leftWidth.value);
-  document.addEventListener('mousemove', handleLeftResize);
-  document.addEventListener('mouseup', handleResizeEnd);
+  document.addEventListener("mousemove", handleLeftResize);
+  document.addEventListener("mouseup", handleResizeEnd);
 };
 
 // 处理左侧鼠标移动时调整大小
@@ -87,15 +90,15 @@ const handleLeftResize = (event: MouseEvent) => {
   const dx = event.clientX - startX;
   let newWidth = Math.max(50, startLeftWidth + dx);
   leftWidth.value = `${newWidth}px`;
-  localStorage.setItem('leftWidth', leftWidth.value);
+  localStorage.setItem("leftWidth", leftWidth.value);
 };
 
 // 处理右侧调整大小开始
 const handleRightResizeStart = (event: MouseEvent) => {
   startX = event.clientX;
   startRightWidth = parseInt(rightWidth.value);
-  document.addEventListener('mousemove', handleRightResize);
-  document.addEventListener('mouseup', handleResizeEnd);
+  document.addEventListener("mousemove", handleRightResize);
+  document.addEventListener("mouseup", handleResizeEnd);
 };
 
 // 处理右侧鼠标移动时调整大小
@@ -103,22 +106,22 @@ const handleRightResize = (event: MouseEvent) => {
   const dx = startX - event.clientX;
   let newWidth = Math.max(50, startRightWidth + dx);
   rightWidth.value = `${newWidth}px`;
-  localStorage.setItem('rightWidth', rightWidth.value);
+  localStorage.setItem("rightWidth", rightWidth.value);
 };
 
 // 结束拖拽，移除事件监听器
 const handleResizeEnd = () => {
-  document.removeEventListener('mousemove', handleLeftResize);
-  document.removeEventListener('mousemove', handleRightResize);
-  document.removeEventListener('mouseup', handleResizeEnd);
+  document.removeEventListener("mousemove", handleLeftResize);
+  document.removeEventListener("mousemove", handleRightResize);
+  document.removeEventListener("mouseup", handleResizeEnd);
 };
 
 //
-const showBot = () =>{
+const showBot = () => {
   isBot.value = !isBot.value;
   localStorage.setItem("isBot", String(isBot.value));
   // window.location.reload();
-}
+};
 </script>
 
 <template>
@@ -132,7 +135,9 @@ const showBot = () =>{
             <div>
               <section>
                 <h1>
-                  {{ problem.problem_id ?? problem.index }}.{{ problem.chinese_name }}
+                  {{ problem.problem_id ?? problem.index }}.{{
+                    problem.chinese_name
+                  }}
                 </h1>
                 <div>
                   <MarkdownView :generateData="problem.description" />
@@ -142,15 +147,15 @@ const showBot = () =>{
           </div>
         </aside>
         <main>
-          <MarkdownEditorView @toggle-bot="showBot" :status="1"/>
+          <MarkdownEditorView @toggle-bot="showBot" :status="1" />
         </main>
-<!--        <aside v-if="isBot" class="right" :style="{ width: rightWidth }">-->
-<!--          <div class="resize resize-left" @mousedown="handleRightResizeStart"></div>-->
-<!--          <div class="line"></div>-->
-<!--          <section>-->
-<!--            <ChatBoxView :description="problem.description"/>-->
-<!--          </section>-->
-<!--        </aside>-->
+        <!--        <aside v-if="isBot" class="right" :style="{ width: rightWidth }">-->
+        <!--          <div class="resize resize-left" @mousedown="handleRightResizeStart"></div>-->
+        <!--          <div class="line"></div>-->
+        <!--          <section>-->
+        <!--            <ChatBoxView :description="problem.description"/>-->
+        <!--          </section>-->
+        <!--        </aside>-->
       </div>
     </div>
   </div>
@@ -216,9 +221,9 @@ section {
 
 /* 添加图案 */
 .resize::before {
-  content: '⋮';  /* 使用 Unicode 来表示图案，类似三点菜单 */
+  content: "⋮"; /* 使用 Unicode 来表示图案，类似三点菜单 */
   font-size: 18px;
-  color: #1890FF;
+  color: #1890ff;
   display: block;
   opacity: 0.6;
   transition: opacity 0.3s ease;
@@ -231,7 +236,7 @@ section {
 }
 
 .resize:hover::before {
-  opacity: 1;  /* 悬停时图标的透明度增加 */
+  opacity: 1; /* 悬停时图标的透明度增加 */
 }
 
 /* 按下时的效果 */
@@ -258,7 +263,7 @@ section {
   bottom: 0;
   background-color: grey;
   opacity: 0;
-  transition: .3s;
+  transition: 0.3s;
   pointer-events: none;
 }
 

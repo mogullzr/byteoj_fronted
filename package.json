@@ -24,6 +24,7 @@
     "github-markdown-css": "^5.5.1",
     "highlight": "^0.2.4",
     "highlight.js": "^11.9.0",
+    "javascript-obfuscator": "^4.1.1",
     "jsencrypt": "^3.3.2",
     "marked": "^12.0.2",
     "mathjax-full": "^3.2.2",
@@ -41,7 +42,8 @@
     "vue-puzzle-vcode": "^1.1.10",
     "vue-router": "^4.0.3",
     "vue3-ace-editor": "^2.2.4",
-    "vue3-puzzle-vcode": "^1.1.7"
+    "vue3-puzzle-vcode": "^1.1.7",
+    "webpack-obfuscator": "^3.5.1"
   },
   "devDependencies": {
     "@types/showdown": "^2.0.6",

@@ -1,3 +1,4 @@
+Vue
 <template>
   <div class="oj-card">
     <div class="oj-card__image">
@@ -38,6 +39,14 @@
             formatDuration(startTime, endTime)
           }}</span>
         </div>
+        <!-- 新增：显示剩余时间 -->
+        <div
+          class="oj-card__info oj-card__info--highlight"
+          v-if="timeRemaining"
+        >
+          <span class="oj-card__label">剩余时间:</span>
+          <span class="oj-card__value">{{ timeRemaining }}</span>
+        </div>
       </div>
       <div class="oj-card__footer">
         <a :href="link" class="oj-card__link" target="_blank">查看详情</a>
@@ -47,7 +56,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from "vue";
+import { defineComponent, computed, ref, onUnmounted } from "vue";
 import dayjs from "dayjs";
 
 export default defineComponent({
@@ -156,17 +165,73 @@ export default defineComponent({
       }
     });
 
+    // 计算剩余时间
+    const timeRemaining = ref("");
+    const updateTimeRemaining = () => {
+      const now = dayjs();
+      const start = dayjs(props.startTime);
+      const end = dayjs(props.endTime);
+
+      let targetTime;
+      if (now.isBefore(start)) {
+        targetTime = start;
+      } else if (now.isBefore(end)) {
+        targetTime = end;
+      } else {
+        timeRemaining.value = ""; // 比赛已结束
+        return;
+      }
+
+      const diff = targetTime.diff(now, "second");
+      const days = Math.floor(diff / 86400);
+      const hours = Math.floor((diff % 86400) / 3600);
+      const minutes = Math.floor((diff % 3600) / 60);
+      const seconds = diff % 60;
+
+      const parts = [];
+      if (days > 0) parts.push(`${days}天`);
+      if (hours > 0) parts.push(`${hours}小时`);
+      if (minutes > 0) parts.push(`${minutes}分钟`);
+      if (seconds > 0) parts.push(`${seconds}秒`);
+
+      timeRemaining.value = parts.join("") || "0秒";
+    };
+
+    // 每秒更新一次剩余时间
+    const timer = setInterval(updateTimeRemaining, 1000);
+    onUnmounted(() => clearInterval(timer));
+
+    // 初始化剩余时间
+    updateTimeRemaining();
+
     return {
       platformColor,
       formatColor,
       getStatusBadgeText,
       getStatusBadgeClass,
+      timeRemaining,
     };
   },
 });
 </script>
 
 <style scoped>
+/* 新增：突出显示剩余时间 */
+.oj-card__info--highlight {
+  background-color: #f8f9fa;
+  padding: 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  color: #dc3545; /* 红色突出显示 */
+}
+
+.oj-card__info--highlight .oj-card__label {
+  color: #333;
+}
+
+.oj-card__info--highlight .oj-card__value {
+  color: #dc3545;
+}
 .oj-card {
   border: 1px solid #e0e0e0;
   border-radius: 8px;

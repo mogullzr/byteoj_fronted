@@ -3,10 +3,33 @@ const CompressionWebpackPlugin = require("compression-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const isProduction = process.env.NODE_ENV === "production";
+const JavaScriptObfuscator = require("webpack-obfuscator");
 
 module.exports = defineConfig({
   configureWebpack: (config) => {
     if (isProduction) {
+      new JavaScriptObfuscator({
+        compact: true, // 压缩代码
+        controlFlowFlattening: true, // 控制流扁平化
+        deadCodeInjection: true, // 注入死代码
+        debugProtection: true, // 启用调试保护
+        debugProtectionInterval: true, // 如果选中，则会在“控制台”选项卡上使用间隔强制调试模式，从而更难使用“开发人员工具”的其他功能。
+        identifierNamesGenerator: "hexadecimal", // 变量名替换为十六进制
+        log: false,
+        // 是否启用全局变量和函数名称的混淆
+        renameGlobals: true,
+        selfDefending: true, // 启用自我防御
+        rotateUnicodeArray: true,
+        stringArray: true, // 启用字符串数组
+        stringArrayEncoding: ["base64", "rc4"], // 对字符串数组进行编码
+        rotateStringArray: true, // 字符串数组随机化
+        stringArrayThreshold: 1,
+        transformObjectKeys: true, // 混淆对象键名
+        unicodeEscapeSequence: true, // 使用 Unicode 转义序列
+        // 通过用空函数替换它们来禁用console.log，console.info，console.error和console.warn。这使得调试器的使用更加困难。
+        disableConsoleOutput: true,
+        comments: false, // 移除注释
+      });
       // 进行代码混淆
       // 添加 Gzip 压缩插件
       config.plugins.push(
