@@ -270,7 +270,6 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
     <div class="w-7/12 m-auto">
       <div class="font-bold text-center text-4xl">ByteOJ编程题库</div>
-      --- {{ route.query.keyword }} ---
       <div class="w-full my-4 flex">
         <input
           v-model="searchRequest.keyword"
