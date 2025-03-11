@@ -139,11 +139,9 @@ const detectDevTools = () => {
 
 // 监听键盘事件
 onMounted(() => {
-  checkDevTools();
-  antiDebug();
   document.addEventListener("keydown", disableF12);
   // 定期检测开发者工具
-  // const interval = setInterval(detectDevTools, 1000);
+  // const interval = setInterval(detectDevTools, 1000);1
   // 组件卸载时清除定时器和事件监听
   onUnmounted(() => {
     document.removeEventListener("keydown", disableF12);

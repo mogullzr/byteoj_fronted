@@ -9,7 +9,7 @@ module.exports = defineConfig({
   configureWebpack: (config) => {
     if (isProduction) {
       new JavaScriptObfuscator({
-        compact: true, // 压缩代码
+        compact: false, // 压缩代码
         controlFlowFlattening: true, // 控制流扁平化
         deadCodeInjection: true, // 注入死代码
         debugProtection: true, // 启用调试保护
