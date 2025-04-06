@@ -472,10 +472,10 @@ const clearMessage = () => {
 }
 
 .chat-title {
-  font-size: 24px;
+  margin: 15px;
+  font-size: 36px;
   font-weight: bold;
   color: #1890ff;
-  margin-bottom: 20px;
 }
 
 .model-selector {
@@ -516,7 +516,7 @@ const clearMessage = () => {
 
 .chat-output {
   width: 100%;
-  height: 359px;
+  height: 430px;
   overflow-y: auto;
   margin-bottom: 10px;
   padding: 15px;

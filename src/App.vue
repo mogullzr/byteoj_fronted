@@ -50,7 +50,7 @@
 <script setup>
 import BasicLayout from "@/layout/BasicLayout.vue";
 import UserStore from "@/store/user";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onBeforeMount, onMounted, onUnmounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 const router = useRouter();
@@ -69,7 +69,6 @@ const r = (function () {
 
 // 控制是否启用 iframe
 const isIframeEnabled = ref(false);
-
 onMounted(() => {
   // 生成一个 0 或 1 的随机数
   const ra = r(3); // 生成 1 或 2 或 3
@@ -136,16 +135,15 @@ const detectDevTools = () => {
       "https://www.rzcode.top/2024/05/29/%E7%88%AC%E8%99%AB%E5%AD%A6%E4%B9%A0%E2%80%94%E2%80%94%E7%88%AC%E8%99%AB%E5%AD%A6%E4%B9%A0%E5%9F%BA%E7%A1%80%E7%AF%87/";
   }
 };
-
 // 监听键盘事件
 onMounted(() => {
-  document.addEventListener("keydown", disableF12);
+  // document.addEventListener("keydown", disableF12);
   // 定期检测开发者工具
   // const interval = setInterval(detectDevTools, 1000);1
   // 组件卸载时清除定时器和事件监听
   onUnmounted(() => {
-    document.removeEventListener("keydown", disableF12);
-    clearInterval(interval);
+    // document.removeEventListener("keydown", disableF12);
+    // clearInterval(interval);
   });
 });
 </script>

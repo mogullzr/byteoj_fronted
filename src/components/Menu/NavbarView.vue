@@ -137,9 +137,6 @@ const searchInfo = () => {
             <router-link to="/competition">竞赛</router-link>
           </li>
           <li>
-            <router-link to="/webChat">大型聊天室</router-link>
-          </li>
-          <li>
             <router-link to="/chatbot">学习机器人</router-link>
           </li>
           <li>

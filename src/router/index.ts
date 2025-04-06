@@ -311,11 +311,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "1",
     component: () => import("@/view/problems/algorithm/AceEditorView.vue"),
   },
-  {
-    path: "/webChat",
-    name: "websocket",
-    component: () => import("@/view/WebChat/WebChatView.vue"),
-  },
+  // {
+  //   path: "/webChat",
+  //   name: "websocket",
+  //   component: () => import("@/view/WebChat/WebChatView.vue"),
+  // },
   {
     path: "/font",
     name: "font",
@@ -356,9 +356,105 @@ const router = createRouter({
   history: createWebHistory(),
   routes,
 });
-
 router.beforeEach(async (to, from, next) => {
-  // 判别是否离开了competition路径，离开则删除competition的localStorage
+  // 反调试逻辑
+  (function () {
+    "use strict";
+
+    console.log("反调试逻辑已执行");
+
+    // 检测开发者工具是否打开
+    const checkDevTools = () => {
+      const devtools = /./;
+      devtools.toString = () => {
+        console.log("开发者工具已打开");
+        return "devtools";
+      };
+      console.log("%c", devtools);
+    };
+
+    // 检测代码执行时间
+    const checkExecutionTime = () => {
+      const startTime = performance.now();
+      (function () {
+        const endTime = performance.now();
+        if (endTime - startTime > 100) {
+          console.log("检测到调试行为");
+        }
+      })();
+    };
+
+    // 动态生成多条件 debugger 模式
+    const generateDebugMode = () => {
+      const conditions = [
+        () => Math.random() > 0.5,
+        () => new Date().getSeconds() % 2 === 0,
+        () => navigator.userAgent.includes("Chrome"),
+        () => window.innerWidth > 1024,
+        () => localStorage.getItem("debug") === "true",
+        () => performance.now() > 1000,
+        () => document.querySelector("body") !== null,
+        () => typeof window.console !== "undefined",
+        () => window.location.href.includes("example.com"),
+        () => Math.floor(Math.random() * 10) > 5,
+      ];
+
+      // 随机选择 3 到 5 个条件
+      const selectedConditions = conditions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.floor(Math.random() * 3) + 3);
+
+      // 随机插入 debugger 的位置
+      const debuggerPositions = [
+        "console.log('Debugger condition 1');",
+        "console.log('Debugger condition 2');",
+        "console.log('Debugger condition 3');",
+        "console.log('Debugger condition 4');",
+        "console.log('Debugger condition 5');",
+      ];
+
+      // 随机选择 1 到 3 个位置
+      const selectedPositions = debuggerPositions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.floor(Math.random() * 3) + 1);
+
+      // 构建代码
+      let code = "";
+      selectedConditions.forEach((condition, index) => {
+        code += `if (${condition.toString()}) { ${
+          selectedPositions[index % selectedPositions.length]
+        } debugger; }\n`;
+      });
+
+      return code;
+    };
+
+    // 动态插入 debugger
+    const dynamicDebugger = () => {
+      try {
+        const debugMode = generateDebugMode();
+        new Function(debugMode)(); // 使用 new Function 代替 eval
+      } catch (e) {
+        console.error("Anti-debug error:", e);
+      }
+      const randomTime = Math.floor(Math.random() * 1001) + 2000;
+      setInterval(() => {
+        try {
+          const debugMode = generateDebugMode();
+          new Function(debugMode)(); // 使用 new Function 代替 eval
+        } catch (e) {
+          console.error("Anti-debug error:", e);
+        }
+      }, randomTime);
+    };
+
+    // 初始化
+    checkDevTools();
+    checkExecutionTime();
+    dynamicDebugger();
+  })();
+
+  // 判别是否离开了 competition 路径，离开则删除 competition 的 localStorage
   const from_path = from.path.toString().indexOf("competition");
   const to_path = to.path.toString().indexOf("competition");
 
@@ -368,25 +464,24 @@ router.beforeEach(async (to, from, next) => {
     (to_path == -1 || to.path.toString().split("/").length == 2)
   ) {
     localStorage.removeItem(
-      "competition-" + from.path.toString().split("/")[2] + "-status"
+      "competition-" + from.path.toString().split("/") + "-status"
     );
   }
+
   window.document.title =
     to.meta.title === undefined ? "ByteOJ" : to.meta.title + " - ByteOJ";
   const userStore = user();
   let loginUser = userStore.loginUser;
-  // await userStore.getUserLocationInfo();
 
   // 如果之前没有登录，自动登录
   if (String(loginUser.role) == "0") {
-    // 加await是为了获取用户登录态之后再执行代码
-
     await userStore.getLoginUser();
     loginUser = userStore.loginUser;
   }
+
   const needAccess: string =
     (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
-  // console.log(needAccess, loginUser.role);
+
   // 要跳转的页面需要登录
   if (needAccess != ACCESS_ENUM.NOT_LOGIN) {
     // 如果没有登录，跳转到登录页面
