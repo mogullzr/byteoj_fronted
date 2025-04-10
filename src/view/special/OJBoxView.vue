@@ -103,7 +103,7 @@ watchEffect(async () => {
 const searchByKeyword = () => {
   if (platorm.value !== "选择平台")
     searchRequest.value.sourceList = platorm.value;
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };

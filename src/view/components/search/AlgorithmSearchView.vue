@@ -41,7 +41,7 @@ const initData = async () => {
   if (res.code === 0) {
     dataList.value = res.data.dataList;
   } else {
-    await router.push("/404");
+    router.replace("/404");
   }
 };
 
@@ -70,7 +70,7 @@ watchEffect(async () => {
 });
 const searchBySource = (source: string) => {
   searchRequest.value.sourceList = [source];
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -92,7 +92,7 @@ const findTagIds = (tagNames: string, data: any): (number | null)[] => {
 const searchByTag = (tag: string) => {
   searchRequest.value.tagsList = findTagIds(tag, tagsRelation);
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };

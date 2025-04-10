@@ -18,4 +18,17 @@ app.use(router);
 app.use(pinia);
 app.use(Vcode);
 app.use(VueLazyload);
+// 添加全局图片错误处理指令
+app.directive("img-fallback", {
+  mounted(el, binding) {
+    el.addEventListener("error", () => {
+      // 替换为默认图片
+      el.src =
+        binding.value ||
+        "http://mogullzr001.oss-cn-beijing.aliyuncs.com/2025/03/6a60b254c55c4ebca74e5423e205c4c0.jpg";
+      // 防止默认图片也加载失败时无限循环
+      el.onerror = null;
+    });
+  },
+});
 app.mount("#app");

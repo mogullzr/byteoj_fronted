@@ -124,7 +124,7 @@ onMounted(async () => {
   myChart.on("click", function (param) {
     var url = param.data.name;
     console.log(url);
-    router.push({
+    router.replace({
       path: "luogu/" + url,
     });
   });

@@ -1,11 +1,11 @@
 <template>
   <div class="tab-container">
     <div
-        v-for="tab in tabs"
-        :key="tab.name"
-        class="tab-item"
-        :class="{ active: activeTab === tab.name }"
-        @click="handleTabClick(tab.name)"
+      v-for="tab in tabs"
+      :key="tab.name"
+      class="tab-item"
+      :class="{ active: activeTab === tab.name }"
+      @click="handleTabClick(tab.name)"
     >
       {{ tab.label }}
     </div>
@@ -18,26 +18,24 @@
     <div class="m-5">
       <div>
         <div v-if="activeTab === 'post'">
-          <PostSearch :data-list="dataList"/>
+          <PostSearch :data-list="dataList" />
         </div>
         <div v-else-if="activeTab === 'course'">
-<!--          <CourseSearch />-->
+          <!--          <CourseSearch />-->
           敬请期待！！！！！
         </div>
         <div v-else-if="activeTab === 'algorithm'">
-          <AlgorithmSearchView :data-list="dataList"/>
+          <AlgorithmSearchView :data-list="dataList" />
         </div>
         <div v-else-if="activeTab === 'user'">
-          <UserSearchView :data-list="dataList"/>
+          <UserSearchView :data-list="dataList" />
         </div>
-        <div v-else-if="activeTab === 'solution'">
-          敬请期待！！！！！
-        </div>
+        <div v-else-if="activeTab === 'solution'">敬请期待！！！！！</div>
         <div>
           <Pagination
-              :current-page="searchRequest.pageNum"
-              :total-pages="pageSum"
-              @current-page="handleClick"
+            :current-page="searchRequest.pageNum"
+            :total-pages="pageSum"
+            @current-page="handleClick"
           />
         </div>
       </div>
@@ -46,54 +44,68 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, nextTick, onMounted, watchEffect, Ref, onUnmounted} from 'vue'
-import {SearchControllerService, SearchRequest} from "../../../../generated";
-import {useRoute, useRouter} from "vue-router";
+import {
+  ref,
+  computed,
+  nextTick,
+  onMounted,
+  watchEffect,
+  Ref,
+  onUnmounted,
+} from "vue";
+import { SearchControllerService, SearchRequest } from "../../../../generated";
+import { useRoute, useRouter } from "vue-router";
 import PostSearch from "@/view/components/search/PostSearchView.vue";
 import UserSearchView from "@/view/components/search/UserSearchView.vue";
 import AlgorithmSearchView from "@/view/components/search/AlgorithmSearchView.vue";
 import Pagination from "@/view/components/Pagination.vue";
 
 interface Tab {
-  name: string
-  label: string
+  name: string;
+  label: string;
 }
 
 const props = defineProps<{
-  tabs: Tab[]
-  modelValue: string
-}>()
+  tabs: Tab[];
+  modelValue: string;
+}>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void
-}>()
+  (e: "update:modelValue", value: string): void;
+}>();
 
 const route = useRoute();
 const router = useRouter();
-const activeTab = ref(props.modelValue)
-const indicatorWidth = ref(0)
-const indicatorLeft = ref(0)
+const activeTab = ref(props.modelValue);
+const indicatorWidth = ref(0);
+const indicatorLeft = ref(0);
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "post",
   difficulty: route.query.difficulty ?? "",
-  keyword:  route.query.keyword ?? "",
+  keyword: route.query.keyword ?? "",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
   sourceList: route.query.sourceList ?? "",
-  tagsList: route.query.tagsList ?? ""
+  tagsList: route.query.tagsList ?? "",
 } as any);
 const dataList = ref([]);
-const pageSum:Ref<number> = ref(1);
+const pageSum: Ref<number> = ref(1);
 
 const initData = async () => {
-  const res = await SearchControllerService.searchAllUsingPost(searchRequest.value);
+  const res = await SearchControllerService.searchAllUsingPost(
+    searchRequest.value
+  );
   if (res.code === 0) {
-      dataList.value = res.data.dataList;
-      pageSum.value = res.data.dataList[0].pages;
+    dataList.value = res.data.dataList;
+    pageSum.value = res.data.dataList[0].pages;
   }
-}
-watchEffect(async ()=>{
-  let tagsList:any= [parseInt(route.query.tagsList ?? "0") == 0  ? "" :   parseInt(route.query.tagsList)];
+};
+watchEffect(async () => {
+  let tagsList: any = [
+    parseInt(route.query.tagsList ?? "0") == 0
+      ? ""
+      : parseInt(route.query.tagsList),
+  ];
   let sourceList: any = route.query.sourceList?.toString() ?? "";
   if (sourceList == "") {
     sourceList = [];
@@ -103,56 +115,57 @@ watchEffect(async ()=>{
   searchRequest.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
-    keyword: decodeURIComponent(<string>route.query.keyword || '') ?? "",
+    keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
     pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
     pageSize: parseInt(<string>route.query.pageSize ?? "10") ?? 10,
-    sourceList: sourceList[0] == '' ? [] : sourceList,
-    tagsList: (!tagsList[0] || tagsList[0] == 0) ? [] : tagsList
+    sourceList: sourceList[0] == "" ? [] : sourceList,
+    tagsList: !tagsList[0] || tagsList[0] == 0 ? [] : tagsList,
   } as any;
   await initData();
-})
+});
 
-
-onMounted(async ()=>{
+onMounted(async () => {
   await initData();
-})
+});
 
-const updateIndicatorPosition = async() => {
-  await nextTick()
-  const activeElement = document.querySelector('.tab-item.active') as HTMLElement
+const updateIndicatorPosition = async () => {
+  await nextTick();
+  const activeElement = document.querySelector(
+    ".tab-item.active"
+  ) as HTMLElement;
   if (activeElement) {
-    indicatorWidth.value = activeElement.offsetWidth
-    indicatorLeft.value = activeElement.offsetLeft
+    indicatorWidth.value = activeElement.offsetWidth;
+    indicatorLeft.value = activeElement.offsetLeft;
   }
-}
+};
 
 const indicatorStyle = computed(() => ({
   width: `${indicatorWidth.value}px`,
-  left: `${indicatorLeft.value}px`
-}))
+  left: `${indicatorLeft.value}px`,
+}));
 
 const handleTabClick = async (tabName: string) => {
   searchRequest.value.pageNum = 1;
 
-  activeTab.value = tabName
-  searchRequest.value.category = tabName
-  emit('update:modelValue', tabName)
-  await updateIndicatorPosition()
-  await router.push({
-    query: searchRequest.value
+  activeTab.value = tabName;
+  searchRequest.value.category = tabName;
+  emit("update:modelValue", tabName);
+  await updateIndicatorPosition();
+  router.replace({
+    query: searchRequest.value,
   });
-}
+};
 
 const handleClick = (page: number) => {
   searchRequest.value.pageNum = page;
-  router.push({
-    query: searchRequest.value
+  router.replace({
+    query: searchRequest.value,
   });
-}
+};
 onMounted(() => {
-  updateIndicatorPosition()
-  window.addEventListener('resize', updateIndicatorPosition)
-})
+  updateIndicatorPosition();
+  window.addEventListener("resize", updateIndicatorPosition);
+});
 </script>
 
 <style scoped>

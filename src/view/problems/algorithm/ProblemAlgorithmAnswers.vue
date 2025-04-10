@@ -19,7 +19,7 @@ onMounted(async () => {
     posts_list.value = res.data;
     console.log(posts_list.value);
   } else if (res.code === 40101) {
-    router.push("/404");
+    router.replace("/404");
   }
 });
 </script>

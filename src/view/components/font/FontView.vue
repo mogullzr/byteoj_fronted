@@ -14,7 +14,7 @@ const text: Ref<string> = ref(
 );
 const load = () => {
   setTimeout(() => {
-    router.push("/home");
+    router.replace("/home");
   }, 3000);
 };
 load();

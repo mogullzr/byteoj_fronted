@@ -142,9 +142,9 @@ const EditorSizeControl = () => {
 
 const goBack = () => {
   if (competition_id.value != -1) {
-    router.push("/competition/" + competition_id.value);
+    router.replace("/competition/" + competition_id.value);
   } else {
-    router.push("/home");
+    router.replace("/home");
   }
 };
 </script>

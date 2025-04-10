@@ -22,71 +22,84 @@ const changeShow = (key: string) => {
     activeCategory.value = key;
     status.value = null;
   }
-  router.push({
+  router.replace({
     query: {
       category: activeCategory.value,
-      status: status.value??null
-    }
-  })
+      status: status.value ?? null,
+    },
+  });
 };
 </script>
 
 <template>
   <div
-      role="tablist"
-      class="tabs tabs-lifted tabs-lg mx-auto"
-      style="max-width: 1150px"
+    role="tablist"
+    class="tabs tabs-lifted tabs-lg mx-auto"
+    style="max-width: 1150px"
   >
     <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        :class="'tab w-64 font-bold' + (activeCategory === 'algorithm' ? ' text-black' : ' text-white')"
-        aria-label="算法编程题库"
-        style="font-size: 18px; white-space: nowrap"
-        @click="changeShow('algorithm')"
-        :checked="activeCategory === 'algorithm' ? 'checked' : ''"
+      type="radio"
+      name="my_tabs_2"
+      role="tab"
+      :class="
+        'tab w-64 font-bold' +
+        (activeCategory === 'algorithm' ? ' text-black' : ' text-white')
+      "
+      aria-label="算法编程题库"
+      style="font-size: 18px; white-space: nowrap"
+      @click="changeShow('algorithm')"
+      :checked="activeCategory === 'algorithm' ? 'checked' : ''"
     />
     <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box"
-        v-if="activeCategory === 'algorithm'"
+      role="tabpanel"
+      class="tab-content bg-base-100 border-base-300 rounded-box"
+      v-if="activeCategory === 'algorithm'"
     >
       <ProblemAlgorithmAllView />
     </div>
 
     <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        :class="'tab font-bold' + (activeCategory === 'math408' && status === '0' ? ' text-black' : ' text-white')"
-        aria-label="数学考研试题"
-        style="font-size: 18px; white-space: nowrap"
-        @click="changeShow('math408_1')"
-        :checked="activeCategory === 'math408' && status === '0'"
+      type="radio"
+      name="my_tabs_2"
+      role="tab"
+      :class="
+        'tab font-bold' +
+        (activeCategory === 'math408' && status === '0'
+          ? ' text-black'
+          : ' text-white')
+      "
+      aria-label="数学考研试题"
+      style="font-size: 18px; white-space: nowrap"
+      @click="changeShow('math408_1')"
+      :checked="activeCategory === 'math408' && status === '0'"
     />
     <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box"
-        v-if="activeCategory === 'math408' && status === '0'"
+      role="tabpanel"
+      class="tab-content bg-base-100 border-base-300 rounded-box"
+      v-if="activeCategory === 'math408' && status === '0'"
     >
       <ProblemMathAllView />
     </div>
 
     <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        :class="'tab font-bold' + (activeCategory === 'math408' && status === '1' ? ' text-black' : ' text-white')"
-        aria-label="408考研试题"
-        style="font-size: 18px; white-space: nowrap"
-        @click="changeShow('math408_2')"
-        :checked="activeCategory === 'math408' && status === '1'"
+      type="radio"
+      name="my_tabs_2"
+      role="tab"
+      :class="
+        'tab font-bold' +
+        (activeCategory === 'math408' && status === '1'
+          ? ' text-black'
+          : ' text-white')
+      "
+      aria-label="408考研试题"
+      style="font-size: 18px; white-space: nowrap"
+      @click="changeShow('math408_2')"
+      :checked="activeCategory === 'math408' && status === '1'"
     />
     <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box"
-        v-if="activeCategory === 'math408' && status === '1'"
+      role="tabpanel"
+      class="tab-content bg-base-100 border-base-300 rounded-box"
+      v-if="activeCategory === 'math408' && status === '1'"
     >
       <Problem408AllView />
     </div>

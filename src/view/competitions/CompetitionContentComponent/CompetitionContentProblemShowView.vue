@@ -21,75 +21,230 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="overflow-x-auto border-4 border-gray-200">
-    <table
-      v-if="problem_list != undefined"
-      class="table"
-      style="font-size: 17px"
-    >
-      <!-- head -->
-      <thead>
-        <tr class="text-lg bg-gray-500 text-white">
-          <th class="w-1/12">题号</th>
-          <th class="w-2/3">题目名称</th>
-          <th class="w-2/12">通过情况</th>
-          <th class="w-1/12">提交状态</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- row 1 -->
-        <tr
-          class="hover:bg-gray-100"
-          v-for="problem in problem_list"
-          :key="problem.problem_order"
-        >
-          <th>{{ problem.index }}</th>
-          <td>
-            <router-link
-              class="text-sky-500 font-bold max-w-full"
-              :to="
-                '/competition/' + competition_id + '/problem/' + problem.index
-              "
-              >{{ problem.problem_name }}</router-link
-            >
-          </td>
-          <td class="text-gray-500 font-bold">
-            <span>{{ problem.ac_total }}</span>
-            <span> / </span>
-            <span>{{ problem.test_total }}</span>
-          </td>
-          <td class="text-lg">
-            <div class="flex" v-if="problem.status == 0">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 48 48"
+  <div class="problem-list-container">
+    <div v-if="problem_list != undefined" class="problem-table-container">
+      <table class="problem-table">
+        <thead>
+          <tr class="table-header-row">
+            <th class="table-header-cell problem-id">#</th>
+            <th class="table-header-cell problem-name">题目</th>
+            <th class="table-header-cell problem-stats">通过率</th>
+            <th class="table-header-cell problem-status">状态</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            class="problem-row group"
+            v-for="(problem, index) in problem_list"
+            :key="problem.problem_order"
+            :class="{ 'bg-gray-50': index % 2 === 0 }"
+          >
+            <td class="table-cell problem-id">
+              <span class="problem-index">{{ problem.index }}</span>
+            </td>
+            <td class="table-cell problem-name">
+              <router-link
+                :to="
+                  '/competition/' + competition_id + '/problem/' + problem.index
+                "
+                class="problem-link"
               >
-                <path
-                  fill="#0EA5E9"
-                  fill-rule="evenodd"
-                  stroke="#0EA5E9"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="4"
-                  d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-              <div class="pl-2 text-sky-500 font-bold">通过</div>
-            </div>
-            <div v-else class="pl-2 text-gray-400 font-bold">未通过</div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else class="mx-auto font-bold text-gray-400">
-      <span class="my-4" style="font-size: 48px">
-        比赛开始的时候题目会显示在这里(〃'▽'〃)
-      </span>
+                <span class="problem-title">{{ problem.problem_name }}</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="link-icon"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
+                </svg>
+              </router-link>
+            </td>
+            <td class="table-cell problem-stats">
+              <div class="progress-container">
+                <div
+                  class="progress-bar"
+                  :style="{
+                    width: `${(problem.ac_total / problem.test_total) * 100}%`,
+                  }"
+                ></div>
+                <span class="progress-text">
+                  {{ problem.ac_total }} / {{ problem.test_total }}
+                </span>
+              </div>
+            </td>
+            <td class="table-cell problem-status">
+              <div
+                v-if="problem.status == 0"
+                class="status-badge status-accepted"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="status-icon"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span>已通过</span>
+              </div>
+              <div v-else class="status-badge status-pending">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="status-icon"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+                <span>未通过</span>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div v-else class="empty-state">
+      <div class="empty-state-content">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="empty-state-icon"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <h3 class="empty-state-title">比赛尚未开始</h3>
+        <p class="empty-state-description">
+          比赛开始后题目会显示在这里 (〃'▽'〃)
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.problem-list-container {
+  @apply rounded-xl bg-white shadow-md overflow-hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.problem-table-container {
+  @apply overflow-x-auto;
+}
+
+.problem-table {
+  @apply min-w-full divide-y divide-gray-200;
+  font-size: 0.9375rem; /* 15px */
+}
+
+.table-header-row {
+  @apply bg-gray-50;
+}
+
+.table-header-cell {
+  @apply px-6 py-4 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider;
+}
+
+.table-cell {
+  @apply px-6 py-5 whitespace-nowrap;
+}
+
+.problem-row {
+  @apply transition-all duration-150 ease-in-out hover:bg-blue-50;
+}
+
+.problem-id {
+  @apply w-20 text-center;
+}
+
+.problem-index {
+  @apply inline-flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 text-gray-800 font-medium text-sm;
+}
+
+.problem-name {
+  @apply min-w-[320px];
+}
+
+.problem-link {
+  @apply flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors duration-150 text-base;
+}
+
+.problem-title {
+  @apply mr-3;
+}
+
+.link-icon {
+  @apply h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity duration-150;
+}
+
+.progress-container {
+  @apply relative w-full h-7 bg-gray-100 rounded-full overflow-hidden;
+  min-width: 120px;
+}
+
+.progress-bar {
+  @apply absolute inset-0 bg-green-500 bg-opacity-40;
+  transition: width 0.6s ease;
+}
+
+.progress-text {
+  @apply absolute inset-0 flex items-center justify-center text-sm font-medium text-gray-800;
+}
+
+.status-badge {
+  @apply inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium;
+}
+
+.status-icon {
+  @apply h-3.5 w-3.5 mr-1.5;
+}
+
+.status-accepted {
+  @apply bg-green-100 text-green-800;
+}
+
+.status-pending {
+  @apply bg-red-100 text-red-800;
+}
+
+.empty-state {
+  @apply p-16 text-center;
+}
+
+.empty-state-content {
+  @apply max-w-md mx-auto;
+}
+
+.empty-state-icon {
+  @apply mx-auto h-16 w-16 text-gray-400;
+}
+
+.empty-state-title {
+  @apply mt-4 text-xl font-semibold text-gray-900;
+}
+
+.empty-state-description {
+  @apply mt-2 text-gray-600 text-base;
+}
+</style>

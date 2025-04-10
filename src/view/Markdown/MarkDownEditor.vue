@@ -132,7 +132,7 @@ const submitPost = async () => {
 
     setTimeout(() => {
       flag.value = 2;
-      router.push("/problems/algorithm/" + problem_id.value);
+      router.replace("/problems/algorithm/" + problem_id.value);
     }, 3000);
   } else {
     flag.value = 1;
@@ -154,7 +154,7 @@ const cancelSubmit = () => {
     "problem-" + path.toString().split("/")[3] + "-content-" + problem_id.value,
     state.text
   );
-  router.push("/problems/algorithm/" + problem_id.value);
+  router.replace("/problems/algorithm/" + problem_id.value);
 };
 
 // 上传图片

@@ -123,7 +123,7 @@ onMounted(async () => {
     };
     myChart_0.setOption(option_0);
   } else if (res.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 });
 if (loginUser.tags != null) {

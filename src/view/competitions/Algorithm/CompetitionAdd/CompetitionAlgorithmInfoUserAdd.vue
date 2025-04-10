@@ -116,7 +116,7 @@ const checkReasonAbility = () => {
   }
   if (!flag) {
     console.log(flag);
-    router.push("/competition/user/add/1/select");
+    router.replace("/competition/user/add/1/select");
   }
 };
 onMounted(() => {

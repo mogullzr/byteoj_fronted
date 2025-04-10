@@ -27,7 +27,7 @@ function downloadFile() {
     class="flex card card-compact bg-base-100 shadow-xl mx-auto"
     style="max-width: 1150px"
   >
-    <div class="font-bold mx-auto text-4xl pt-6">ByteOJ原创路线学习</div>
+    <div class="font-bold mx-auto text-4xl pt-6">ByteOJ原创学习路线</div>
     <a
       class="mx-auto btn bg-blue-300 hover:bg-blue-500 active:bg-blue-600 text-white text-lg m-4"
       href="javascript:void(0);"

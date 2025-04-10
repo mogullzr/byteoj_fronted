@@ -13,8 +13,8 @@ const tabs = [
 ];
 
 const setActiveTab = (tabId: string) => {
-  if (tabId == "oj") router.push(route.path + "?category=" + tabId);
-  else router.push(route.path);
+  if (tabId == "oj") router.replace(route.path + "?category=" + tabId);
+  else router.replace(route.path);
   activeTab.value = tabId;
 };
 </script>

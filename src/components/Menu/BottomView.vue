@@ -25,7 +25,7 @@ const changeShow = async (key: number) => {
       pictures.value = res.data;
       console.log(pictures.value);
     } else if (res.code === 40101) {
-      await router.push("/404");
+      router.replace("/404");
     }
   }
 };
@@ -104,7 +104,7 @@ const pictureGet = async () => {
       pictures.value = res.data;
       console.log(pictures.value);
     } else if (res.code === 40101) {
-      await router.push("/404");
+      router.replace("/404");
     }
   }
 };

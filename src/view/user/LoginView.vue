@@ -92,7 +92,7 @@ const onRegisterSubmit = async () => {
     success("注册成功");
     setTimeout(function () {
       window.location.reload();
-      router.push("/login");
+      router.replace("/login");
     }, 1500);
   } else {
     error(res.message);

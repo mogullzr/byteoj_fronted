@@ -86,7 +86,7 @@ onMounted(async () => {
   if (resEasy.code === 0) {
     EasySum.value = resEasy.data;
   } else if (resEasy.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
   // 请求2
   const resMedium =
@@ -97,7 +97,7 @@ onMounted(async () => {
   if (resMedium.code === 0) {
     MediumSum.value = resMedium.data;
   } else if (resMedium.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 
   // 请求3
@@ -109,7 +109,7 @@ onMounted(async () => {
   if (resHard.code === 0) {
     HardSum.value = resHard.data;
   } else if (resHard.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 });
 
@@ -169,7 +169,7 @@ const searchByDifficulty = async (difficulty_name: string) => {
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
-  await router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -195,7 +195,7 @@ const searchByTag = async (tag_name_list: string) => {
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
-  await router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -223,7 +223,7 @@ const searchByKeyword = async () => {
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
-  await router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -234,7 +234,7 @@ const handlePageChange = (page: number) => {
 
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString();
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -252,7 +252,7 @@ const handleSelectedTags = (tags: any) => {
   }
   searchRequest.value.tagsList = tags_id_list;
   searchRequest.value.sourceList = searchRequest.value.sourceList?.toString();
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };
@@ -261,7 +261,7 @@ const handleSelectedTags = (tags: any) => {
 const handleSourceSelectedTags = (sourceList: string[]) => {
   searchRequest.value.sourceList = sourceList.toString();
   searchRequest.value.tagsList = searchRequest.value.tagsList?.toString() ?? "";
-  router.push({
+  router.replace({
     query: searchRequest.value,
   });
 };

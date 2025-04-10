@@ -63,7 +63,7 @@ const highlightKeyword = (text: string, keyword: string) => {
     <!-- 悬浮选股按钮 -->
     <div class="hover-button">
       <button
-        @click="router.push('/user/space/' + data.uuid)"
+        @click="router.replace('/user/space/' + data.uuid)"
         class="select-button font-bold"
       >
         点击进入用户中心

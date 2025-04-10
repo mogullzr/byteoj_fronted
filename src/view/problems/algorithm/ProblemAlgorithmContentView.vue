@@ -40,7 +40,7 @@ onMounted(async () => {
         problem_id.value + "." + problem.value.chinese_name + " - ByteOJ题库";
       problem_url.value = "/problems/algorithm/" + problem_id.value;
     } else if (res.code === 40101) {
-      await router.push("/404");
+      router.replace("/404");
     }
     problem_name.value = problem_id.value + "." + problem.value.chinese_name;
   } else {

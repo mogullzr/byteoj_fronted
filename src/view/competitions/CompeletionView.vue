@@ -34,7 +34,7 @@ onMounted(async () => {
     competition_list.value = res1.data;
     PageSum.value = competition_list.value[0].page_Sum;
   } else if (res1.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 
   const res2 =

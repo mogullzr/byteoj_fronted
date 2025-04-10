@@ -7,18 +7,21 @@ import {
   onUpdated,
   ref,
   Ref,
-  watch, watchEffect,
+  watch,
+  watchEffect,
 } from "vue";
 import {
   CompetitionAddRequest,
   ProblemAlgorithmBankVo,
-  ProblemAlgorithmControllerService, SearchControllerService, SearchRequest,
+  ProblemAlgorithmControllerService,
+  SearchControllerService,
+  SearchRequest,
 } from "../../../../../generated";
 import UserStore from "@/store/user";
 import router from "@/router";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import dayjs from "dayjs";
-import {useRoute} from "vue-router";
+import { useRoute } from "vue-router";
 import Pagination from "@/view/components/Pagination.vue";
 
 const useStore = UserStore();
@@ -53,15 +56,16 @@ const route = useRoute();
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "algorithm",
   difficulty: route.query.difficulty ?? "",
-  keyword:  route.query.keyword ?? "",
+  keyword: route.query.keyword ?? "",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
   sourceList: route.query.sourceList ?? [],
-  tagsList: route.query.tagsList ?? []
+  tagsList: route.query.tagsList ?? [],
 } as any);
 const searchByKeyword = async () => {
-  const res =
-    await SearchControllerService.searchAllUsingPost(searchRequest.value);
+  const res = await SearchControllerService.searchAllUsingPost(
+    searchRequest.value
+  );
   if (res.code === 0) {
     problem_list.value = [];
     problem_list.value = res.data.dataList;
@@ -71,9 +75,9 @@ const searchByKeyword = async () => {
       element.checked = false;
     }
   }
-  await router.push({
-    query: searchRequest.value
-  })
+  router.replace({
+    query: searchRequest.value,
+  });
 };
 
 // 根据标签搜索题目
@@ -95,8 +99,9 @@ const searchByTag = async (event: any) => {
   }
 
   searchRequest.value.tagsList = [tag_id.value];
-  const res =
-    await SearchControllerService.searchAllUsingPost(searchRequest.value);
+  const res = await SearchControllerService.searchAllUsingPost(
+    searchRequest.value
+  );
   if (res.code === 0) {
     problem_list.value = [];
     for (let item = 0; item < res.data.length; item++) {
@@ -110,15 +115,20 @@ const searchByTag = async (event: any) => {
 // 根据难度搜索题目
 const searchByDifficulty = async (event: any) => {
   searchRequest.value.pageNum = 1;
-  searchRequest.value.difficulty = (event.target.value == '简单' ? 'easy' : (event.target.value == '中等' ? 'medium' : 'difficult'));
-  router.push({
-    query: searchRequest.value
-  })
+  searchRequest.value.difficulty =
+    event.target.value == "简单"
+      ? "easy"
+      : event.target.value == "中等"
+      ? "medium"
+      : "difficult";
+  router.replace({
+    query: searchRequest.value,
+  });
 };
 
 // 返回上一级
 const reBack = () => {
-  router.push("/competition/user/add/1/info");
+  router.replace("/competition/user/add/1/info");
 };
 
 // 选中 or 取消选中某个题目
@@ -234,7 +244,7 @@ const isAnyEmpty = () => {
     checked_problem_list.value != null &&
     checked_problem_list.value.length != 0
   ) {
-    router.push("/competition/user/add/1/show");
+    router.replace("/competition/user/add/1/show");
   } else {
     let el: any = document.getElementById("own_modal_warning");
     el.showModal();
@@ -321,30 +331,33 @@ const checkReasonAbility = () => {
     competition_info.value.avatar = useStore.loginUser.avatar;
   }
   if (flag) {
-    router.push("/competition/user/add/1/info");
+    router.replace("/competition/user/add/1/info");
   }
 };
 
 const initData = async () => {
-  const res = await SearchControllerService.searchAllUsingPost(searchRequest.value);
+  const res = await SearchControllerService.searchAllUsingPost(
+    searchRequest.value
+  );
   if (res.code === 0) {
     problem_list.value = res.data.dataList;
     PageSum.value = problem_list.value[0].pages;
-    console.log(PageSum.value)
+    console.log(PageSum.value);
   }
-}
+};
 
 const convertToFrameNumbers = (str: any): number[] => {
-  if (str.includes(',')) {
-    return str.split(',')
-        .map(item => Number(item))
-        .filter(item => !isNaN(item)); // 过滤无效的数字
+  if (str.includes(",")) {
+    return str
+      .split(",")
+      .map((item) => Number(item))
+      .filter((item) => !isNaN(item)); // 过滤无效的数字
   } else {
     return [Number(str)]; // 如果没有逗号，直接将单个数字转为数组
   }
 };
-watchEffect(async ()=>{
-  let tagsList:any= convertToFrameNumbers(route.query.tagsList ?? "");
+watchEffect(async () => {
+  let tagsList: any = convertToFrameNumbers(route.query.tagsList ?? "");
   let sourceList: any = route.query.sourceList?.toString() ?? "";
   if (sourceList.includes(",")) {
     sourceList = sourceList.split(",");
@@ -354,13 +367,13 @@ watchEffect(async ()=>{
   searchRequest.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
-    keyword: decodeURIComponent(<string>route.query.keyword || '') ?? "",
+    keyword: decodeURIComponent(<string>route.query.keyword || "") ?? "",
     pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
     pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
-    sourceList: sourceList[0] == '' ? [] : sourceList,
-    tagsList: tagsList[0] == 0 ? [] : tagsList
+    sourceList: sourceList[0] == "" ? [] : sourceList,
+    tagsList: tagsList[0] == 0 ? [] : tagsList,
   } as any;
-  console.log(searchRequest.value)
+  console.log(searchRequest.value);
   await initData();
 });
 onMounted(async () => {
@@ -412,12 +425,12 @@ watch(
   { deep: true }
 );
 
-const handlePageChange = (page:number) => {
+const handlePageChange = (page: number) => {
   searchRequest.value.pageNum = page;
-  router.push({
-    query: searchRequest.value
-  })
-}
+  router.replace({
+    query: searchRequest.value,
+  });
+};
 </script>
 
 <template>
@@ -571,9 +584,9 @@ const handlePageChange = (page:number) => {
       </div>
       <div>
         <Pagination
-            :current-page="searchRequest.pageNum ?? 1"
-            :total-pages="PageSum"
-            @current-page="handlePageChange"
+          :current-page="searchRequest.pageNum ?? 1"
+          :total-pages="PageSum"
+          @current-page="handlePageChange"
         />
       </div>
       <div class="flex">

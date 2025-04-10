@@ -149,7 +149,7 @@ const searchRequest: Ref<SearchRequest> = ref({
     <!-- 悬浮选股按钮 -->
     <div class="hover-button">
       <button
-        @click="router.push('/posts/' + data.post_id)"
+        @click="router.replace('/posts/' + data.post_id)"
         class="select-button font-bold"
       >
         点击进入帖子

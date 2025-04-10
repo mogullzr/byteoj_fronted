@@ -10,7 +10,7 @@ onMounted(async () => {
     code.value
   );
   if (res.code === 0) {
-    await router.push("/home");
+    router.replace("/home");
   }
 });
 </script>

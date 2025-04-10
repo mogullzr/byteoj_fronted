@@ -88,7 +88,7 @@ onMounted(async () => {
 
     currentPage.value = 1;
   } else if (res1.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 
   const res2 =
@@ -99,7 +99,7 @@ onMounted(async () => {
   if (res2.code === 0) {
     PageSum.value = res2.data;
   } else if (res2.code === 40101) {
-    await router.push("/404");
+    router.replace("/404");
   }
 });
 

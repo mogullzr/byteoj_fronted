@@ -90,7 +90,7 @@ const modalClick = (problem_id: number | undefined) => {
   }
 };
 const reBack = () => {
-  router.push("/competition/user/add/1/select");
+  router.replace("/competition/user/add/1/select");
 };
 
 const isAnyEmpty = async () => {
@@ -144,7 +144,7 @@ const isAnyEmpty = async () => {
     );
     setTimeout(() => {
       el.close();
-      router.push("/competition/user/add/1/success");
+      router.replace("/competition/user/add/1/success");
     }, 2000);
   }
 };
@@ -214,7 +214,7 @@ const checkReasonAbility = () => {
     competition_info.value.avatar = useStore.loginUser.avatar;
   }
   if (flag) {
-    router.push("/competition/user/add/1/info");
+    router.replace("/competition/user/add/1/info");
   }
 };
 onMounted(() => {

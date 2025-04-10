@@ -73,7 +73,7 @@ const logout = async () => {
 
 const searchInfo = () => {
   searchRequest.value.pageNum = 1;
-  router.push(
+  router.replace(
     "/together/search?category=" +
       searchRequest.value.category +
       "&keyword=" +

@@ -69,7 +69,7 @@ onMounted(async () => {
     problem.value = res.data;
     console.log(problem.value);
   } else if (res.code === 40101) {
-    router.push("/404");
+    router.replace("/404");
   }
 });
 
