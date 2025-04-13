@@ -20,7 +20,6 @@ const router = useRouter();
 const path = router.currentRoute.value.fullPath;
 
 const competition_id = ref(parseInt(path.toString().split("/")[2]));
-const current_time = new Date();
 const password = ref();
 const message = ref("");
 const status = ref();
