@@ -2,8 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type BaseResponse_Void_ = {
+import type { AliyunVodVo } from './AliyunVodVo';
+export type BaseResponse_AliyunVodVo_ = {
     code?: number;
+    data?: AliyunVodVo;
     message?: string;
 };
 

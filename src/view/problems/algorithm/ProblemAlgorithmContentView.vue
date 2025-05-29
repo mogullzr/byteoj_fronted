@@ -66,7 +66,7 @@ onMounted(async () => {
     url: problem_url.value,
   } as UserLastEnter);
   // 设置题目记录
-  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingGet(
+  await ProblemAlgorithmControllerService.problemAlgorithmSetUserLastUsingPost(
     userLastEnter.value
   );
 });

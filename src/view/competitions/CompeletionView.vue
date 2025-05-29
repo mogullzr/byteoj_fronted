@@ -573,7 +573,10 @@ const checkCompetition = (num: number) => {
           </div>
 
           <div>
-            <button class="w-full btn btn-primary text-white text-2xl">
+            <button
+              @click="router.replace('/competition/rank')"
+              class="w-full btn btn-primary text-white text-2xl"
+            >
               查看
             </button>
           </div>

@@ -67,7 +67,7 @@ const toggleProblemGroup = () => {
 
 // 判断是否为第一页前三名
 const isTopThree = (index: number) => {
-  return currentPage.value === 1 && index < 3;
+  return currentPage.value === 1 && index <= 3;
 };
 </script>
 

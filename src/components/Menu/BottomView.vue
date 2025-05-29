@@ -301,15 +301,29 @@ onUnmounted(() => {
   bottom: 0;
   left: 0;
   right: 0;
-  transition: transform 0.3s ease; /* 添加过渡效果 */
+  transition: transform 0.3s ease;
+  height: 50px; /* 压缩高度 */
+  padding: 0 15px; /* 调整内边距 */
 }
 
 .navbar-hidden {
-  transform: translateY(100%); /* 默认隐藏 */
+  transform: translateY(100%);
 }
 
 .navbar-visible {
-  transform: translateY(0); /* 显示 */
+  transform: translateY(0);
+}
+
+/* 调整按钮大小和间距 */
+.navbar .btn {
+  padding: 0.25rem 0.75rem; /* 减小按钮内边距 */
+  min-height: 36px; /* 设置最小高度 */
+}
+
+/* 调整图标大小 */
+.navbar svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* AI机器人按钮样式 */

@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type BaseResponse_Void_ = {
-    code?: number;
-    message?: string;
+export type AliyunVodVo = {
+    playauth?: string;
+    vid?: string;
 };
 

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AlgorithmQueryRequest } from '../models/AlgorithmQueryRequest';
+import type { BaseResponse_AliyunVodVo_ } from '../models/BaseResponse_AliyunVodVo_';
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
 import type { BaseResponse_Judge_ } from '../models/BaseResponse_Judge_';
 import type { BaseResponse_List_CompetitionProblemsVo_ } from '../models/BaseResponse_List_CompetitionProblemsVo_';
@@ -187,6 +188,28 @@ export class ProblemAlgorithmControllerService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/problem/algorithm/admin/testCaseFile/get',
+            query: {
+                'problem_id': problemId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * AliyunVodGet
+     * @param problemId problem_id
+     * @returns BaseResponse_AliyunVodVo_ OK
+     * @throws ApiError
+     */
+    public static aliyunVodGetUsingGet(
+        problemId: number,
+    ): CancelablePromise<BaseResponse_AliyunVodVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/algorithm/aliyun/vod',
             query: {
                 'problem_id': problemId,
             },
@@ -560,11 +583,12 @@ export class ProblemAlgorithmControllerService {
      * problemAlgorithmSetUserLast
      * @param userLastEnter userLastEnter
      * @returns BaseResponse_boolean_ OK
+     * @returns any Created
      * @throws ApiError
      */
-    public static problemAlgorithmSetUserLastUsingGet(
+    public static problemAlgorithmSetUserLastUsingPost(
         userLastEnter: UserLastEnter,
-    ): CancelablePromise<BaseResponse_boolean_> {
+    ): CancelablePromise<BaseResponse_boolean_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/problem/algorithm/set/problemLast',

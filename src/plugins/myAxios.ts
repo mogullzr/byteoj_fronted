@@ -2,7 +2,8 @@ import axios from "axios";
 
 // Set config defaults when creating the instance
 const myAxios = axios.create({
-  baseURL: "http://120.79.88.0:7091",
+  // baseURL: "http://120.79.88.0:7091",
+  // baseURL: "http://localhost:7091",
 });
 
 axios.interceptors.request.use(

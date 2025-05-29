@@ -11,6 +11,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "首页",
     meta: {
       access: "0",
+      title: "ByteOJ - 2509实验室创建无线奇迹",
     },
     redirect: "/home",
   },
@@ -19,6 +20,7 @@ const routes: Array<RouteRecordRaw> = [
     name: "主页",
     meta: {
       access: "0",
+      title: "ByteOJ - 2509实验室创建无限奇迹",
     },
     component: () => import("@/view/HomeView.vue"),
   },
@@ -32,6 +34,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/user/LoginView.vue"),
         meta: {
           access: "0",
+          title: "ByteOJ - 登录页面",
         },
       },
       {
@@ -40,6 +43,7 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/user/UserCenterView.vue"),
         meta: {
           access: "1",
+          title: "ByteOJ - 用户卡片",
         },
       },
       {
@@ -48,19 +52,21 @@ const routes: Array<RouteRecordRaw> = [
         component: UserLayout,
         meta: {
           access: "1",
+          title: "ByteOJ - 用户中心",
         },
       },
     ],
   },
   {
     path: "/posts",
-    name: "",
+    name: "帖子总页面",
     children: [
       {
         path: ":post_id",
         name: "帖子内容",
         meta: {
           access: "0",
+          title: "文章 - ByteOJ",
         },
         component: () => import("@/view/posts/PostContent.vue"),
       },
@@ -69,6 +75,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "添加答疑帖子",
         meta: {
           access: "1",
+          title: "发帖子 - ByteOJ",
         },
         component: () => import("@/view/posts/PostProblemAnswerAdd.vue"),
       },
@@ -77,6 +84,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "添加题解帖子",
         meta: {
           access: "1",
+          title: "发帖子 - ByteOJ",
         },
         component: () => import("@/view/posts/PostProblemSolutionAdd.vue"),
       },
@@ -85,6 +93,7 @@ const routes: Array<RouteRecordRaw> = [
         name: "帖子",
         meta: {
           access: "0",
+          title: "ByteOJ - 2509实验室创建无限奇迹",
         },
         component: () => import("@/view/posts/PostView.vue"),
       },
@@ -103,6 +112,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "设置比赛基本信息",
             meta: {
               access: "1",
+              title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
               import(
@@ -114,6 +124,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "设置比赛题目列表",
             meta: {
               access: "1",
+              title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
               import(
@@ -125,6 +136,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "修改题目名称信息还有序号信息",
             meta: {
               access: "1",
+              title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
               import(
@@ -136,6 +148,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "创界比赛次成功界面",
             meta: {
               access: "1",
+              title: "恭喜O(∩_∩)O哈哈~创建竞赛成功 - ByteOJ",
             },
             component: () =>
               import(
@@ -145,6 +158,7 @@ const routes: Array<RouteRecordRaw> = [
         ],
         meta: {
           access: "1",
+          title: "创建变成比赛 - ByteOJ",
         },
       },
       {
@@ -183,6 +197,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "提交记录",
             meta: {
               access: "1",
+              title: "提交记录 - ByteOJ",
             },
             component: () =>
               import(
@@ -194,6 +209,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "题目信息",
             meta: {
               access: "1",
+              title: "题目信息 - ByteOJ",
             },
             component: () =>
               import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
@@ -203,6 +219,7 @@ const routes: Array<RouteRecordRaw> = [
             name: "",
             meta: {
               access: "1",
+              title: "ByteOJ - 竞赛",
             },
             component: () =>
               import("@/view/competitions/CompeletionContentView.vue"),
@@ -210,7 +227,18 @@ const routes: Array<RouteRecordRaw> = [
         ],
         meta: {
           access: "0",
+          title: "ByteOJ - 竞赛",
         },
+      },
+      {
+        path: "rank",
+        name: "ByteOJ巅峰Rating排行榜",
+        meta: {
+          access: "0",
+          title: "ByteOJ - 巅峰排名",
+        },
+        component: () =>
+          import("@/view/competitions/CompetitionRankListView.vue"),
       },
       {
         path: "",
@@ -221,9 +249,13 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/competitions/CompeletionView.vue"),
       },
     ],
+    meta: {
+      title: "ByteOJ - 竞赛",
+    },
   },
   {
     path: "/study",
+    name: "课程总页面",
     children: [
       {
         path: ":plan_id",
@@ -238,6 +270,7 @@ const routes: Array<RouteRecordRaw> = [
     ],
     meta: {
       access: "1",
+      title: "ByteOJ - 课程",
     },
   },
   {
@@ -306,10 +339,13 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/problems/ProblemView.vue"),
       },
     ],
+    meta: {
+      title: "ByteOJ - 题库",
+    },
   },
   {
     path: "/markdown",
-    name: "1",
+    name: "markdown",
     component: () => import("@/view/problems/algorithm/AceEditorView.vue"),
   },
   // {
@@ -318,18 +354,21 @@ const routes: Array<RouteRecordRaw> = [
   //   component: () => import("@/view/WebChat/WebChatView.vue"),
   // },
   {
-    path: "/font",
-    name: "font",
-    component: () => import("@/view/components/font/FontView.vue"),
-  },
-  {
     path: "/chatbot",
     name: "AI学习问答机器人",
+    meta: {
+      access: "1",
+      title: "ByteOJ - DeepSeek问答机器人",
+    },
     component: () => import("@/view/AI/ChatBoxView.vue"),
   },
   {
     path: "/special",
     name: "专栏",
+    meta: {
+      access: "0",
+      title: "ByteOJ - 应用中心",
+    },
     component: () => import("@/view/special/SpecialBoxView.vue"),
   },
   {
@@ -359,104 +398,104 @@ const router = createRouter({
 });
 router.beforeEach(async (to, from, next) => {
   // 反调试逻辑
-  // (function () {
-  //   "use strict";
-  //
-  //   console.log("反调试逻辑已执行");
-  //
-  //   // 检测开发者工具是否打开
-  //   const checkDevTools = () => {
-  //     const devtools = /./;
-  //     devtools.toString = () => {
-  //       console.log("开发者工具已打开");
-  //       return "devtools";
-  //     };
-  //     console.log("%c", devtools);
-  //   };
-  //
-  //   // 检测代码执行时间
-  //   const checkExecutionTime = () => {
-  //     const startTime = performance.now();
-  //     (function () {
-  //       const endTime = performance.now();
-  //       if (endTime - startTime > 100) {
-  //         console.log("检测到调试行为");
-  //       }
-  //     })();
-  //   };
-  //
-  //   // 动态生成多条件 debugger 模式
-  //   const generateDebugMode = () => {
-  //     const conditions = [
-  //       () => Math.random() > 0.5,
-  //       () => new Date().getSeconds() % 2 === 0,
-  //       () => navigator.userAgent.includes("Chrome"),
-  //       () => window.innerWidth > 1024,
-  //       () => localStorage.getItem("debug") === "true",
-  //       () => performance.now() > 1000,
-  //       () => document.querySelector("body") !== null,
-  //       () => typeof window.console !== "undefined",
-  //       () => window.location.href.includes("example.com"),
-  //       () => Math.floor(Math.random() * 10) > 5,
-  //     ];
-  //
-  //     // 随机选择 3 到 5 个条件
-  //     const selectedConditions = conditions
-  //       .sort(() => Math.random() - 0.5)
-  //       .slice(0, Math.floor(Math.random() * 3) + 3);
-  //
-  //     // 随机插入 debugger 的位置
-  //     const debuggerPositions = [
-  //       "console.log('Debugger condition 1');",
-  //       "console.log('Debugger condition 2');",
-  //       "console.log('Debugger condition 3');",
-  //       "console.log('Debugger condition 4');",
-  //       "console.log('Debugger condition 5');",
-  //     ];
-  //
-  //     // 随机选择 1 到 3 个位置
-  //     const selectedPositions = debuggerPositions
-  //       .sort(() => Math.random() - 0.5)
-  //       .slice(0, Math.floor(Math.random() * 3) + 1);
-  //
-  //     // 构建代码
-  //     let code = "";
-  //     selectedConditions.forEach((condition, index) => {
-  //       code += `if (${condition.toString()}) { ${
-  //         selectedPositions[index % selectedPositions.length]
-  //       } debugger; }\n`;
-  //     });
-  //
-  //     return code;
-  //   };
-  //
-  //   // 动态插入 debugger
-  //   const dynamicDebugger = () => {
-  //     try {
-  //       const debugMode = generateDebugMode();
-  //       new Function(debugMode)(); // 使用 new Function 代替 eval
-  //     } catch (e) {
-  //       console.error("Anti-debug error:", e);
-  //     }
-  //     const randomTime = Math.floor(Math.random() * 1001) + 2000;
-  //     setInterval(() => {
-  //       try {
-  //         const debugMode = generateDebugMode();
-  //         new Function(debugMode)(); // 使用 new Function 代替 eval
-  //       } catch (e) {
-  //         console.error("Anti-debug error:", e);
-  //       }
-  //     }, randomTime);
-  //   };
-  //
-  //   // 初始化
-  //   checkDevTools();
-  //   checkExecutionTime();
-  //   dynamicDebugger();
-  // })();
+  (function () {
+    "use strict";
+
+    console.log("反调试逻辑已执行");
+
+    // 检测开发者工具是否打开
+    const checkDevTools = () => {
+      const devtools = /./;
+      devtools.toString = () => {
+        console.log("开发者工具已打开");
+        return "devtools";
+      };
+      console.log("%c", devtools);
+    };
+
+    // 检测代码执行时间
+    const checkExecutionTime = () => {
+      const startTime = performance.now();
+      (function () {
+        const endTime = performance.now();
+        if (endTime - startTime > 100) {
+          console.log("检测到调试行为");
+        }
+      })();
+    };
+
+    // 动态生成多条件 debugger 模式
+    const generateDebugMode = () => {
+      const conditions = [
+        () => Math.random() > 0.5,
+        () => new Date().getSeconds() % 2 === 0,
+        () => navigator.userAgent.includes("Chrome"),
+        () => window.innerWidth > 1024,
+        () => localStorage.getItem("debug") === "true",
+        () => performance.now() > 1000,
+        () => document.querySelector("body") !== null,
+        () => typeof window.console !== "undefined",
+        () => window.location.href.includes("example.com"),
+        () => Math.floor(Math.random() * 10) > 5,
+      ];
+
+      // 随机选择 3 到 5 个条件
+      const selectedConditions = conditions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.floor(Math.random() * 3) + 3);
+
+      // 随机插入 debugger 的位置
+      const debuggerPositions = [
+        "console.log('Debugger condition 1');",
+        "console.log('Debugger condition 2');",
+        "console.log('Debugger condition 3');",
+        "console.log('Debugger condition 4');",
+        "console.log('Debugger condition 5');",
+      ];
+
+      // 随机选择 1 到 3 个位置
+      const selectedPositions = debuggerPositions
+        .sort(() => Math.random() - 0.5)
+        .slice(0, Math.floor(Math.random() * 3) + 1);
+
+      // 构建代码
+      let code = "";
+      selectedConditions.forEach((condition, index) => {
+        code += `if (${condition.toString()}) { ${
+          selectedPositions[index % selectedPositions.length]
+        } debugger; }\n`;
+      });
+
+      return code;
+    };
+
+    // 动态插入 debugger
+    const dynamicDebugger = () => {
+      try {
+        const debugMode = generateDebugMode();
+        new Function(debugMode)(); // 使用 new Function 代替 eval
+      } catch (e) {
+        console.error("Anti-debug error:", e);
+      }
+      const randomTime = Math.floor(Math.random() * 1001) + 3000;
+      setInterval(() => {
+        try {
+          const debugMode = generateDebugMode();
+          new Function(debugMode)(); // 使用 new Function 代替 eval
+        } catch (e) {
+          console.error("Anti-debug error:", e);
+        }
+      }, randomTime);
+    };
+
+    // 初始化
+    checkDevTools();
+    checkExecutionTime();
+    dynamicDebugger();
+  })();
 
   // 1. 设置页面标题
-  document.title = to.meta.title ? `${to.meta.title} - ByteOJ` : "ByteOJ";
+  document.title = to.meta.title ? `${to.meta.title}` : "ByteOJ";
 
   // 2. 初始化用户store
   const userStore = user();
@@ -466,20 +505,12 @@ router.beforeEach(async (to, from, next) => {
     // 3. 强制获取最新用户状态（包含错误处理）
     await userStore.getLoginUser();
     loginUser = userStore.loginUser;
-
-    console.log(
-      "[路由守卫] 当前用户角色:",
-      loginUser.role,
-      "目标路由权限:",
-      to.meta.access
-    );
   } catch (error) {
-    console.error("[路由守卫] 获取用户信息失败:", error);
     // 获取用户信息失败时，按未登录处理
-    loginUser.role = Number(ACCESS_ENUM.NOT_LOGIN);
+    loginUser = { ...loginUser, role: Number(ACCESS_ENUM.NOT_LOGIN) };
   }
 
-  // 4. 清理competition相关存储（优化版）
+  // 4. 清理competition相关存储
   try {
     const isLeavingCompetition =
       from.path.includes("/competition") && !to.path.includes("/competition");
@@ -487,46 +518,40 @@ router.beforeEach(async (to, from, next) => {
       const competitionId = from.params.competition_id;
       if (competitionId) {
         localStorage.removeItem(`competition-${competitionId}-status`);
-        console.log("[路由守卫] 已清理competition存储:", competitionId);
       }
     }
-  } catch (storageError) {
-    console.error("[路由守卫] 清理storage失败:", storageError);
-  }
+  } catch (storageError) {}
 
   // 5. 获取目标路由所需权限
   const needAccess: string =
     (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
 
-  // 6. 权限检查流程（所有分支都明确return）
+  // 6. 权限检查流程
   // 6.1 检查是否被封禁
   if (String(loginUser.role) === ACCESS_ENUM.BAN) {
-    console.warn("[路由守卫] 用户被封禁，跳转到404");
-    return next("/404");
+    return next("/404"); // 使用return终止后续执行
   }
 
   // 6.2 检查需要登录的路由
   if (needAccess !== ACCESS_ENUM.NOT_LOGIN) {
     // 6.2.1 未登录情况
     if (!loginUser.role || String(loginUser.role) === ACCESS_ENUM.NOT_LOGIN) {
-      console.warn("[路由守卫] 未登录，跳转到登录页");
       return next({
+        // 使用return终止后续执行
         path: "/user/login",
-        query: { redirect: to.fullPath }, // 携带重定向地址
+        query: { redirect: to.fullPath },
       });
     }
 
     // 6.2.2 权限不足情况
     if (!checkAccess(loginUser, needAccess)) {
-      console.warn(
-        `[路由守卫] 权限不足（用户:${loginUser.role} 需要:${needAccess}）`
-      );
-      next("/home");
+      // 避免循环重定向，检查当前是否已经在home
+      if (to.path !== "/home") {
+        return next("/home"); // 使用return终止后续执行
+      }
     }
   }
 
-  // 7. 所有检查通过，放行路由
-  console.log("[路由守卫] 允许访问:", to.path);
   next();
 });
 

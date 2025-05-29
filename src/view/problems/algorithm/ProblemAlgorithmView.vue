@@ -5,6 +5,8 @@ import { onMounted, ref } from "vue";
 import ProblemAlgorithmAnswers from "@/view/problems/algorithm/ProblemAlgorithmAnswers.vue";
 import ProblemAlgorithmSolutions from "@/view/problems/algorithm/ProblemAlgorithmSolutions.vue";
 import ProblemAlgorithmTransformContentView from "@/view/problems/algorithm/ProblemAlgorithmTransformContentView.vue";
+import ProblemAlgorithmVideo from "@/view/problems/algorithm/ProblemAlgorithmVideo.vue";
+import ProblemVideoUploadView from "@/view/problems/algorithm/ProblemVideoUploadView.vue";
 
 // 0表示題目内容界面，1表示提交记录，2表示答疑，3表示题解，4表示视频讲解
 const isShow = ref(0);
@@ -105,7 +107,8 @@ const changeShow = (key: number) => {
       class="tab-content bg-base-100 border-base-200 rounded-box p-6 tabs-lg"
       v-if="isShow === 4"
     >
-      Tab content 3
+      <ProblemAlgorithmVideo />
+      <!--      <ProblemVideoUploadView />-->
     </div>
   </div>
 </template>
