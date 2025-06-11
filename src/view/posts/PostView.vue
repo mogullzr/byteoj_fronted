@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, Ref, ref } from "vue";
+import { onMounted, Ref, ref, nextTick } from "vue";
 import MarkdownEditorView from "@/view/Markdown/MarkdownView.vue";
 import { PostsControllerService } from "../../../generated";
 import dayjs, { Dayjs } from "dayjs";
@@ -15,87 +15,56 @@ const loading_posts_list: Ref<any[]> = ref([]);
 const title = ref("");
 const content = ref("");
 const tag_list: any = ref([]);
-const nowDate = ref<Dayjs>();
-const years = ref();
-const months = ref();
-const days = ref();
-const hours = ref();
-const minutes = ref();
-const seconds = ref();
 const currentPage = ref(1);
 const isShow = ref(false);
-let TimeStamp = ref();
 const num = ref(0);
 const comment_content = ref("");
 const root_comment_id = ref(0);
 const to_comment_id = ref(0);
 
+const formatTimeAgo = (dateString: string | Dayjs) => {
+  const timeStamp = dayjs().diff(dayjs(dateString), "second");
+  if (timeStamp < 0) return { value: "", unit: "来自未来" };
+
+  const years = Math.floor(timeStamp / (365 * 24 * 60 * 60));
+  if (years >= 1) return { value: years, unit: "年前" };
+
+  const months = Math.floor(timeStamp / (30 * 24 * 60 * 60));
+  if (months >= 1) return { value: months, unit: "个月前" };
+
+  const days = Math.floor(timeStamp / (24 * 60 * 60));
+  if (days >= 1) return { value: days, unit: "天前" };
+
+  const hours = Math.floor(timeStamp / (60 * 60));
+  if (hours >= 1) return { value: hours, unit: "个小时前" };
+
+  const minutes = Math.floor(timeStamp / 60);
+  if (minutes >= 1) return { value: minutes, unit: "分钟前" };
+
+  return { value: Math.floor(timeStamp), unit: "秒前" };
+};
+
 onMounted(async () => {
   const res = await PostsControllerService.postSearchByPageUsingPost(1);
   if (res.code === 0) {
     posts_list.value = res.data;
-    for (let item = 0; item < posts_list.value.length; item++) {
-      posts_list.value[item].create_time = ref<Dayjs>(
-        posts_list.value[item].create_time
-      );
+    posts_list.value.forEach((post: any) => {
+      const { value, unit } = formatTimeAgo(post.create_time);
+      post.timeAgoValue = value;
+      post.timeAgoUnit = unit;
+      post.comments_visible = false;
+      post.comments_loaded = false;
+      // 确保is_thumbs属性存在，默认为1（未点赞）
+      post.is_thumbs = post.is_thumbs !== undefined ? post.is_thumbs : 1;
       // 如果这篇文章的内容字数多余200字的话我们就选择将超过200字的部分进行隐藏。0表示展开状态1表示默认不展开，2表示没有展开
-      if (posts_list.value[item].content.length > 200) {
-        posts_list.value[item].is_hidden = 1;
-        posts_list.value[item].extra_content =
-          posts_list.value[item].content.substring(200);
-        posts_list.value[item].content = posts_list.value[
-          item
-        ].content.substring(0, 200);
+      if (post.content.length > 200) {
+        post.is_hidden = 1;
+        post.extra_content = post.content.substring(200);
+        post.content = post.content.substring(0, 200);
       } else {
-        posts_list.value[item].is_hidden = 2;
+        post.is_hidden = 2;
       }
-
-      TimeStamp.value =
-        dayjs(nowDate.value).diff(dayjs(posts_list.value[item].create_time)) /
-        1000;
-      if (TimeStamp.value < 0) {
-        posts_list.value[item].create_time = ref("");
-        continue;
-      }
-      years.value = Math.floor(TimeStamp.value / (365 * 24 * 60 * 60));
-      if (years.value >= 1) {
-        posts_list.value[item].create_time = ref(years.value);
-        posts_list.value[item].pattern = ref("年前");
-        continue;
-      }
-
-      months.value = Math.floor(TimeStamp.value / (30 * 24 * 60 * 60));
-      if (months.value >= 1) {
-        posts_list.value[item].create_time = ref(months.value);
-        posts_list.value[item].pattern = ref("个月前");
-        continue;
-      }
-
-      days.value = Math.floor(TimeStamp.value / (24 * 60 * 60));
-      if (days.value >= 1) {
-        posts_list.value[item].create_time = ref(days.value);
-        posts_list.value[item].pattern = ref("天前");
-        continue;
-      }
-
-      hours.value = Math.floor(TimeStamp.value / (60 * 60));
-      if (hours.value >= 1) {
-        posts_list.value[item].create_time = ref(hours.value);
-        posts_list.value[item].pattern = ref("个小时前");
-        continue;
-      }
-
-      minutes.value = Math.floor(TimeStamp.value / 60);
-      if (minutes.value >= 1) {
-        posts_list.value[item].create_time = ref(minutes);
-        posts_list.value[item].pattern = ref("分钟前");
-        continue;
-      }
-
-      seconds.value = Math.floor(TimeStamp.value);
-      posts_list.value[item].create_time = ref(seconds.value);
-      posts_list.value[item].pattern = ref("秒前");
-    }
+    });
   } else {
     error(res.message);
     setTimeout(() => {
@@ -159,68 +128,23 @@ const scroll = () => {
             isShow.value = false;
           }, 2000);
         } else {
-          for (let item = 0; item < loading_posts_list.value.length; item++) {
-            loading_posts_list.value[item].create_time = ref<Dayjs>(
-              loading_posts_list.value[item].create_time
-            );
+          loading_posts_list.value.forEach((post: any) => {
+            const { value, unit } = formatTimeAgo(post.create_time);
+            post.timeAgoValue = value;
+            post.timeAgoUnit = unit;
+            post.comments_visible = false;
+            post.comments_loaded = false;
+            // 确保is_thumbs属性存在，默认为1（未点赞）
+            post.is_thumbs = post.is_thumbs !== undefined ? post.is_thumbs : 1;
 
-            if (loading_posts_list.value[item].content.length > 200) {
-              loading_posts_list.value[item].is_hidden = 1;
-              loading_posts_list.value[item].extra_content =
-                loading_posts_list.value[item].content.substring(200);
-              loading_posts_list.value[item].content = loading_posts_list.value[
-                item
-              ].content.substring(0, 200);
+            if (post.content.length > 200) {
+              post.is_hidden = 1;
+              post.extra_content = post.content.substring(200);
+              post.content = post.content.substring(0, 200);
             } else {
-              loading_posts_list.value[item].is_hidden = 2;
+              post.is_hidden = 2;
             }
-            TimeStamp.value =
-              dayjs(nowDate.value).diff(
-                dayjs(loading_posts_list.value[item].create_time)
-              ) / 1000;
-            if (TimeStamp.value < 0) {
-              loading_posts_list.value[item].create_time = ref("");
-              continue;
-            }
-            years.value = Math.floor(TimeStamp.value / (365 * 24 * 60 * 60));
-            if (years.value >= 1) {
-              loading_posts_list.value[item].create_time = ref(years.value);
-              loading_posts_list.value[item].pattern = ref("年前");
-              continue;
-            }
-
-            months.value = Math.floor(TimeStamp.value / (30 * 24 * 60 * 60));
-            if (months.value >= 1) {
-              loading_posts_list.value[item].create_time = ref(months.value);
-              loading_posts_list.value[item].pattern = ref("个月前");
-              continue;
-            }
-
-            days.value = Math.floor(TimeStamp.value / (24 * 60 * 60));
-            if (days.value >= 1) {
-              loading_posts_list.value[item].create_time = ref(days.value);
-              loading_posts_list.value[item].pattern = ref("天前");
-              continue;
-            }
-
-            hours.value = Math.floor(TimeStamp.value / (60 * 60));
-            if (hours.value >= 1) {
-              loading_posts_list.value[item].create_time = ref(hours.value);
-              loading_posts_list.value[item].pattern = ref("个小时前");
-              continue;
-            }
-
-            minutes.value = Math.floor(TimeStamp.value / 60);
-            if (minutes.value >= 1) {
-              loading_posts_list.value[item].create_time = ref(minutes);
-              loading_posts_list.value[item].pattern = ref("分钟前");
-              continue;
-            }
-
-            seconds.value = Math.floor(TimeStamp.value);
-            loading_posts_list.value[item].create_time = ref(seconds.value);
-            loading_posts_list.value[item].pattern = ref("秒前");
-          }
+          });
           setTimeout(() => {
             posts_list.value = posts_list.value.concat(
               loading_posts_list.value
@@ -237,78 +161,41 @@ const scroll = () => {
   };
 };
 
+const toggleComments = async (post: any) => {
+  if (!post.comments_loaded) {
+    await commentShow(post.post_id);
+    post.comments_loaded = true;
+  }
+  post.comments_visible = !post.comments_visible;
+};
+
 const commentShow = async (post_id: number) => {
   const res = await PostsControllerService.postSearchCommentByPostIdUsingPost(
     post_id
   );
   if (res.code === 0) {
     comment_list.value[post_id] = res.data;
-    if (comment_list.value == null) {
+    if (comment_list.value[post_id] == null) {
       return;
     }
-    for (let item = 0; item < comment_list.value[post_id].length; item++) {
-      for (let j = 0; j < comment_list.value[post_id][item].length; j++) {
-        comment_list.value[post_id][item][j].create_time = ref<Dayjs>(
-          comment_list.value[post_id][item][j].create_time
-        );
-        TimeStamp.value =
-          dayjs(nowDate.value).diff(
-            dayjs(comment_list.value[post_id][item][j].create_time)
-          ) / 1000;
-
-        if (TimeStamp.value < 0) {
-          comment_list.value[post_id][item][j].create_time = ref("");
-          continue;
-        }
-        years.value = Math.floor(TimeStamp.value / (365 * 24 * 60 * 60));
-        if (years.value >= 1) {
-          comment_list.value[post_id][item][j].create_time = ref(years.value);
-          comment_list.value[post_id][item][j].pattern = ref("年前");
-          continue;
-        }
-
-        months.value = Math.floor(TimeStamp.value / (30 * 24 * 60 * 60));
-        if (months.value >= 1) {
-          comment_list.value[post_id][item][j].create_time = ref(months.value);
-          comment_list.value[post_id][item][j].pattern = ref("个月前");
-          continue;
-        }
-
-        days.value = Math.floor(TimeStamp.value / (24 * 60 * 60));
-        if (days.value >= 1) {
-          comment_list.value[post_id][item][j].create_time = ref(days.value);
-          comment_list.value[post_id][item][j].pattern = ref("天前");
-          continue;
-        }
-
-        hours.value = Math.floor(TimeStamp.value / (60 * 60));
-        if (hours.value >= 1) {
-          comment_list.value[post_id][item][j].create_time = ref(hours.value);
-          comment_list.value[post_id][item][j].pattern = ref("个小时前");
-          continue;
-        }
-
-        minutes.value = Math.floor(TimeStamp.value / 60);
-        if (minutes.value >= 1) {
-          comment_list.value[post_id][item][j].create_time = ref(minutes.value);
-          comment_list.value[post_id][item][j].pattern = ref("分钟前");
-          continue;
-        }
-
-        seconds.value = Math.floor(TimeStamp.value);
-        comment_list.value[post_id][item][j].create_time = ref(seconds.value);
-        comment_list.value[post_id][item][j].pattern = ref("秒前");
+    comment_list.value[post_id].forEach((commentThread: any[]) => {
+      if (commentThread) {
+        commentThread.forEach((comment: any) => {
+          if (comment) {
+            const { value, unit } = formatTimeAgo(comment.create_time);
+            comment.timeAgoValue = value;
+            comment.timeAgoUnit = unit;
+          }
+        });
       }
-    }
+    });
   }
 };
 
-// 确定@的评论以及@评论的root_comment_id
 const commentAddCommentId = (
   single_comment_id: number,
   single_root_comment_id: number
 ) => {
-  console.log(single_comment_id, single_root_comment_id);
   if (
     single_root_comment_id == root_comment_id.value &&
     single_comment_id == to_comment_id.value
@@ -318,39 +205,41 @@ const commentAddCommentId = (
   } else {
     to_comment_id.value = single_comment_id;
     root_comment_id.value = single_root_comment_id;
+    if (single_root_comment_id === 0) {
+      root_comment_id.value = single_comment_id;
+    }
   }
-  console.log(root_comment_id.value);
 };
 
-// 提交评论
 const submitComment = async (post_id: number) => {
-  if (comment_content.value == "") {
+  if (comment_content.value.trim() === "") {
     error("评论信息不能为空");
-  } else {
-    const res = await PostsControllerService.postCommentAddUsingPost({
-      content: comment_content.value,
-      post_id: post_id,
-      root_comment_id:
-        root_comment_id.value == 0
-          ? to_comment_id.value
-          : root_comment_id.value,
-      to_comment_id: to_comment_id.value,
-    });
-    if (res.code === 0) {
-      comment_content.value = "";
-      for (let item = 0; item < posts_list.value.length; item++) {
-        if (posts_list.value[item].post_id == post_id) {
-          posts_list.value[item].message = "评论完成(〃'▽'〃)(〃'▽'〃)";
-          posts_list.value[item].comment_num++;
-          setTimeout(() => {
-            posts_list.value[item].message = "";
-          }, 2000);
-          break;
-        }
-      }
-    } else {
-      error(res.message);
+    return;
+  }
+  const res = await PostsControllerService.postCommentAddUsingPost({
+    content: comment_content.value,
+    post_id: post_id,
+    root_comment_id:
+      root_comment_id.value == 0
+        ? to_comment_id.value
+        : root_comment_id.value,
+    to_comment_id: to_comment_id.value,
+  });
+
+  if (res.code === 0) {
+    success("评论成功!");
+    comment_content.value = "";
+    to_comment_id.value = 0;
+    root_comment_id.value = 0;
+
+    await commentShow(post_id);
+
+    const post = posts_list.value.find((p: any) => p.post_id === post_id);
+    if (post) {
+      post.comment_num++;
     }
+  } else {
+    error(res.message);
   }
 };
 
@@ -392,6 +281,48 @@ const DeleteComment = async (post_id: number, comment_id: number) => {
   }
 };
 
+// 点赞或者取消点赞
+const postAddOrCancelThumbs = async (post_id: number, isThumb: number) => {
+  // isThumb 值为1表示未点赞，0表示已点赞
+  if (isThumb === 1) {
+    // 当前未点赞，需要点赞
+    const res = await PostsControllerService.postThumbsAddOrCancelUsingPost(
+      post_id,
+      0
+    );
+
+    if (res.code === 0) {
+      for (let item = 0; item < posts_list.value.length; item++) {
+        if (posts_list.value[item].post_id === post_id) {
+          posts_list.value[item].thumbs_up++;
+          posts_list.value[item].is_thumbs = 0;
+          break;
+        }
+      }
+    } else {
+      error(res.message);
+    }
+  } else {
+    // 当前已点赞，需要取消点赞
+    const res = await PostsControllerService.postThumbsAddOrCancelUsingPost(
+      post_id,
+      1
+    );
+
+    if (res.code === 0) {
+      for (let item = 0; item < posts_list.value.length; item++) {
+        if (posts_list.value[item].post_id === post_id) {
+          posts_list.value[item].thumbs_up--;
+          posts_list.value[item].is_thumbs = 1;
+          break;
+        }
+      }
+    } else {
+      error(res.message);
+    }
+  }
+};
+
 // 点赞或者取消赞
 const commentAddOrCancelThumbs = async (
   comment_id: number,
@@ -423,60 +354,29 @@ const commentAddOrCancelThumbs = async (
   }
 };
 
-// 点赞或者取消点赞
-const postAddOrCancelThumbs = async (post_id: number, isThumb: number) => {
-  if (isThumb) {
-    const res = await PostsControllerService.postThumbsAddOrCancelUsingPost(
-      post_id,
-      0
-    );
-
-    if (res.code === 0) {
-      for (let item = 0; item < posts_list.value.length; item++) {
-        if (posts_list.value[item].post_id === post_id) {
-          posts_list.value[item].thumbs_up++;
-          posts_list.value[item].is_thumbs = 0;
-          break;
-        }
-      }
-    } else {
-      error(res.message);
-    }
-  } else {
-    const res = await PostsControllerService.postThumbsAddOrCancelUsingPost(
-      post_id,
-      1
-    );
-
-    if (res.code === 0) {
-      for (let item = 0; item < posts_list.value.length; item++) {
-        if (posts_list.value[item].post_id === post_id) {
-          posts_list.value[item].thumbs_up--;
-          posts_list.value[item].is_thumbs = 1;
-          break;
-        }
-      }
-    } else {
-      console.log(res.message);
-    }
-  }
-};
-
 // 实现内容展开和不展开的的状态切换
-const click = (post_id: number) => {
-  for (let item = 0; item < posts_list.value.length; item++) {
-    if (posts_list.value[item].post_id === post_id) {
-      if (posts_list.value[item].is_hidden === 0) {
-        posts_list.value[item].is_hidden = 1;
-        posts_list.value[item].content = posts_list.value[
-          item
-        ].content.substring(0, 200);
-      } else if (posts_list.value[item].is_hidden === 1) {
-        posts_list.value[item].is_hidden = 0;
-        posts_list.value[item].content += posts_list.value[item].extra_content;
-      }
-      break;
+const click = async (post_id: number) => {
+  const post = posts_list.value.find((p: any) => p.post_id === post_id);
+  if (!post) return;
+
+  if (post.is_hidden === 0) {
+    post.is_hidden = 1;
+    post.content = post.content.substring(0, 200);
+    await nextTick();
+    const postElement = document.getElementById(`post-${post_id}`);
+    if (postElement) {
+      postElement.scrollIntoView({ behavior: "smooth", block: "start" });
     }
+  } else if (post.is_hidden === 1) {
+    post.is_hidden = 0;
+    post.content += post.extra_content;
+    await nextTick();
+    setTimeout(() => {
+      const postElement = document.getElementById(`post-${post_id}`);
+      if (postElement) {
+        postElement.scrollIntoView({ behavior: "smooth", block: "end" });
+      }
+    }, 100);
   }
 };
 
@@ -497,8 +397,8 @@ const deletePost = async (post_id: number) => {
 <template>
   <div class="flex">
     <div class="mx-auto">
-      <div class="card lg:card-side bg-white mt-5" style="width: 650px">
-        <div class="card-body bg-white p-4 rounded-lg" style="width: 650px">
+      <div class="card lg:card-side bg-white mt-5" style="width: 580px">
+        <div class="card-body bg-white p-4 rounded-lg" style="width: 580px">
           <div>
             <div class="font-bold text-lg">添加帖子</div>
             <div class="divider"></div>
@@ -517,10 +417,10 @@ const deletePost = async (post_id: number) => {
               </router-link>
               <button
                 class="btn rounded-full text-gray-600"
-                style="width: 500px; background-color: #f0f2f5"
+                style="width: 430px; background-color: #f0f2f5"
                 onclick="my_modal_4.showModal()"
               >
-                {{ useStore.loginUser.username }},点击这里发发帖子吧O(∩_∩)O哈哈~
+                {{ useStore.loginUser.username }}, 有什么新鲜事想分享吗?
               </button>
               <dialog id="my_modal_4" class="modal">
                 <div class="modal-box w-11/12 max-w-5xl">
@@ -564,7 +464,9 @@ const deletePost = async (post_id: number) => {
                   ></textarea>
                   <div class="modal-action">
                     <form method="dialog">
-                      <button class="btn w-full" @click="PostAdd">发布</button>
+                      <button class="btn btn-primary w-full" @click="PostAdd">
+                        发布
+                      </button>
                     </form>
                   </div>
                 </div>
@@ -575,12 +477,13 @@ const deletePost = async (post_id: number) => {
       </div>
 
       <div
+        :id="'post-' + post.post_id"
         class="card lg:card-side bg-white mt-5"
         v-for="post in posts_list"
         :key="post.post_id"
-        style="width: 650px"
+        style="width: 580px"
       >
-        <div class="card-body bg-white my-5" style="width: 650px">
+        <div class="card-body bg-white my-5" style="width: 580px">
           <!-- 添加 flex 布局 -->
           <div>
             <div class="flex">
@@ -606,17 +509,17 @@ const deletePost = async (post_id: number) => {
                 </div>
               </div>
               <div class="text-gray-500">
-                {{ post.create_time }}{{ post.pattern }}
+                {{ post.timeAgoValue }} {{ post.timeAgoUnit }}
               </div>
             </div>
 
-            <div class="my-4 font-bold" style="font-size: 36px">
+            <div class="my-4 font-bold text-3xl">
               {{ post.title }}
             </div>
             <div>
               <MarkdownEditorView
                 :generateData="post.content"
-                style="width: 610px"
+                style="width: 540px"
               />
             </div>
             <div class="text-lg flex">
@@ -628,11 +531,11 @@ const deletePost = async (post_id: number) => {
               >
               <div class="flex-1"></div>
               <button
-                class="badge badge-primary badge-lg text-white"
+                class="btn btn-link btn-sm"
                 v-if="post.is_hidden != 2"
                 @click="click(post.post_id)"
               >
-                <span>展开</span>
+                <span>{{ post.is_hidden === 1 ? "展开" : "收起" }}</span>
                 <span>
                   <svg
                     v-if="post.is_hidden === 0"
@@ -662,409 +565,503 @@ const deletePost = async (post_id: number) => {
               </button>
             </div>
             <div class="divider"></div>
-            <div>
-              <button class="btn btn-ghost w-1/3">
-                <div
-                  class="heart-icon flex"
-                  @click="postAddOrCancelThumbs(post.post_id, post.is_thumbs)"
-                >
-                  <input type="checkbox" />
-                  <svg
-                    v-show="post.is_thumbs"
-                    viewBox="0 0 1024 1024"
-                    version="1.1"
-                    width="30"
-                    height="30"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      class="heart"
-                      d="M512 854.9c-7.7 0-14.3-2.7-19.6-8.1L213.8 578.1c-3-2.3-7-6.3-12.3-11.6-5.2-5.4-13.4-15.1-24.8-29.2-11.3-14.2-21.4-28.6-30.3-43.6-8.9-14.8-16.9-32.9-23.8-54-7-21.1-10.5-41.7-10.5-61.6 0-65.4 18.9-116.7 56.7-153.6s90-55.4 156.7-55.4c18.5 0 37.3 3.2 56.4 9.6 19.2 6.4 37.1 15 53.6 25.9 16.5 10.9 30.7 21 42.6 30.6 11.9 9.5 23.2 19.6 33.9 30.3 10.7-10.7 22.1-20.8 33.9-30.3 11.9-9.5 26.1-19.7 42.6-30.6 16.5-10.9 34.4-19.5 53.6-25.9 19.2-6.4 38-9.6 56.4-9.6 66.7 0 118.9 18.5 156.7 55.4 37.8 36.9 56.7 88.1 56.7 153.6 0 65.8-34.1 132.8-102.3 200.9l-278 267.8c-5.3 5.4-11.9 8.1-19.6 8.1z"
-                    ></path>
-                  </svg>
-                  <svg
-                    v-show="!post.is_thumbs"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      fill="#e11d48"
-                      d="M2 9.137C2 14 6.02 16.591 8.962 18.911C10 19.729 11 20.5 12 20.5s2-.77 3.038-1.59C17.981 16.592 22 14 22 9.138c0-4.863-5.5-8.312-10-3.636C7.5.825 2 4.274 2 9.137"
-                    />
-                  </svg>
-                  <span class="w-full my-1 text-gray-400"
-                    >点赞{{ post.thumbs_up }}</span
-                  >
-                </div>
-              </button>
-              <button class="btn btn-ghost w-1/3">
+            <div class="flex justify-center items-center text-gray-500 space-x-8 max-w-md mx-auto">
+              <button
+                class="btn btn-ghost btn-sm flex items-center"
+                @click="postAddOrCancelThumbs(post.post_id, post.is_thumbs)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="30"
-                  height="30"
+                  class="h-6 w-6"
                   viewBox="0 0 24 24"
+                  :class="{ 'text-red-500': post.is_thumbs === 0, 'text-gray-400': post.is_thumbs === 1 }"
+                  :fill="post.is_thumbs === 0 ? 'currentColor' : 'none'"
+                  stroke="currentColor"
                 >
                   <path
-                    fill="#999999"
-                    d="M7 13.5h10q.213 0 .356-.144t.144-.357t-.144-.356T17 12.5H7q-.213 0-.356.144t-.144.357t.144.356T7 13.5m0-3h10q.213 0 .356-.144t.144-.357t-.144-.356T17 9.5H7q-.213 0-.356.144t-.144.357t.144.356T7 10.5m0-3h10q.213 0 .356-.144t.144-.357t-.144-.356T17 6.5H7q-.213 0-.356.144t-.144.357t.144.356T7 7.5M4.616 17q-.691 0-1.153-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615v13.518q0 .534-.497.742t-.876-.171L17.923 17z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                   />
                 </svg>
-                <span class="my-1 text-gray-400">
-                  评论{{ post.comment_num }}
-                </span>
+                <span class="ml-1 text-sm">{{ post.thumbs_up }}</span>
               </button>
-              <button class="btn btn-ghost w-1/3">
+              <button
+                class="btn btn-ghost btn-sm flex items-center"
+                @click="toggleComments(post)"
+              >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="30"
-                  height="30"
+                  class="h-6 w-6"
+                  fill="none"
                   viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
                   <path
-                    fill="#cccccc"
-                    d="M17.562 21.56a1 1 0 0 1-.465-.116L12 18.764l-5.097 2.68a1 1 0 0 1-1.45-1.053l.973-5.676l-4.124-4.02a1 1 0 0 1 .554-1.705l5.699-.828l2.549-5.164a1.04 1.04 0 0 1 1.793 0l2.548 5.164l5.699.828a1 1 0 0 1 .554 1.705l-4.124 4.02l.974 5.676a1 1 0 0 1-.985 1.169Z"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
-                <span class="my-1 text-gray-400">点赞{{ post.thumbs_up }}</span>
+                <span class="ml-1 text-sm">{{ post.comment_num }}</span>
+              </button>
+              <button class="btn btn-ghost btn-sm flex items-center">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+                <span class="ml-1 text-sm">收藏</span>
               </button>
             </div>
 
             <div class="divider"></div>
-            <div class="collapse">
-              <input type="checkbox" @click="commentShow(post.post_id)" />
-              <div class="collapse-title text-xl font-bold text-blue-500">
-                显示评论{{ post.comment_num }}
-              </div>
-              <div :class="'collapse-content ' + post.post_id">
-                <div class="flex">
+            <div class="text-center">
+              <button
+                class="btn btn-outline btn-sm rounded-full"
+                @click="toggleComments(post)"
+              >
+                {{
+                  post.comments_visible
+                    ? "隐藏评论"
+                    : `查看全部 ${post.comment_num} 条评论`
+                }}
+              </button>
+            </div>
+            <div v-if="post.comments_visible">
+              <!-- Comment Section -->
+              <section id="comments" class="mt-4">
+                <h2 class="text-xl font-bold mb-6">
+                  评论 ({{ comment_list[post.post_id] ? comment_list[post.post_id].flat().length : 0 }})
+                </h2>
+                
+                <!-- New Comment Form -->
+                <div class="flex items-start gap-4">
                   <div class="avatar">
-                    <div class="rounded-full w-16 h-16 mx-2">
+                    <div class="w-12 h-12 rounded-full">
                       <img
                         @dragstart.prevent
                         :src="useStore.loginUser.avatar"
-                        alt="ByteOJ出品"
+                        alt="Your avatar"
+                        class="object-cover w-full h-full"
                       />
                     </div>
                   </div>
-                  <label class="form-control w-full">
-                    <div class="label">
-                      <span class="label-text font-bold">{{
-                        useStore.loginUser.username
-                      }}</span>
-                    </div>
+                  <div class="w-full">
                     <textarea
-                      class="textarea textarea-bordered h-24"
-                      placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
+                      class="textarea textarea-bordered w-full h-24"
+                      placeholder="发表你的评论... (支持Markdown)"
                       v-model="comment_content"
                     ></textarea>
                     <button
-                      class="btn btn-outline btn-success my-2"
+                      class="btn btn-neutral mt-2 float-right"
                       @click="submitComment(post.post_id)"
                     >
-                      提交评论
-                      <span>{{ post.message }}</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        ></path>
+                      </svg>
+                      <span>发表评论</span>
                     </button>
-                  </label>
+                  </div>
                 </div>
-                <div
-                  v-for="comments in comment_list[post.post_id]"
-                  :key="comments"
-                >
-                  <div v-for="(comment, index) in comments" :key="comment">
-                    <div v-if="index == 0 && comment != ''" class="flex">
-                      <div class="avatar">
-                        <div class="rounded-full w-16 h-16 mx-2">
-                          <img
-                            @dragstart.prevent
-                            :src="comment.avatar"
-                            alt="ByteOJ出品"
-                          />
-                        </div>
-                      </div>
-                      <div class="flex-1">
-                        <span class="font-bold mx-2">{{
-                          comment.username
-                        }}</span>
-                        <span class="text-gray-500">
-                          {{ comment.create_time }}{{ comment.pattern }}
-                        </span>
-                        <button
-                          class="float-right mx-2"
-                          v-if="comment.uuid === useStore.loginUser.uuid"
-                          @click="
-                            DeleteComment(post.post_id, comment.comment_id)
-                          "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 12 16"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z"
-                              fill="#e11d48"
-                            />
-                          </svg>
-                          <span class="text-red-600 font-bold">{{
-                            comment.message
-                          }}</span>
-                        </button>
-                        <button
-                          class="float-right mx-2"
-                          @click="
-                            commentAddOrCancelThumbs(
-                              comment.comment_id,
-                              post.post_id,
-                              comment.is_thumbs
-                            )
-                          "
-                        >
-                          <svg
-                            v-if="comment.is_thumbs === 0"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 32 32"
-                          >
-                            <path
-                              fill="#999999"
-                              d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                            />
-                          </svg>
 
-                          <svg
-                            v-else
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 32 32"
-                          >
-                            <path
-                              fill="#e11d48"
-                              d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
+                <div class="divider my-8"></div>
+
+                <!-- Comment List -->
+                <div class="space-y-8">
+                  <div
+                    v-for="comments in comment_list[post.post_id]"
+                    :key="comments[0]?.comment_id"
+                    class="comment-thread"
+                  >
+                    <div
+                      v-if="comments && comments.length > 0 && comments[0]"
+                    >
+                      <!-- Root Comment -->
+                      <div class="flex items-start gap-4">
+                        <div class="avatar">
+                          <div class="w-12 h-12 rounded-full">
+                            <img
+                              @dragstart.prevent
+                              :src="comments[0].avatar"
+                              alt="Commenter's avatar"
+                              class="object-cover w-full h-full"
                             />
-                          </svg>
-                          <span>{{ comment.comment_like_count }}</span>
-                        </button>
-                        <button class="collapse float-right my-1">
-                          <input
-                            type="checkbox"
-                            @click="
-                              commentAddCommentId(
-                                comment.comment_id,
-                                comment.root_comment_id
-                              )
-                            "
-                          />
-                          <div class="collapse-title ext-primary-content">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                fill="#999999"
-                                d="M6.5 13.5h11v-1h-11zm0-3h11v-1h-11zm0-3h11v-1h-11zM21 20.077L17.923 17H4.616q-.691 0-1.154-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615zM4.616 16H18.35L20 17.644V4.616q0-.231-.192-.424T19.385 4H4.615q-.23 0-.423.192T4 4.615v10.77q0 .23.192.423t.423.192M4 16V4z"
-                              />
-                            </svg>
                           </div>
-                          <div class="collapse-content flex">
-                            <div class="avatar">
-                              <div class="rounded-full w-16 h-16 mx-2">
-                                <img
-                                  :src="useStore.loginUser.avatar"
-                                  alt="ByteOJ出品"
-                                />
+                        </div>
+                        <div class="flex-grow">
+                          <div class="flex justify-between items-center">
+                            <div>
+                              <span class="font-bold">{{
+                                comments[0].username
+                              }}</span>
+                              <span class="text-sm text-gray-500 ml-2"
+                                >{{ comments[0].timeAgoValue }}{{ comments[0].timeAgoUnit }}</span
+                              >
+                            </div>
+                            <div
+                              class="flex items-center gap-4 text-gray-500 children-hover:text-primary"
+                            >
+                              <button
+                                @click="
+                                  commentAddOrCancelThumbs(
+                                    comments[0].comment_id,
+                                    post.post_id,
+                                    comments[0].is_thumbs
+                                  )
+                                "
+                                class="flex items-center gap-1"
+                                :class="{
+                                  'text-rose-500': comments[0].is_thumbs === 1,
+                                }"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.562 8H12V4a2 2 0 00-2-2l-1.5.5-1 2-1 4V10H6z"
+                                  />
+                                </svg>
+                                <span class="text-sm font-medium">{{
+                                  comments[0].comment_like_count
+                                }}</span>
+                              </button>
+                              <button
+                                @click="
+                                  commentAddCommentId(
+                                    comments[0].comment_id,
+                                    comments[0].root_comment_id
+                                  )
+                                "
+                                class="flex items-center gap-1"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                  />
+                                </svg>
+                                <span class="text-sm font-medium">回复</span>
+                              </button>
+                              <button
+                                v-if="
+                                  comments[0].uuid === useStore.loginUser.uuid
+                                "
+                                @click="DeleteComment(post.post_id, comments[0].comment_id)"
+                                class="flex items-center gap-1 hover:text-red-500"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <MarkdownEditorView
+                            class="prose max-w-none mt-2"
+                            :generateData="comments[0].content"
+                          />
+                          <transition name="slide-fade">
+                            <div
+                              v-if="to_comment_id === comments[0].comment_id"
+                              class="flex items-start gap-4 mt-4 w-full"
+                            >
+                              <div class="avatar">
+                                <div class="w-10 h-10 rounded-full">
+                                  <img
+                                    @dragstart.prevent
+                                    :src="useStore.loginUser.avatar"
+                                    alt="Your avatar"
+                                    class="object-cover w-full h-full"
+                                  />
+                                </div>
+                              </div>
+                              <div class="w-full">
+                                <textarea
+                                  class="textarea textarea-bordered w-full h-20"
+                                  :placeholder="`回复 @${
+                                    comments[0].username
+                                  }`"
+                                  v-model="comment_content"
+                                ></textarea>
+                                <div class="flex justify-end gap-2 mt-2">
+                                  <button
+                                    class="btn btn-ghost btn-sm"
+                                    @click="to_comment_id = 0"
+                                  >
+                                    取消
+                                  </button>
+                                  <button
+                                    class="btn btn-neutral btn-sm"
+                                    @click="submitComment(post.post_id)"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4 mr-1"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                      ></path>
+                                    </svg>
+                                    <span>回复</span>
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                            <label class="form-control w-full">
-                              <div class="label">
-                                <span class="label-text">{{
-                                  useStore.loginUser.username
-                                }}</span>
-                              </div>
-                              <textarea
-                                class="textarea textarea-bordered h-24"
-                                placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
-                                v-model="comment_content"
-                              ></textarea>
-                              <button
-                                class="btn btn-outline btn-success my-2"
-                                @click="submitComment(post.post_id)"
-                              >
-                                提交评论
-                              </button>
-                            </label>
-                          </div>
-                        </button>
-                        <MarkdownEditorView :generateData="comment.content" />
-                      </div>
-                    </div>
-                    <div v-else-if="comment != ''" class="flex ml-16 my-4">
-                      <div class="avatar">
-                        <div class="rounded-full w-16 h-16 mx-2">
-                          <img
-                            @dragstart.prevent
-                            :src="comment.avatar"
-                            alt="ByteOJ出品"
-                          />
+                          </transition>
                         </div>
                       </div>
-                      <div class="flex-1">
-                        <span class="font-bold mx-2">{{
-                          comment.username
-                        }}</span>
-                        <span class="text-gray-500">
-                          {{ comment.create_time }}{{ comment.pattern }} 回复了
-                        </span>
-                        <router-link
-                          :to="'/myspace/index/' + comment.to_comment_id"
-                        >
-                          <span class="text-red-600 font-bold"
-                            >@{{ comment.to_comment_name }}</span
-                          >
-                          <span>的评论</span></router-link
-                        >
-                        <button
-                          class="float-right mx-2"
-                          v-if="comment.uuid === useStore.loginUser.uuid"
-                          @click="
-                            DeleteComment(post.post_id, comment.comment_id)
-                          "
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 12 16"
-                          >
-                            <path
-                              fill-rule="evenodd"
-                              d="M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z"
-                              fill="#e11d48"
-                            />
-                          </svg>
-                          <span class="text-red-600 font-bold">{{
-                            comment.message
-                          }}</span>
-                        </button>
-                        <button
-                          class="float-right mx-2"
-                          @click="
-                            commentAddOrCancelThumbs(
-                              comment.comment_id,
-                              post.post_id,
-                              comment.is_thumbs
-                            )
-                          "
-                        >
-                          <svg
-                            v-if="comment.is_thumbs === 0"
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 32 32"
-                          >
-                            <path
-                              fill="#999999"
-                              d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                            />
-                          </svg>
 
-                          <svg
-                            v-else
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="30"
-                            height="30"
-                            viewBox="0 0 32 32"
-                          >
-                            <path
-                              fill="#e11d48"
-                              d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                            />
-                          </svg>
-                          <span>{{ comment.comment_like_count }}</span>
-                        </button>
-                        <button class="collapse float-right my-1">
-                          <input
-                            type="checkbox"
-                            @click="
-                              commentAddCommentId(
-                                comment.comment_id,
-                                comment.root_comment_id
-                              )
-                            "
-                          />
-                          <div class="collapse-title ext-primary-content">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="30"
-                              height="30"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                fill="#999999"
-                                d="M6.5 13.5h11v-1h-11zm0-3h11v-1h-11zm0-3h11v-1h-11zM21 20.077L17.923 17H4.616q-.691 0-1.154-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615zM4.616 16H18.35L20 17.644V4.616q0-.231-.192-.424T19.385 4H4.615q-.23 0-.423.192T4 4.615v10.77q0 .23.192.423t.423.192M4 16V4z"
-                              />
-                            </svg>
-                          </div>
-                          <div class="collapse-content flex">
+                      <!-- Replies -->
+                      <div class="pl-16 mt-6 space-y-6">
+                        <div
+                          v-for="reply in comments.slice(1)"
+                          :key="reply.comment_id"
+                        >
+                          <div class="flex items-start gap-4" v-if="reply">
                             <div class="avatar">
-                              <div class="rounded-full w-16 h-16 mx-2">
+                              <div class="w-12 h-12 rounded-full">
                                 <img
                                   @dragstart.prevent
-                                  :src="useStore.loginUser.avatar"
-                                  alt="ByteOJ出品"
+                                  :src="reply.avatar"
+                                  alt="Commenter's avatar"
+                                  class="object-cover w-full h-full"
                                 />
                               </div>
                             </div>
-                            <label class="form-control w-full">
-                              <div class="label">
-                                <span class="label-text">{{
-                                  useStore.loginUser.username
-                                }}</span>
+                            <div class="flex-grow">
+                              <div class="flex justify-between items-center">
+                                <div>
+                                  <span class="font-bold">{{
+                                    reply.username
+                                  }}</span>
+                                  <span class="text-sm text-gray-500 mx-1"
+                                    >回复</span
+                                  >
+                                  <router-link
+                                    v-if="reply.to_comment_id"
+                                    :to="
+                                      '/myspace/index/' + reply.to_comment_id
+                                    "
+                                  >
+                                    <span class="text-blue-600 font-semibold"
+                                      >@{{ reply.to_comment_name }}</span
+                                    >
+                                  </router-link>
+                                  <span class="text-sm text-gray-500 ml-2"
+                                    >{{ reply.timeAgoValue }}{{ reply.timeAgoUnit }}</span
+                                  >
+                                </div>
+                                <div
+                                  class="flex items-center gap-4 text-gray-500 children-hover:text-primary"
+                                >
+                                  <button
+                                    @click="
+                                      commentAddOrCancelThumbs(
+                                        reply.comment_id,
+                                        post.post_id,
+                                        reply.is_thumbs
+                                      )
+                                    "
+                                    class="flex items-center gap-1"
+                                    :class="{
+                                      'text-rose-500': reply.is_thumbs === 1,
+                                    }"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      <path
+                                        d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.562 8H12V4a2 2 0 00-2-2l-1.5.5-1 2-1 4V10H6z"
+                                      />
+                                    </svg>
+                                    <span class="text-sm font-medium">{{
+                                      reply.comment_like_count
+                                    }}</span>
+                                  </button>
+                                  <button
+                                    @click="
+                                      commentAddCommentId(
+                                        reply.comment_id,
+                                        reply.root_comment_id
+                                      )
+                                    "
+                                    class="flex items-center gap-1"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                      />
+                                    </svg>
+                                    <span class="text-sm font-medium"
+                                      >回复</span
+                                    >
+                                  </button>
+                                  <button
+                                    v-if="
+                                      reply.uuid === useStore.loginUser.uuid
+                                    "
+                                    @click="DeleteComment(post.post_id, reply.comment_id)"
+                                    class="flex items-center gap-1 hover:text-red-500"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
                               </div>
-                              <textarea
-                                class="textarea textarea-bordered h-24"
-                                placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
-                                v-model="comment_content"
-                              ></textarea>
-                              <button
-                                class="btn btn-outline btn-success my-2"
-                                @click="submitComment(post.post_id)"
-                              >
-                                提交评论
-                              </button>
-                            </label>
+                              <MarkdownEditorView
+                                class="prose max-w-none mt-2"
+                                :generateData="reply.content"
+                              />
+                              <transition name="slide-fade">
+                                <div
+                                  v-if="to_comment_id === reply.comment_id"
+                                  class="flex items-start gap-4 mt-4 w-full"
+                                >
+                                  <div class="avatar">
+                                    <div class="w-10 h-10 rounded-full">
+                                      <img
+                                        @dragstart.prevent
+                                        :src="useStore.loginUser.avatar"
+                                        alt="Your avatar"
+                                        class="object-cover w-full h-full"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div class="w-full">
+                                    <textarea
+                                      class="textarea textarea-bordered w-full h-20"
+                                      :placeholder="`回复 @${reply.username}`"
+                                      v-model="comment_content"
+                                    ></textarea>
+                                    <div class="flex justify-end gap-2 mt-2">
+                                      <button
+                                        class="btn btn-ghost btn-sm"
+                                        @click="to_comment_id = 0"
+                                      >
+                                        取消
+                                      </button>
+                                      <button
+                                        class="btn btn-neutral btn-sm"
+                                        @click="submitComment(post.post_id)"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          class="h-4 w-4 mr-1"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                          ></path>
+                                        </svg>
+                                        <span>回复</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </transition>
+                            </div>
                           </div>
-                        </button>
-                        <MarkdownEditorView :generateData="comment.content" />
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div class="divider" v-if="comments != ''"></div>
                 </div>
+                
                 <div
-                  v-if="comment_list[post.post_id] == ''"
-                  class="mx-auto w-36 text-gray-400"
-                  style="font-size: 36px"
+                  v-if="
+                    !comment_list[post.post_id] ||
+                    comment_list[post.post_id].length === 0
+                  "
+                  class="text-center py-8 text-gray-500"
                 >
-                  暂无评论
+                  还没有评论，快来抢占沙发吧！
                 </div>
-              </div>
+              </section>
             </div>
           </div>
-
-          <span
-            class="loading loading-bars loading-lg m-auto"
-            v-show="isShow"
-          ></span>
         </div>
+      </div>
+      <div class="flex justify-center w-full py-6" v-if="isShow">
+        <span class="loading loading-dots loading-lg"></span>
       </div>
     </div>
   </div>
@@ -1110,63 +1107,28 @@ const deletePost = async (post_id: number) => {
   }
 }
 
-.heart-icon {
-  width: var(--size);
-  position: relative;
-
-  --skin-color: rgb(245, 98, 110);
-  --gray-color: rgb(197, 197, 197);
-  --size: 80px;
-  --path-dasharray: 3600;
-
-  input[type="checkbox"] {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 99;
-    opacity: 0;
-  }
-
-  svg {
-    width: 100%;
-    position: relative;
-    z-index: 9;
-
-    .heart {
-      fill: var(--gray-color);
-      stroke: var(--skin-color);
-      stroke-dasharray: var(--path-dasharray);
-      stroke-width: 50px;
-      stroke-dashoffset: var(--path-dasharray);
-      stroke-linecap: round;
-    }
-  }
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
 }
 
-@keyframes touch {
-  0%,
-  50%,
-  100% {
-    transform: scale(1);
-  }
-  25% {
-    transform: scale(0.75);
-  }
-  75% {
-    transform: scale(1.25);
-  }
+/* Add this to your styles */
+.children-hover\:text-primary > * {
+  transition: color 0.2s ease-in-out;
+}
+.children-hover\:text-primary > *:hover {
+  color: var(--fallback-p, oklch(var(--p) / 1));
 }
 
-input[type="checkbox"] {
-  &:checked + svg {
-    animation: touch 0.5s forwards ease-in;
-
-    .heart {
-      animation: run 0.75s 0.1s forwards linear;
-    }
-  }
+.prose {
+  line-height: 1.7;
 }
 </style>
+

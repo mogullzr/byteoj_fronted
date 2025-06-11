@@ -8,6 +8,13 @@ import UserStore from "@/store/user";
 import { marked } from "marked";
 import { useMessageBox } from "@/view/components/alert/useMessageBox";
 
+interface TitleItem {
+  index: number;
+  level: number;
+  text: string;
+  id?: number | string;
+}
+
 const useStore = UserStore();
 const path = router.currentRoute.value.fullPath;
 const post_id: Ref<UnwrapRef<number>> = ref(
@@ -30,7 +37,7 @@ const comment_content = ref("");
 const root_comment_id = ref(0);
 const to_comment_id = ref(0);
 
-const titles: Ref<any> = ref([]);
+const titles: Ref<TitleItem[]> = ref([]);
 const activeIndex: Ref<number> = ref(1);
 const observer = ref<IntersectionObserver | null>(null);
 const { success, error, warning } = useMessageBox();
@@ -259,7 +266,7 @@ const commentAddOrCancelThumbs = async (
 };
 
 // 转换内容
-const extractLinkText = (markdown: string) => {
+const extractLinkText = (markdown: string = "") => {
   // 正则表达式用于匹配 Markdown 链接，并提取链接文本
   const regex = /\[([^\]]+)]\([^\\)]+\)/g;
   const matches = [];
@@ -278,16 +285,23 @@ const getTitleContent = (content: string) => {
   let id = 0;
   const tokens = marked.lexer(content); // 解析 Markdown 内容为 tokens
   const headerTokens = tokens.filter((token) => token.type === "heading");
-  titles.value = headerTokens.map((token: any) => ({
-    index: id++,
-    level: token.depth,
-    text: token.text.includes("](")
-      ? token.text.split("[")[0] +
-        (extractLinkText(token.text)[0] == undefined
-          ? ""
-          : extractLinkText(token.text)[0])
-      : token.text,
-  }));
+  titles.value = headerTokens.map((token: any) => {
+    const tokenText = token.text || "";
+    let titleText = tokenText;
+
+    if (tokenText.includes("](")) {
+      const basePart = tokenText.split("[")[0] || "";
+      const links = extractLinkText(tokenText);
+      const linkText = links && links.length > 0 ? links[0]! : "";
+      titleText = basePart + linkText;
+    }
+
+    return {
+      index: id++,
+      level: token.depth,
+      text: titleText,
+    };
+  });
 };
 
 // 点击实现跳转效果
@@ -351,9 +365,10 @@ const addCustomText = (event: any) => {
     window.location.href; // 自定义要添加的内容
   const selection: any = window.getSelection();
   const selectedText = selection.toString();
-  event.clipboardData.setData("text/plain", selectedText + customText);
-  event.preventDefault();
-  console.log(123);
+  if (selectedText.length > 0) {
+    event.clipboardData.setData("text/plain", selectedText + customText);
+    event.preventDefault();
+  }
 };
 
 window.addEventListener("copy", addCustomText);
@@ -363,468 +378,634 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="container flex mx-auto" style="width: 1150px">
-    <div class="card lg:card-side shadow-xl bg-white">
-      <div class="card-body flex">
-        <div class="flex">
-          <div class="avatar">
-            <div class="rounded-full w-12 mx-3">
-              <img @dragstart.prevent :src="post.avatar" alt="ByteOJ出品" />
-            </div>
-          </div>
-          <div class="flex-col">
-            <div class="font-bold flex-1">{{ post.author }}</div>
-            <div class="text-gray-400">
-              {{ dayjs(post.create_time).format("YYYY-MM-DD HH:mm") }} 发布
-              {{ post.school }} {{ post.tag_first }} 发布于
-              {{ post.location == null ? "未知地区" : post.location }}
-            </div>
-          </div>
-        </div>
-        <div class="font-bold" style="font-size: 36px">
-          {{ post.title }}
-        </div>
-        <div v-if="post.status === 3">
-          <a
-            :href="post.url"
-            class="float-right btn btn-primary text-white"
-            style="font-size: 18px"
-            >点击下载</a
-          >
-        </div>
+  <div class="w-full">
+    <div class="container mx-auto px-4 max-w-7xl">
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Main Content -->
+        <main class="w-full lg:w-3/4">
+          <article class="card bg-white shadow-xl rounded-lg">
+            <div class="card-body p-6 md:p-8">
+              <!-- Author Info -->
+              <div class="flex items-center mb-6">
+                <div class="avatar mr-4">
+                  <div
+                    class="w-14 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2"
+                  >
+                    <img
+                      @dragstart.prevent
+                      :src="post.avatar"
+                      alt="Author's avatar"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <div class="font-bold text-lg">{{ post.author }}</div>
+                  <div class="text-sm text-gray-500">
+                    <span>{{
+                      dayjs(post.create_time).format("YYYY-MM-DD HH:mm")
+                    }}</span>
+                    <span v-if="post.school"> · {{ post.school }}</span>
+                    <span v-if="post.tag_first"> · {{ post.tag_first }}</span>
+                    <span v-if="post.location">
+                      · {{ post.location == null ? "未知地区" : post.location }}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-        <div class="divider"></div>
-        <div id="markdown">
-          <MarkdownEditorView
-            :generateData="post.content"
-            style="width: 700px"
-          />
-        </div>
-        <div class="flex">
-          <div class="heart-icon flex" @click="postAddOrCancelThumbs">
-            <div class="w-20">
-              <input type="checkbox" />
-              <svg
-                v-show="!isThumb"
-                viewBox="0 0 1024 1024"
-                version="1.1"
-                width="30"
-                height="30"
-                xmlns="http://www.w3.org/2000/svg"
+              <!-- Post Title -->
+              <h1
+                class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
               >
-                <path
-                  class="heart"
-                  d="M512 854.9c-7.7 0-14.3-2.7-19.6-8.1L213.8 578.1c-3-2.3-7-6.3-12.3-11.6-5.2-5.4-13.4-15.1-24.8-29.2-11.3-14.2-21.4-28.6-30.3-43.6-8.9-14.8-16.9-32.9-23.8-54-7-21.1-10.5-41.7-10.5-61.6 0-65.4 18.9-116.7 56.7-153.6s90-55.4 156.7-55.4c18.5 0 37.3 3.2 56.4 9.6 19.2 6.4 37.1 15 53.6 25.9 16.5 10.9 30.7 21 42.6 30.6 11.9 9.5 23.2 19.6 33.9 30.3 10.7-10.7 22.1-20.8 33.9-30.3 11.9-9.5 26.1-19.7 42.6-30.6 16.5-10.9 34.4-19.5 53.6-25.9 19.2-6.4 38-9.6 56.4-9.6 66.7 0 118.9 18.5 156.7 55.4 37.8 36.9 56.7 88.1 56.7 153.6 0 65.8-34.1 132.8-102.3 200.9l-278 267.8c-5.3 5.4-11.9 8.1-19.6 8.1z"
-                ></path>
-              </svg>
-              <svg
-                v-show="isThumb"
-                xmlns="http://www.w3.org/2000/svg"
-                width="30"
-                height="30"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  fill="#e11d48"
-                  d="M2 9.137C2 14 6.02 16.591 8.962 18.911C10 19.729 11 20.5 12 20.5s2-.77 3.038-1.59C17.981 16.592 22 14 22 9.138c0-4.863-5.5-8.312-10-3.636C7.5.825 2 4.274 2 9.137"
+                {{ post.title }}
+              </h1>
+
+              <!-- Download Button -->
+              <div v-if="post.status === 3" class="mb-4">
+                <a
+                  :href="post.url"
+                  class="btn btn-primary text-white"
+                  style="font-size: 16px"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5 mr-2"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                    />
+                  </svg>
+                  点击下载
+                </a>
+              </div>
+
+              <div class="divider"></div>
+
+              <!-- Markdown Content -->
+              <div id="markdown" class="prose max-w-none">
+                <MarkdownEditorView
+                  :generateData="post.content"
+                  style="width: 100%"
                 />
-              </svg>
-              <span class="w-40 my-1 ml-3 text-gray-400"
-                >点赞{{ post.thumbs_up }}</span
-              >
-            </div>
-          </div>
-          <button class="ml-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="#999999"
-                d="M6.5 13.5h11v-1h-11zm0-3h11v-1h-11zm0-3h11v-1h-11zM21 20.077L17.923 17H4.616q-.691 0-1.154-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615zM4.616 16H18.35L20 17.644V4.616q0-.231-.192-.424T19.385 4H4.615q-.23 0-.423.192T4 4.615v10.77q0 .23.192.423t.423.192M4 16V4z"
-              />
-            </svg>
-            <span class="w-40 my-1 text-gray-400"> 评论 </span>
-          </button>
-          <div class="flex-1"></div>
-          <div class="my-3 text-gray-400" style="font-size: 18px">
-            浏览量
-            <span>{{ post.reading }}</span>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <div class="flex">
-          <div class="avatar">
-            <div class="rounded-full w-16 h-16 mx-2">
-              <img
-                @dragstart.prevent
-                :src="useStore.loginUser.avatar"
-                alt="ByteOJ出品"
-              />
-            </div>
-          </div>
-          <label class="form-control w-full">
-            <div class="label">
-              <span class="label-text font-bold">{{
-                useStore.loginUser.username
-              }}</span>
-            </div>
-            <textarea
-              class="textarea textarea-bordered h-24"
-              placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
-              v-model="comment_content"
-            ></textarea>
-            <button
-              class="btn btn-outline btn-success my-2"
-              @click="submitComment"
-            >
-              提交评论
-            </button>
-          </label>
-        </div>
-        <div class="divider"></div>
-        <div v-for="comments in comment_list" :key="comments">
-          <div v-for="(comment, index) in comments" :key="comment.comment_id">
-            <div v-if="index == 0 && comment != ''" class="flex">
-              <div class="avatar">
-                <div class="rounded-full w-16 h-16 mx-2">
-                  <img
-                    @dragstart.prevent
-                    :src="comment.avatar"
-                    alt="ByteOJ出品"
-                  />
-                </div>
               </div>
-              <div class="flex-1">
-                <span class="font-bold mx-2">{{ comment.username }}</span>
-                <span class="text-gray-500">
-                  {{ comment.create_time }}{{ comment.pattern }}
-                </span>
-                <button
-                  class="float-right mx-2"
-                  v-if="comment.uuid === useStore.loginUser.uuid"
-                  @click="DeleteComment(comment.comment_id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 12 16"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z"
-                      fill="#e11d48"
-                    />
-                  </svg>
-                  <span class="text-red-600 font-bold">{{
-                    comment.message
-                  }}</span>
-                </button>
-                <button
-                  class="float-right mx-2"
-                  @click="
-                    commentAddOrCancelThumbs(
-                      comment.comment_id,
-                      post.post_id,
-                      comment.is_thumbs
-                    )
-                  "
-                >
-                  <svg
-                    v-if="comment.is_thumbs === 0"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 32 32"
-                  >
-                    <path
-                      fill="#999999"
-                      d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                    />
-                  </svg>
 
-                  <svg
-                    v-else
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 32 32"
+              <div class="divider mt-8"></div>
+
+              <!-- Action Bar -->
+              <div class="flex items-center justify-between text-gray-500 mt-4">
+                <div class="flex items-center gap-6">
+                  <!-- Like button -->
+                  <div
+                    class="heart-icon flex items-center cursor-pointer"
+                    @click="postAddOrCancelThumbs"
                   >
-                    <path
-                      fill="#e11d48"
-                      d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                    />
-                  </svg>
-                  <span>{{ comment.comment_like_count }}</span>
-                </button>
-                <button class="collapse float-right my-1">
-                  <input
-                    type="checkbox"
-                    @click="
-                      commentAddCommentId(
-                        comment.comment_id,
-                        comment.root_comment_id
-                      )
-                    "
-                  />
-                  <div class="collapse-title ext-primary-content">
+                    <div class="relative" style="width: 30px; height: 30px">
+                      <input
+                        type="checkbox"
+                        :checked="isThumb"
+                        class="absolute opacity-0 w-full h-full cursor-pointer z-10"
+                      />
+                      <svg
+                        v-show="!isThumb"
+                        viewBox="0 0 1024 1024"
+                        version="1.1"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          class="heart"
+                          d="M512 854.9c-7.7 0-14.3-2.7-19.6-8.1L213.8 578.1c-3-2.3-7-6.3-12.3-11.6-5.2-5.4-13.4-15.1-24.8-29.2-11.3-14.2-21.4-28.6-30.3-43.6-8.9-14.8-16.9-32.9-23.8-54-7-21.1-10.5-41.7-10.5-61.6 0-65.4 18.9-116.7 56.7-153.6s90-55.4 156.7-55.4c18.5 0 37.3 3.2 56.4 9.6 19.2 6.4 37.1 15 53.6 25.9 16.5 10.9 30.7 21 42.6 30.6 11.9 9.5 23.2 19.6 33.9 30.3 10.7-10.7 22.1-20.8 33.9-30.3 11.9-9.5 26.1-19.7 42.6-30.6 16.5-10.9 34.4-19.5 53.6-25.9 19.2-6.4 38-9.6 56.4-9.6 66.7 0 118.9 18.5 156.7 55.4 37.8 36.9 56.7 88.1 56.7 153.6 0 65.8-34.1 132.8-102.3 200.9l-278 267.8c-5.3 5.4-11.9 8.1-19.6 8.1z"
+                        ></path>
+                      </svg>
+                      <svg
+                        v-show="isThumb"
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          fill="#e11d48"
+                          d="M2 9.137C2 14 6.02 16.591 8.962 18.911C10 19.729 11 20.5 12 20.5s2-.77 3.038-1.59C17.981 16.592 22 14 22 9.138c0-4.863-5.5-8.312-10-3.636C7.5.825 2 4.274 2 9.137"
+                        />
+                      </svg>
+                    </div>
+                    <span class="ml-2"
+                      >点赞{{
+                        (post.thumbs_up ?? 0) > 0 ? ` (${post.thumbs_up})` : ""
+                      }}</span
+                    >
+                  </div>
+                  <!-- Comment button -->
+                  <div class="flex items-center gap-2">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      width="30"
-                      height="30"
+                      class="h-6 w-6"
+                      fill="none"
                       viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      stroke-width="2"
                     >
                       <path
-                        fill="#999999"
-                        d="M6.5 13.5h11v-1h-11zm0-3h11v-1h-11zm0-3h11v-1h-11zM21 20.077L17.923 17H4.616q-.691 0-1.154-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615zM4.616 16H18.35L20 17.644V4.616q0-.231-.192-.424T19.385 4H4.615q-.23 0-.423.192T4 4.615v10.77q0 .23.192.423t.423.192M4 16V4z"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                       />
                     </svg>
+                    <span>评论</span>
                   </div>
-                  <div class="collapse-content flex">
-                    <div class="avatar">
-                      <div class="rounded-full w-16 h-16 mx-2">
-                        <img
-                          @dragstart.prevent
-                          :src="useStore.loginUser.avatar"
-                          alt="ByteOJ出品"
-                        />
-                      </div>
-                    </div>
-                    <label class="form-control w-full">
-                      <div class="label">
-                        <span class="label-text">{{
-                          useStore.loginUser.username
-                        }}</span>
-                      </div>
-                      <textarea
-                        class="textarea textarea-bordered h-24"
-                        placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
-                        v-model="comment_content"
-                      ></textarea>
-                      <button
-                        class="btn btn-outline btn-success my-2"
-                        @click="submitComment"
-                      >
-                        提交评论
-                      </button>
-                    </label>
-                  </div>
-                </button>
-                <MarkdownEditorView :generateData="comment.content" />
-              </div>
-            </div>
-            <div v-else-if="comment != ''" class="flex ml-16 my-4">
-              <div class="avatar">
-                <div class="rounded-full w-16 h-16 mx-2">
-                  <img
-                    @dragstart.prevent
-                    :src="comment.avatar"
-                    alt="ByteOJ出品"
-                  />
+                </div>
+                <div class="text-sm">
+                  <span>浏览量 {{ post.reading }}</span>
                 </div>
               </div>
-              <div class="flex-1">
-                <span class="font-bold mx-2">{{ comment.username }}</span>
-                <span class="text-gray-500">
-                  {{ comment.create_time }}{{ comment.pattern }} 回复了
-                </span>
-                <router-link :to="'/myspace/index/' + comment.to_comment_id">
-                  <span class="text-red-600 font-bold"
-                    >@{{ comment.to_comment_name }}</span
-                  >
-                  <span>的评论</span></router-link
-                >
-                <button
-                  class="float-right mx-2"
-                  v-if="comment.uuid === useStore.loginUser.uuid"
-                  @click="DeleteComment(comment.comment_id)"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 12 16"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M11 2H9c0-.55-.45-1-1-1H5c-.55 0-1 .45-1 1H2c-.55 0-1 .45-1 1v1c0 .55.45 1 1 1v9c0 .55.45 1 1 1h7c.55 0 1-.45 1-1V5c.55 0 1-.45 1-1V3c0-.55-.45-1-1-1zm-1 12H3V5h1v8h1V5h1v8h1V5h1v8h1V5h1v9zm1-10H2V3h9v1z"
-                      fill="#e11d48"
-                    />
-                  </svg>
-                  <span class="text-red-600 font-bold">{{
-                    comment.message
-                  }}</span>
-                </button>
-                <button
-                  class="float-right mx-2"
-                  @click="
-                    commentAddOrCancelThumbs(
-                      comment.comment_id,
-                      post.post_id,
-                      comment.is_thumbs
-                    )
-                  "
-                >
-                  <svg
-                    v-if="comment.is_thumbs === 0"
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 32 32"
-                  >
-                    <path
-                      fill="#999999"
-                      d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                    />
-                  </svg>
 
-                  <svg
-                    v-else
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="30"
-                    height="30"
-                    viewBox="0 0 32 32"
-                  >
-                    <path
-                      fill="#e11d48"
-                      d="M2 16h5v14H2zm21 14H9V15.197l3.042-4.563l.845-5.917A2.01 2.01 0 0 1 14.868 3H15a3.003 3.003 0 0 1 3 3v6h8a4.005 4.005 0 0 1 4 4v7a7.01 7.01 0 0 1-7 7"
-                    />
-                  </svg>
-                  <span>{{ comment.comment_like_count }}</span>
-                </button>
-                <button class="collapse float-right my-1">
-                  <input
-                    type="checkbox"
-                    @click="
-                      commentAddCommentId(
-                        comment.comment_id,
-                        comment.root_comment_id
-                      )
-                    "
-                  />
-                  <div class="collapse-title ext-primary-content">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="30"
-                      height="30"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="#999999"
-                        d="M6.5 13.5h11v-1h-11zm0-3h11v-1h-11zm0-3h11v-1h-11zM21 20.077L17.923 17H4.616q-.691 0-1.154-.462T3 15.385V4.615q0-.69.463-1.153T4.615 3h14.77q.69 0 1.152.462T21 4.615zM4.616 16H18.35L20 17.644V4.616q0-.231-.192-.424T19.385 4H4.615q-.23 0-.423.192T4 4.615v10.77q0 .23.192.423t.423.192M4 16V4z"
+              <div class="divider my-8"></div>
+              <!-- Comment Section -->
+              <section id="comments">
+                <h2 class="text-xl font-bold mb-6">
+                  评论 ({{ comment_list ? comment_list.flat().length : 0 }})
+                </h2>
+                <!-- New Comment Form -->
+                <div class="flex items-start gap-4">
+                  <div class="avatar">
+                    <div class="w-12 h-12 rounded-full">
+                      <img
+                        @dragstart.prevent
+                        :src="useStore.loginUser.avatar"
+                        alt="Your avatar"
+                        class="object-cover w-full h-full"
                       />
-                    </svg>
+                    </div>
                   </div>
-                  <div class="collapse-content flex">
-                    <div class="avatar">
-                      <div class="rounded-full w-16 h-16 mx-2">
-                        <img
-                          @dragstart.prevent
-                          :src="useStore.loginUser.avatar"
-                          alt="ByteOJ出品"
-                        />
+                  <div class="w-full">
+                    <textarea
+                      class="textarea textarea-bordered w-full h-24"
+                      placeholder="发表你的评论... (支持Markdown)"
+                      v-model="comment_content"
+                    ></textarea>
+                    <button
+                      class="btn btn-neutral mt-2 float-right"
+                      @click="submitComment"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                        ></path>
+                      </svg>
+                      <span>发表评论</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="divider my-8"></div>
+
+                <!-- Comment List -->
+                <div class="space-y-8">
+                  <div
+                    v-for="comments in comment_list"
+                    :key="comments[0]?.comment_id"
+                    class="comment-thread"
+                  >
+                    <div v-if="comments && comments.length > 0 && comments[0]">
+                      <!-- Root Comment -->
+                      <div class="flex items-start gap-4">
+                        <div class="avatar">
+                          <div class="w-12 h-12 rounded-full">
+                            <img
+                              @dragstart.prevent
+                              :src="comments[0].avatar"
+                              alt="Commenter's avatar"
+                              class="object-cover w-full h-full"
+                            />
+                          </div>
+                        </div>
+                        <div class="flex-grow">
+                          <div class="flex justify-between items-center">
+                            <div>
+                              <span class="font-bold">{{
+                                comments[0].username
+                              }}</span>
+                              <span class="text-sm text-gray-500 ml-2"
+                                >{{ comments[0].create_time
+                                }}{{ comments[0].pattern }}</span
+                              >
+                            </div>
+                            <div
+                              class="flex items-center gap-4 text-gray-500 children-hover:text-primary"
+                            >
+                              <button
+                                @click="
+                                  commentAddOrCancelThumbs(
+                                    comments[0]!.comment_id,
+                                    post.post_id!,
+                                    comments[0]!.is_thumbs
+                                  )
+                                "
+                                class="flex items-center gap-1"
+                                :class="{
+                                  'text-rose-500': comments[0]!.is_thumbs,
+                                }"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.562 8H12V4a2 2 0 00-2-2l-1.5.5-1 2-1 4V10H6z"
+                                  />
+                                </svg>
+                                <span class="text-sm font-medium">{{
+                                  comments[0]!.comment_like_count
+                                }}</span>
+                              </button>
+                              <button
+                                @click="
+                                  commentAddCommentId(
+                                    comments[0]!.comment_id,
+                                    comments[0]!.root_comment_id
+                                  )
+                                "
+                                class="flex items-center gap-1"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                  />
+                                </svg>
+                                <span class="text-sm font-medium">回复</span>
+                              </button>
+                              <button
+                                v-if="
+                                  comments[0]!.uuid === useStore.loginUser.uuid
+                                "
+                                @click="DeleteComment(comments[0]!.comment_id)"
+                                class="flex items-center gap-1 hover:text-red-500"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  class="h-4 w-4"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="currentColor"
+                                >
+                                  <path
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round"
+                                    stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </div>
+                          <MarkdownEditorView
+                            class="prose max-w-none mt-2"
+                            :generateData="comments[0]!.content"
+                          />
+                          <transition name="slide-fade">
+                            <div
+                              v-if="to_comment_id === comments[0]!.comment_id"
+                              class="flex items-start gap-4 mt-4 w-full"
+                            >
+                              <div class="avatar">
+                                <div class="w-10 h-10 rounded-full">
+                                  <img
+                                    @dragstart.prevent
+                                    :src="useStore.loginUser.avatar"
+                                    alt="Your avatar"
+                                    class="object-cover w-full h-full"
+                                  />
+                                </div>
+                              </div>
+                              <div class="w-full">
+                                <textarea
+                                  class="textarea textarea-bordered w-full h-20"
+                                  :placeholder="`回复 @${
+                                    comments[0]!.username
+                                  }`"
+                                  v-model="comment_content"
+                                ></textarea>
+                                <div class="flex justify-end gap-2 mt-2">
+                                  <button
+                                    class="btn btn-ghost btn-sm"
+                                    @click="to_comment_id = 0"
+                                  >
+                                    取消
+                                  </button>
+                                  <button
+                                    class="btn btn-neutral btn-sm"
+                                    @click="submitComment"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4 mr-1"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                      ></path>
+                                    </svg>
+                                    <span>回复</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </transition>
+                        </div>
+                      </div>
+
+                      <!-- Replies -->
+                      <div class="pl-16 mt-6 space-y-6">
+                        <div
+                          v-for="reply in comments.slice(1)"
+                          :key="reply.comment_id"
+                        >
+                          <div class="flex items-start gap-4" v-if="reply">
+                            <div class="avatar">
+                              <div class="w-12 h-12 rounded-full">
+                                <img
+                                  @dragstart.prevent
+                                  :src="reply.avatar"
+                                  alt="Commenter's avatar"
+                                  class="object-cover w-full h-full"
+                                />
+                              </div>
+                            </div>
+                            <div class="flex-grow">
+                              <div class="flex justify-between items-center">
+                                <div>
+                                  <span class="font-bold">{{
+                                    reply.username
+                                  }}</span>
+                                  <span class="text-sm text-gray-500 mx-1"
+                                    >回复</span
+                                  >
+                                  <router-link
+                                    v-if="reply.to_comment_id"
+                                    :to="
+                                      '/myspace/index/' + reply.to_comment_id
+                                    "
+                                  >
+                                    <span class="text-blue-600 font-semibold"
+                                      >@{{ reply.to_comment_name }}</span
+                                    >
+                                  </router-link>
+                                  <span class="text-sm text-gray-500 ml-2"
+                                    >{{ reply.create_time
+                                    }}{{ reply.pattern }}</span
+                                  >
+                                </div>
+                                <div
+                                  class="flex items-center gap-4 text-gray-500 children-hover:text-primary"
+                                >
+                                  <button
+                                    @click="
+                                      commentAddOrCancelThumbs(
+                                        reply.comment_id,
+                                        post.post_id!,
+                                        reply.is_thumbs
+                                      )
+                                    "
+                                    class="flex items-center gap-1"
+                                    :class="{
+                                      'text-rose-500': reply.is_thumbs,
+                                    }"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      viewBox="0 0 20 20"
+                                      fill="currentColor"
+                                    >
+                                      <path
+                                        d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.562 8H12V4a2 2 0 00-2-2l-1.5.5-1 2-1 4V10H6z"
+                                      />
+                                    </svg>
+                                    <span class="text-sm font-medium">{{
+                                      reply.comment_like_count
+                                    }}</span>
+                                  </button>
+                                  <button
+                                    @click="
+                                      commentAddCommentId(
+                                        reply.comment_id,
+                                        reply.root_comment_id
+                                      )
+                                    "
+                                    class="flex items-center gap-1"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                      />
+                                    </svg>
+                                    <span class="text-sm font-medium"
+                                      >回复</span
+                                    >
+                                  </button>
+                                  <button
+                                    v-if="
+                                      reply.uuid === useStore.loginUser.uuid
+                                    "
+                                    @click="DeleteComment(reply.comment_id)"
+                                    class="flex items-center gap-1 hover:text-red-500"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      class="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                              <MarkdownEditorView
+                                class="prose max-w-none mt-2"
+                                :generateData="reply.content"
+                              />
+                              <transition name="slide-fade">
+                                <div
+                                  v-if="to_comment_id === reply.comment_id"
+                                  class="flex items-start gap-4 mt-4 w-full"
+                                >
+                                  <div class="avatar">
+                                    <div class="w-10 h-10 rounded-full">
+                                      <img
+                                        @dragstart.prevent
+                                        :src="useStore.loginUser.avatar"
+                                        alt="Your avatar"
+                                        class="object-cover w-full h-full"
+                                      />
+                                    </div>
+                                  </div>
+                                  <div class="w-full">
+                                    <textarea
+                                      class="textarea textarea-bordered w-full h-20"
+                                      :placeholder="`回复 @${reply.username}`"
+                                      v-model="comment_content"
+                                    ></textarea>
+                                    <div class="flex justify-end gap-2 mt-2">
+                                      <button
+                                        class="btn btn-ghost btn-sm"
+                                        @click="to_comment_id = 0"
+                                      >
+                                        取消
+                                      </button>
+                                      <button
+                                        class="btn btn-neutral btn-sm"
+                                        @click="submitComment"
+                                      >
+                                        <svg
+                                          xmlns="http://www.w3.org/2000/svg"
+                                          class="h-4 w-4 mr-1"
+                                          fill="none"
+                                          viewBox="0 0 24 24"
+                                          stroke="currentColor"
+                                        >
+                                          <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                                          ></path>
+                                        </svg>
+                                        <span>回复</span>
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </transition>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <label class="form-control w-full">
-                      <div class="label">
-                        <span class="label-text">{{
-                          useStore.loginUser.username
-                        }}</span>
-                      </div>
-                      <textarea
-                        class="textarea textarea-bordered h-24"
-                        placeholder="在这里可以填写你的评论哦o(*￣︶￣*)o（此处支持markdown，MaxJax语法）"
-                        v-model="comment_content"
-                      ></textarea>
-                      <button
-                        class="btn btn-outline btn-success my-2"
-                        @click="submitComment"
-                      >
-                        提交评论
-                      </button>
-                    </label>
                   </div>
-                </button>
-                <MarkdownEditorView :generateData="comment.content" />
+                </div>
+              </section>
+            </div>
+          </article>
+        </main>
+
+        <!-- TOC -->
+        <aside class="w-full lg:w-1/4 lg:block hidden">
+          <div class="toc-container">
+            <div class="card bg-white shadow-sm rounded-lg">
+              <div class="card-body p-4">
+                <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h7"
+                    />
+                  </svg>
+                  目录
+                </h3>
+                <div
+                  class="max-h-[calc(100vh-180px)] overflow-y-auto pr-2 custom-scrollbar"
+                >
+                  <nav>
+                    <ul class="space-y-2">
+                      <li>
+                        <a
+                          @click.prevent="scrollToTitle(-1)"
+                          href="#"
+                          class="block text-sm transition-colors duration-200 font-bold text-primary"
+                        >
+                          回到顶部
+                        </a>
+                      </li>
+                      <li v-for="title in titles" :key="title.index">
+                        <a
+                          @click.prevent="scrollToTitle(title.index)"
+                          href="#"
+                          class="block text-sm transition-colors duration-200"
+                          :class="{
+                            'text-primary font-bold border-l-2 border-primary':
+                              activeIndex === title.index + 1,
+                            'text-gray-600 hover:text-primary border-l-2 border-transparent hover:border-gray-300':
+                              activeIndex !== title.index + 1,
+                          }"
+                          :style="{
+                            'padding-left': (title.level - 1) * 1 + 1 + 'rem',
+                          }"
+                        >
+                          {{ title.text }}
+                        </a>
+                      </li>
+                    </ul>
+                  </nav>
+                </div>
               </div>
             </div>
           </div>
-          <div class="divider" v-if="comments != ''"></div>
-        </div>
+        </aside>
       </div>
-    </div>
-    <div
-      class="card lg:card-side shadow-lg bg-gradient-to-r bg-white lg:w-1/4 fixed flex overflow-auto scrollable-div"
-      style="
-        width: 350px;
-        max-height: 720px;
-        overflow-y: auto;
-        border: 2px solid #1976d2;
-        z-index: 9999;
-        position: fixed;
-        margin-left: 780px;
-      "
-    >
-      <nav class="p-6 w-full">
-        <ul>
-          <li class="text-2xl text-blue-500 text-center mb-4 mx-auto">
-            <button
-              @click="scrollToTitle(-1)"
-              class="py-2 px-4 rounded-lg transition bg-blue-500 hover:bg-blue-600 active:bg-gray-700 text-white w-full"
-            >
-              <span> 目录(置顶)</span>
-            </button>
-          </li>
-          <li
-            :class="
-              activeIndex === title.index + 1
-                ? 'bg-blue-500 text-white'
-                : 'text-gray-800 hover:bg-blue-100 active:bg-blue-500'
-            "
-            class="nav-item rounded"
-            v-for="title in titles"
-            :key="title.id"
-          >
-            <button
-              class="font-bold px-2 rounded-lg block transition text-left w-full"
-              :style="'text-indent:' + (title.level - 1) + 'em'"
-              :id="'#' + title.id"
-              @click.prevent="scrollToTitle(title.index)"
-            >
-              {{ title.text }}
-            </button>
-          </li>
-        </ul>
-      </nav>
     </div>
   </div>
 </template>
 
 <style scoped>
 .heart-icon {
-  width: var(--size);
-  position: relative;
-
   --skin-color: rgb(245, 98, 110);
   --gray-color: rgb(197, 197, 197);
-  --size: 80px;
   --path-dasharray: 3600;
 
-  input[type="checkbox"] {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 99;
-    opacity: 0;
-  }
   svg {
-    width: 100%;
     position: relative;
     z-index: 9;
     .heart {
@@ -860,6 +1041,13 @@ input[type="checkbox"] {
   }
 }
 
+@keyframes run {
+  to {
+    stroke-dashoffset: 0;
+    fill: var(--skin-color);
+  }
+}
+
 .alert-error {
   animation: alert-error 3s 1;
 }
@@ -890,7 +1078,74 @@ input[type="checkbox"] {
     opacity: 0;
   }
 }
-.nav-item button {
-  transition: background-color 0.01ms, color 0.01s;
+
+/* Add this to your styles */
+.children-hover\:text-primary > * {
+  transition: color 0.2s ease-in-out;
+}
+.children-hover\:text-primary > *:hover {
+  color: var(--fallback-p, oklch(var(--p) / 1));
+}
+.prose {
+  line-height: 1.7;
+}
+
+#markdown :deep(h1),
+#markdown :deep(h2),
+#markdown :deep(h3),
+#markdown :deep(h4),
+#markdown :deep(h5),
+#markdown :deep(h6) {
+  scroll-margin-top: 80px; /* Adjust this value to your liking */
+}
+
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.3s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateY(-10px);
+  opacity: 0;
+}
+
+.toc-container {
+  position: fixed;
+  top: 75px; /* Adjust this value to match your navigation bar height */
+  width: 300px;
+  right: calc((100% - 1300px) / 2);
+  z-index: 10;
+}
+
+@media (max-width: 1536px) {
+  .toc-container {
+    right: 20px;
+    width: 280px;
+  }
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 20px;
+}
+
+#markdown :deep(h5),
+#markdown :deep(h6) {
+  scroll-margin-top: 80px; /* Adjust this value to your liking */
 }
 </style>

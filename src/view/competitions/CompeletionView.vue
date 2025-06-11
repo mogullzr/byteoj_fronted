@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, Ref, ref, UnwrapRef } from "vue";
+import { onMounted, Ref, ref, UnwrapRef, computed } from "vue";
 import { useRouter } from "vue-router";
 import {
   CompetitionControllerService,
@@ -8,635 +8,772 @@ import {
   UserVo,
 } from "../../../generated";
 import UserStore from "@/store/user";
+import user from "@/store/user";
 
 const dayjs = require("dayjs");
 
 const router = useRouter();
 const useStore = UserStore();
+const userInfo = useStore.loginUser;
 const path = router.currentRoute.value.fullPath + "/";
 const currentPage = ref(1);
-const PageSum: Ref<number | undefined> = ref(1);
-const competition_list: Ref<CompetitionInfoVo[]> = ref([]);
-const checked: Ref<number> = ref(0);
+const PageSum = ref<number>(1);
+const competition_list = ref<CompetitionInfoVo[]>([]);
+const checked = ref<number>(0);
 // 排行榜前十名用户
-const user_top: Ref<UserVo[]> = ref([]);
+const user_top = ref<UserVo[]>([]);
 // 各个分数对应颜色
 const rated_color_list: UnwrapRef<string[]> = useStore.rated_color_list;
 // 最后一次题目
-const last_problem: Ref<any> = ref({});
+const last_problem = ref<any>({});
+
+// UI state
+const isModalOpen = ref(false);
+const loading = ref(true);
+
+const toggleModal = () => {
+  isModalOpen.value = !isModalOpen.value;
+  console.log("Modal toggled:", isModalOpen.value);
+};
+
+// Format date helper
+const formatDate = (date: string | undefined) => {
+  return date ? dayjs(date).format("YYYY-MM-DD HH:mm") : "-";
+};
+
+// Page status helpers
+const getStatusBadge = (status: number | undefined) => {
+  switch (status) {
+    case 0:
+      return { text: "已报名", class: "badge-blue" };
+    case 1:
+      return { text: "报名", class: "badge-green" };
+    case 2:
+    case 3:
+      return { text: "进行中", class: "badge-yellow" };
+    case 4:
+      return { text: "已结束", class: "badge-gray" };
+    default:
+      return { text: "未知", class: "badge-gray" };
+  }
+};
+
 onMounted(async () => {
-  const res1 =
-    await CompetitionControllerService.competitionSearchByPageUsingPost(
-      currentPage.value
-    );
+  loading.value = true;
+  try {
+    const [res1, res2, res3] = await Promise.all([
+      CompetitionControllerService.competitionSearchByPageUsingPost(
+        currentPage.value
+      ),
+      CompetitionControllerService.competitionSearchRankTop10UsingPost(),
+      ProblemAlgorithmControllerService.problemAlgorithmUserLastUsingGet(),
+    ]);
 
-  if (res1.code === 0) {
-    competition_list.value = res1.data;
-    PageSum.value = competition_list.value[0].page_Sum;
-  } else if (res1.code === 40101) {
-    router.replace("/404");
-  }
+    if (res1.code === 0) {
+      competition_list.value = res1.data;
+      PageSum.value = res1.data?.[0]?.page_Sum || 1;
+    } else if (res1.code === 40101) {
+      router.replace("/404");
+    }
 
-  const res2 =
-    await CompetitionControllerService.competitionSearchRankTop10UsingPost();
-  if (res2.code === 0) {
-    user_top.value = res2.data;
-    console.log(user_top.value);
-  }
+    if (res2.code === 0) {
+      user_top.value = res2.data;
+    }
 
-  const res3 =
-    await ProblemAlgorithmControllerService.problemAlgorithmUserLastUsingGet();
-  if (res3.code === 0) {
-    last_problem.value = res3.data;
+    if (res3.code === 0) {
+      last_problem.value = res3.data;
+    }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    loading.value = false;
   }
 });
 
 const PageClick = async (Page: number) => {
-  if (Page <= 0 || Page > PageSum.value) {
+  if (!PageSum.value || Page <= 0 || Page > PageSum.value) {
     return;
   }
-
+  loading.value = true;
   const res =
     await CompetitionControllerService.competitionSearchByPageUsingPost(Page);
 
   if (res.code === 0) {
     competition_list.value = res.data;
     currentPage.value = Page;
+    window.scrollTo(0, 0);
   } else {
     console.log(res.message);
   }
+  loading.value = false;
 };
 
 // 确定当前选中的比赛创建类型
 const checkCompetition = (num: number) => {
   checked.value = num;
+  // Directly navigate to the competition creation page when a type is selected
+  if (num > 0) {
+    router.push(`/competition/user/add/${num}/info`);
+    toggleModal(); // Close the modal after navigation
+  }
 };
+
+// Calculate page navigation
+const paginationArray = computed(() => {
+  if (!PageSum.value) return [];
+
+  const total = PageSum.value;
+  const current = currentPage.value;
+  const delta = 2;
+  const left = current - delta;
+  const right = current + delta;
+  const range = [];
+  const rangeWithDots: (number | string)[] = [];
+  let l: number | undefined;
+
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= left && i <= right)) {
+      range.push(i);
+    }
+  }
+
+  for (const i of range) {
+    if (l) {
+      if (i - l === 2) {
+        rangeWithDots.push(l + 1);
+      } else if (i - l !== 1) {
+        rangeWithDots.push("...");
+      }
+    }
+    rangeWithDots.push(i);
+    l = i;
+  }
+
+  return rangeWithDots;
+});
 </script>
 
 <template>
-  <div class="flex mx-auto" style="max-width: 1150px">
-    <div class="flex-1 mr-12 w-5/12">
-      <div class="card align-center bg-white w-full my-4 p-4">
-        <div class="flex">
-          <div class="flex">
+  <div class="page-background">
+    <div class="content-container">
+      <!-- Main Content Area -->
+      <main class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left Section -->
+        <div class="lg:col-span-8">
+          <header class="page-header">
+            <h1 class="header-title">竞赛中心</h1>
+            <router-link
+              to="/competition/user/add/1/info"
+              class="btn btn-primary"
+              v-if="userInfo.role === 2"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5 mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                />
+              </svg>
+              创建比赛
+            </router-link>
+          </header>
+
+          <!-- Competition List -->
+          <div v-if="loading" class="space-y-4">
+            <div
+              v-for="i in 5"
+              :key="i"
+              class="competition-card skeleton-card"
+            ></div>
+          </div>
+          <div v-else class="space-y-4">
+            <article
+              v-for="competition in competition_list"
+              :key="competition.competition_id"
+              class="competition-card"
+            >
+              <router-link
+                :to="path + competition.competition_id"
+                class="card-link"
+              >
+                <div class="card-avatar">
+                  <img
+                    @dragstart.prevent
+                    :src="competition.avatar"
+                    alt="Competition Avatar"
+                  />
+                </div>
+                <div class="card-details">
+                  <h2 class="card-title">{{ competition.competition_name }}</h2>
+                  <div class="card-info">
+                    <span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                          clip-rule="evenodd"
+                        />
+                      </svg>
+                      {{ competition.username }}
+                    </span>
+                    <span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="h-4 w-4"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"
+                        />
+                      </svg>
+                      {{ competition.joins }} 人参与
+                    </span>
+                  </div>
+                  <div class="card-time">
+                    <span>{{ formatDate(competition.start_time) }}</span>
+                    <span>-</span>
+                    <span>{{ formatDate(competition.end_time) }}</span>
+                  </div>
+                </div>
+                <div class="card-status">
+                  <span
+                    class="badge"
+                    :class="getStatusBadge(competition.user_status).class"
+                  >
+                    {{ getStatusBadge(competition.user_status).text }}
+                  </span>
+                </div>
+              </router-link>
+            </article>
+          </div>
+
+          <!-- Pagination -->
+          <nav class="pagination" v-if="PageSum && PageSum > 1">
+            <button
+              @click="PageClick(currentPage - 1)"
+              class="page-button"
+              :disabled="currentPage <= 1"
+            >
+              &lt;
+            </button>
+            <button
+              v-for="(page, index) in paginationArray"
+              :key="index"
+              @click="page !== '...' ? PageClick(Number(page)) : null"
+              class="page-button"
+              :class="{ active: page === currentPage, dots: page === '...' }"
+              :disabled="page === '...'"
+            >
+              {{ page }}
+            </button>
+            <button
+              @click="PageClick(currentPage + 1)"
+              class="page-button"
+              :disabled="currentPage >= (PageSum || 1)"
+            >
+              &gt;
+            </button>
+          </nav>
+        </div>
+
+        <!-- Right Sidebar -->
+        <aside class="lg:col-span-4 space-y-8">
+          <div class="sidebar-card">
+            <h3 class="sidebar-header">你的最近题目</h3>
+            <div class="sidebar-content">
+              <p class="font-semibold line-clamp-2 problem-title-display">
+                {{ last_problem.problem_name || "暂无记录" }}
+              </p>
+              <router-link
+                class="btn btn-secondary w-full mt-4"
+                :to="last_problem.problem_url || '/problems'"
+              >
+                继续刷题
+              </router-link>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <h3 class="sidebar-header">巅峰 Rating 排行榜</h3>
+            <div class="sidebar-content">
+              <ul class="space-y-3">
+                <li
+                  v-for="(user, index) in user_top"
+                  :key="index"
+                  class="leaderboard-item"
+                >
+                  <div class="flex items-center">
+                    <span
+                      class="leaderboard-rank"
+                      :class="{ 'top-3': index < 3 }"
+                      >{{ index + 1 }}</span
+                    >
+                    <span
+                      class="font-bold"
+                      :style="
+                        user.rated !== undefined && rated_color_list
+                          ? `color:${rated_color_list[user.rated]}`
+                          : ''
+                      "
+                    >
+                      {{ user.username }}
+                    </span>
+                  </div>
+                  <span
+                    class="font-bold"
+                    :style="
+                      user.rated !== undefined && rated_color_list
+                        ? `color:${rated_color_list[user.rated]}`
+                        : ''
+                    "
+                  >
+                    {{ user.rating }}
+                  </span>
+                </li>
+              </ul>
+              <button
+                @click="router.replace('/competition/rank')"
+                class="btn btn-secondary w-full mt-6"
+              >
+                查看完整榜单
+              </button>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <!-- Create Competition Modal -->
+    <div v-if="isModalOpen" class="modal-backdrop" @click.self="toggleModal">
+      <div class="modal" @click.stop>
+        <header class="modal-header">
+          <h3>创建新比赛</h3>
+          <button @click="toggleModal" class="modal-close">
             <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="50"
-              height="50"
-              viewBox="0 0 512 512"
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
               <path
-                fill="#3B82F6"
-                d="M18.506 19.895v37.56L135.11 174.06l33.755-33.757L48.97 19.895H18.507zm296.924 81.607c-8.398 17.695-17.58 34.514-27.555 50.48c53.052 55.6 109.094 165.155 145.602 270.827l6.332 18.327l-18.28-6.467c-104.687-37.034-220.62-91.264-274.374-141.967c-15.972 9.98-32.793 19.165-50.49 27.563c53.693 35.685 121.57 69.222 189.496 95.166c-14.437 7.188-29.938 13.59-46.58 19.27l.002.003c68.264 38.63 175.57 65.47 254.412 64.127c1.33-78.052-27.08-188.95-64.127-254.416c-5.76 16.87-12.257 32.57-19.56 47.166c-26.458-69.205-60.387-138.182-94.88-190.08zm-117.858 36.523L135.79 199.81c34.207 31.62 67.775 56.763 94.798 71.598c14.454 7.935 27.094 12.95 36.334 14.762s13.778.34 15.564-1.445s3.26-6.326 1.448-15.565s-6.83-21.88-14.764-36.334c-14.835-27.023-39.976-60.59-71.598-94.8zm79.762 30.08q-6.99 10.214-14.457 19.926c8.892 12.557 16.52 24.587 22.676 35.802c8.515 15.51 14.306 29.43 16.718 41.73c2.414 12.3 1.528 24.28-6.57 32.377c-8.096 8.096-20.076 8.982-32.376 6.57c-12.3-2.413-26.22-8.206-41.73-16.72c-11.1-6.094-23-13.632-35.414-22.405a448 448 0 0 1-22.877 16.76c47.263 42.21 149.664 92.317 245.545 127.873c-35.19-95.766-86.347-192.602-131.514-241.913z"
-              />
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
             </svg>
-            <span class="text-red-400 font-bold text-2xl my-auto"
-              >等你来战</span
-            >
-          </div>
-          <div class="flex-1"></div>
-          <button
-            class="btn text-white bg-blue-300 hover:bg-blue-500 active:bg-blue-600 text-2xl font-bold"
-            onclick="my_modal_3.showModal()"
+          </button>
+        </header>
+        <div class="modal-body">
+          <div
+            v-for="type in [1, 2, 3]"
+            :key="type"
+            class="modal-option"
+            :class="{ active: checked === type }"
+            @click="checkCompetition(type)"
           >
-            创建比赛
-          </button>
-          <dialog id="my_modal_3" class="modal">
-            <div class="modal-box w-11/12 max-w-2xl">
-              <form method="dialog">
-                <button
-                  class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
-                >
-                  ✕
-                </button>
-              </form>
-              <h3 class="font-bold text-xl">请选择创建比赛种类</h3>
-              <div class="divider"></div>
-              <button
-                :class="
-                  'flex flex-row shadow-gray-200 shadow-2xl py-4 my-4 border-2 border-gray-200 w-full ' +
-                  (checked == 1 ? 'border-sky-500' : '')
-                "
-                @click="checkCompetition(1)"
-              >
-                <div class="basis-7/12">
-                  <div class="flex pl-16">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="80"
-                      height="80"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        d="M5 21q-.825 0-1.412-.587T3 19V5q0-.825.588-1.412T5 3h14q.825 0 1.413.588T21 5v14q0 .825-.587 1.413T19 21zm10.15-2h2.125L19 17.275V16h-.85zm-7.5-5l3.025-3l2 2l5.075-5.1l-1.4-1.4l-3.675 3.675l-2-2L6.25 12.6zM5 19h.85l3-3H6.725L5 17.725zm8.525 0l3-3H14.4l-3 3zM9.8 19l3-3h-2.125l-3 3z"
-                      />
-                    </svg>
-                    <div class="text-2xl py-6 font-bold">个人编程创建赛</div>
-                  </div>
-                  <div class="text-gray-400 font-bold text-sm">
-                    *仅仅运行选择题库题目，自行创建比赛
-                  </div>
-                </div>
-                <div class="basis-5/12 text-gray-400">
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持设置比赛密码</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持是使用公共题库</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm"
-                      >仅支持OI赛制(OI，后续将继续扩展)</span
-                    >
-                  </div>
-                </div>
-              </button>
-              <button
-                :class="
-                  'flex flex-row shadow-gray-200 shadow-2xl py-4  my-4 border-2 border-gray-200 w-full ' +
-                  (checked == 2 ? 'border-sky-500' : '')
-                "
-                @click="checkCompetition(2)"
-              >
-                <div class="basis-7/12 pl-16">
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="80"
-                      height="80"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2m-3.1 3.9s-.7-.3-1-.3c-.6-.1-1 .1-1.2 1.1L12 16.8c-.2.8-.5 1.4-1 1.8c-.4.3-.8.4-1.3.4c-.8 0-2-.5-2-.5l.5-1.4s.8.3 1 .3c.3.1.5 0 .7-.1s.3-.4.4-.7l1.6-9.2c.1-.8.5-1.4 1-1.9c.6-.4 1.3-.5 2.1-.4c.7.1 1.5.5 1.5.5z"
-                      />
-                    </svg>
-                    <div class="text-2xl py-6 font-bold">个人数学创建赛</div>
-                  </div>
-                  <div class="text-gray-400 font-bold text-sm">
-                    *仅仅运行选择题库题目，自行创建比赛
-                  </div>
-                </div>
-                <div class="basis-5/12 text-gray-400">
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持设置比赛密码</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持是使用公共题库</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm"
-                      >仅支持OI赛制(OI，后续将继续扩展)</span
-                    >
-                  </div>
-                </div>
-              </button>
-              <button
-                :class="
-                  'flex flex-row shadow-gray-200 shadow-2xl py-4 my-4 border-2 border-gray-200 w-full ' +
-                  (checked == 3 ? 'border-sky-500' : '')
-                "
-                @click="checkCompetition(3)"
-              >
-                <div class="basis-7/12 pl-16">
-                  <div class="flex align-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="80"
-                      height="80"
-                      viewBox="0 0 48 48"
-                    >
-                      <defs>
-                        <mask id="IconifyId1913a427b121fac716">
-                          <g fill="none" stroke="#fff" stroke-width="4">
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              d="M19 32h10v9H19z"
-                            />
-                            <rect
-                              width="38"
-                              height="24"
-                              x="5"
-                              y="8"
-                              fill="#555"
-                              rx="2"
-                            />
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              d="M22 27h4M14 41h20"
-                            />
-                          </g>
-                        </mask>
-                      </defs>
-                      <path
-                        fill="#3B82F6"
-                        d="M0 0h48v48H0z"
-                        mask="url(#IconifyId1913a427b121fac716)"
-                      />
-                    </svg>
-                    <div class="text-2xl py-6 font-bold">个人408创建赛</div>
-                  </div>
-                  <div class="text-gray-400 font-bold text-sm">
-                    *仅仅运行选择题库题目，自行创建比赛
-                  </div>
-                </div>
-                <div class="basis-5/12 text-gray-400">
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持设置比赛密码</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm">支持是使用公共题库</span>
-                  </div>
-                  <div class="flex">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="20"
-                      height="20"
-                      viewBox="0 0 48 48"
-                    >
-                      <path
-                        fill="#3B82F6"
-                        fill-rule="evenodd"
-                        stroke="#3B82F6"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="4"
-                        d="m4 24l5-5l10 10L39 9l5 5l-25 25z"
-                        clip-rule="evenodd"
-                      />
-                    </svg>
-                    <span class="pl-1 text-sm"
-                      >仅支持OI赛制(OI，后续将继续扩展)</span
-                    >
-                  </div>
-                </div>
-              </button>
-              <div class="flex">
-                <div class="flex-1"></div>
-                <form method="dialog">
-                  <button class="btn bg-white text-lg">取消</button>
-                </form>
-                <router-link
-                  class="btn bg-sky-500 text-white text-lg ml-4"
-                  :to="'/competition/user/add/' + checked + '/info'"
-                >
-                  确定
-                </router-link>
-              </div>
+            <div class="flex-grow">
+              <h4 class="font-bold">
+                {{
+                  {
+                    1: "个人编程创建赛",
+                    2: "个人数学创建赛",
+                    3: "个人408创建赛",
+                  }[type]
+                }}
+              </h4>
+              <p class="text-sm">支持公共题库，仅支持OI赛制</p>
             </div>
-          </dialog>
-        </div>
-      </div>
-
-      <div class="container">
-        <router-link
-          class="card lg:card-side shadow-xl border-radius bg-white"
-          v-for="competition in competition_list"
-          :key="competition.competition_id"
-          :to="path + competition.competition_id"
-          style="margin-left: 0; margin-right: 0"
-        >
-          <div class="card-body avatar" style="float: left; width: 20%">
-            <div class="rounded-full w-24">
-              <img
-                @dragstart.prevent
-                :src="competition.avatar"
-                alt="ByteOJ出品"
-              />
+            <div class="radio">
+              <div class="radio-dot"></div>
             </div>
-          </div>
-          <div class="card-body font-bold" style="width: 45%">
-            <div class="my-auto">
-              <div>{{ competition.competition_name }}</div>
-              <div>
-                <div>
-                  <span>比赛创建者：</span>
-                  <span class="text-red-600">{{ competition.username }}</span>
-                </div>
-                <div>
-                  <span>比赛参与人数：</span>
-                  <span class="text-blue-400">{{ competition.joins }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="card-body font-bold" style="width: 35%">
-            <div>
-              <div style="font-size: 20px">比赛时间:</div>
-              <div class="text-blue-700" style="font-size: 14px">
-                {{ dayjs(competition.start_time).format("YYYY-MM-DD HH:mm") }}
-
-                {{ dayjs(competition.end_time).format("YYYY-MM-DD HH:mm") }}
-              </div>
-            </div>
-          </div>
-          <button class="btn btn-success" v-if="competition.user_status === 1">
-            报名
-          </button>
-          <button
-            class="btn btn-error"
-            v-else-if="competition.user_status === 0"
-          >
-            已报名
-          </button>
-          <button
-            class="btn btn-warning"
-            v-else-if="
-              competition.user_status === 2 || competition.user_status === 3
-            "
-          >
-            进行中
-          </button>
-          <button class="btn" v-else-if="competition.user_status === 4">
-            已结束
-          </button>
-        </router-link>
-      </div>
-      <div class="join flex pl-96 bg-white" v-if="PageSum > 1">
-        <button class="join-item btn" @click="PageClick(currentPage - 1)">
-          «
-        </button>
-        <button
-          class="join-item btn"
-          v-if="currentPage - 1 > 0 && currentPage < PageSum"
-          @click="PageClick(currentPage - 1)"
-        >
-          {{ currentPage - 1 }}
-        </button>
-        <button class="join-item btn" v-if="currentPage < PageSum">
-          {{ currentPage }}
-        </button>
-        <button
-          class="join-item btn"
-          v-if="currentPage + 1 < PageSum"
-          @click="PageClick(currentPage + 1)"
-        >
-          {{ currentPage + 1 }}
-        </button>
-        <button class="join-item btn btn-disabled">...</button>
-        <button
-          class="join-item btn"
-          v-if="currentPage + 2 < PageSum - 1"
-          @click="PageClick(PageSum - 1)"
-        >
-          {{ PageSum - 1 }}
-        </button>
-        <button class="join-item btn" @click="PageClick(<number>PageSum)">
-          {{ PageSum }}
-        </button>
-        <button class="join-item btn" @click="PageClick(currentPage + 1)">
-          »
-        </button>
-      </div>
-    </div>
-    <div style="width: 30%">
-      <div class="card card-compact bg-base-100 w-80 shadow-2xl pt-4 my-4">
-        <div class="card-body">
-          <div class="card-title align-center text-blue-600 text-3xl">
-            <div>
-              <div class="m-2">你写的上一道题目：</div>
-              <div class="m-2">{{ last_problem.problem_name }}</div>
-            </div>
-          </div>
-          <div>
-            <router-link
-              class="w-full btn btn-primary text-white text-xl"
-              :to="last_problem.problem_url"
-            >
-              继续刷题
-            </router-link>
           </div>
         </div>
-      </div>
-      <div class="card card-compact bg-base-100 w-80 shadow-2xl pt-4">
-        <div class="card-body">
-          <div class="card-title align-center text-red-600 text-3xl">
-            巅峰Rating排行榜
-          </div>
-          <div class="">
-            <ul>
-              <li class="m-2 text-lg" v-for="(user, index) in user_top">
-                <span class="font-black mr-4 w-4 bg-gray-100">{{
-                  index + 1
-                }}</span>
-                <span
-                  class="font-black"
-                  :style="'color:' + rated_color_list[user.rated]"
-                  >{{ user.username }}</span
-                >
-                <span
-                  class="font-black float-right"
-                  :style="'color:' + rated_color_list[user.rated]"
-                  >{{ user.rating }}</span
-                >
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <button
-              @click="router.replace('/competition/rank')"
-              class="w-full btn btn-primary text-white text-2xl"
-            >
-              查看
-            </button>
-          </div>
-        </div>
+        <footer class="modal-footer">
+          <button @click="toggleModal" class="btn btn-ghost">取消</button>
+          <button disabled class="btn btn-primary">请选择比赛类型</button>
+        </footer>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.card:hover {
-  box-shadow: 0px 1rem 2rem 0px rgba(48, 55, 66, 0.15);
-  transform: translate(0, -2px);
-  transition-delay: 0s !important;
+/* General Page Styling */
+.page-background {
+  background-color: transparent; /* Allows website background image to show */
+  min-height: 100vh;
 }
 
-html,
-body {
+.content-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+
+  /* Solid white background */
+  background-color: #ffffff;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+  border: 1px solid #e5e7eb;
+}
+
+/* Header */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+.header-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+.btn-primary:disabled {
+  background-color: #9ca3af;
+  border-color: #9ca3af;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+  border-color: #d1d5db;
+}
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+.btn-ghost {
+  background-color: transparent;
+  color: #6b7280;
+}
+.btn-ghost:hover {
+  background-color: #f3f4f6;
+}
+
+/* Competition Card */
+.competition-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+  transition: all 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+.competition-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-2px);
+  border-color: #3b82f6;
+}
+.card-link {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  gap: 1.5rem;
+  color: inherit;
+  text-decoration: none;
+}
+.card-avatar {
+  flex-shrink: 0;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.card-avatar img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+}
+.card-details {
+  flex-grow: 1;
+}
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+.card-info {
   display: flex;
+  gap: 1rem;
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+.card-info span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.card-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+.card-status {
+  flex-shrink: 0;
+}
+.badge {
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+.badge-blue {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+.badge-green {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+.badge-yellow {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+.badge-gray {
+  background-color: #e5e7eb;
+  color: #4b5563;
 }
 
-:root {
-  --borderColor: #0357f3;
+.skeleton-card {
+  height: 124px;
+  background-color: #e5e7eb;
+  border-radius: 0.75rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.border-radius {
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+.page-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  margin: 0 0.25rem;
+  border-radius: 0.5rem;
+  background-color: white;
+  color: #6b7280;
+  font-weight: 600;
+  border: 1px solid #d1d5db;
+  transition: all 0.2s ease;
+}
+.page-button:hover:not(:disabled) {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+.page-button.active {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: white;
+}
+.page-button:disabled:not(.dots) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.page-button.dots {
+  border-color: transparent;
+  background-color: transparent;
+  cursor: default;
+}
+
+/* Sidebar */
+.sidebar-card {
+  background-color: #f9fafb; /* Slightly off-white for contrast */
+  border-radius: 0.75rem;
+  border: 1px solid #e5e7eb;
+}
+.sidebar-header {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  font-size: 1.25rem;
+  color: #1f2937;
+  border-bottom: 1px solid #e5e7eb;
+}
+.sidebar-content {
+  padding: 1.5rem;
+}
+.sidebar-content .problem-title-display {
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: #374151;
+  min-height: 64px;
+}
+.leaderboard-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.95rem;
+}
+.leaderboard-rank {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-right: 0.75rem;
+  background-color: #f3f4f6;
+  color: #4b5563;
+}
+.leaderboard-rank.top-3 {
+  background-color: #f59e0b;
+  color: white;
+}
+
+/* Modal */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+.modal {
+  background-color: white;
+  border-radius: 0.75rem;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   position: relative;
-  margin: 0 20px 20px;
-  border: 0 solid #036bf3;
+  z-index: 10000;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+.modal-close {
+  color: #9ca3af;
+  transition: color 0.2s;
+}
+.modal-close:hover {
+  color: #1f2937;
+}
+.modal-body {
+  padding: 1.5rem;
+}
+.modal-option {
+  padding: 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
   cursor: pointer;
-
-  &::before,
-  &::after {
-    content: "";
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    transition: 0.3s ease-in-out;
-  }
-
-  &::before {
-    top: -5px;
-    left: -5px;
-    border-top: 1px solid var(--borderColor);
-    border-left: 1px solid var(--borderColor);
-  }
-
-  &::after {
-    right: -5px;
-    bottom: -5px;
-    border-bottom: 1px solid var(--borderColor);
-    border-right: 1px solid var(--borderColor);
-  }
-
-  &:hover::before,
-  &:hover::after {
-    width: calc(100% + 9px);
-    height: calc(100% + 9px);
-  }
+  transition: all 0.2s ease;
+  margin-bottom: 1rem;
+}
+.modal-option h4 {
+  font-size: 1.05rem;
+}
+.modal-option p {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+.modal-option:hover {
+  border-color: #3b82f6;
+}
+.modal-option.active {
+  border-color: #3b82f6;
+  background-color: #eff6ff;
+}
+.radio {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  border: 2px solid #d1d5db;
+  margin-left: 1rem;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-option.active .radio {
+  border-color: #3b82f6;
+}
+.radio-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+.modal-option.active .radio-dot {
+  transform: scale(1);
+}
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
 }
 </style>

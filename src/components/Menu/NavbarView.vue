@@ -21,6 +21,27 @@ const searchRequest: Ref<SearchRequest> = ref({
   tagsList: route.query.tagsList ?? "",
 } as any);
 
+// 检查是否在iframe中
+const isInIframe = ref(window !== window.parent);
+
+// 处理页面导航
+const handleNavigation = (path: string) => {
+  // 使用路由进行导航
+  router.push(path);
+
+  // 如果在iframe中，向父窗口发送导航消息
+  if (isInIframe.value) {
+    try {
+      window.parent.postMessage({
+        type: 'navigation',
+        path: path
+      }, window.location.origin);
+    } catch (e) {
+      console.error('无法向父窗口发送导航消息', e);
+    }
+  }
+};
+
 onMounted(() => {
   darkTheme.value = "ByteOJLight";
 });
@@ -122,25 +143,25 @@ const searchInfo = () => {
       <div class="navbar-start hidden lg:flex flex-1 px-1 mr-1">
         <ul class="menu menu-horizontal">
           <li>
-            <router-link to="/home">首页</router-link>
+            <a @click.prevent="handleNavigation('/home')" href="/home">首页</a>
           </li>
           <li>
-            <router-link to="/problems">题库</router-link>
+            <a @click.prevent="handleNavigation('/problems')" href="/problems">题库</a>
           </li>
           <li>
-            <router-link to="/study">学习</router-link>
+            <a @click.prevent="handleNavigation('/study')" href="/study">学习</a>
           </li>
           <!--        <li>-->
-          <!--          <router-link to="/discussion">讨论</router-link>-->
+          <!--          <a @click.prevent="handleNavigation('/discussion')" href="/discussion">讨论</a>-->
           <!--        </li>-->
           <li>
-            <router-link to="/competition">竞赛</router-link>
+            <a @click.prevent="handleNavigation('/competition')" href="/competition">竞赛</a>
           </li>
           <li>
-            <router-link to="/chatbot">学习机器人</router-link>
+            <a @click.prevent="handleNavigation('/chatbot')" href="/chatbot">学习机器人</a>
           </li>
           <li>
-            <router-link to="/special">Byte专栏</router-link>
+            <a @click.prevent="handleNavigation('/special')" href="/special">Byte专栏</a>
           </li>
         </ul>
       </div>
@@ -195,7 +216,7 @@ const searchInfo = () => {
             >
               <li v-if="useStore.loginUser.role === 2">
                 <a
-                  href="http://www.byteoj.com"
+                  href="https://admin.byteoj.com/home"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
