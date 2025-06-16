@@ -176,7 +176,7 @@ const goBack = () => {
                 <span class="font-bold text-xxl">作者:</span>
                 <router-link
                   class="link link-hover text-primary font-bold"
-                  to="'/user/userspace/' + record.uuid"
+                  to="'/user/space/' + record.uuid"
                 >
                   <div class="avatar">
                     <div class="w-12 rounded-full">
@@ -336,7 +336,7 @@ const goBack = () => {
           </div>
           <router-link
             class="link link-hover link-primary font-bold text-blue-500 mx-4 py-8 text-2xl"
-            :to="'/user/userspace/' + record.uuid"
+            :to="'/user/space/' + record.uuid"
           >
             {{ record.user_name }}
           </router-link>

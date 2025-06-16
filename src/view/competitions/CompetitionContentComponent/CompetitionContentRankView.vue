@@ -21,7 +21,8 @@ const currentProblemGroup = ref(0); // 当前题目分组索引
 onMounted(async () => {
   const res = await CompetitionControllerService.competitionSearchRankUsingPost(
     competition_id.value,
-    1
+    1,
+    0
   );
 
   if (res.code === 0) {

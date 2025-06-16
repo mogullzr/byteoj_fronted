@@ -402,7 +402,7 @@ export class UserControllerService {
   public static userGetPictureByUserUsingGet(): CancelablePromise<BaseResponse_string_> {
     return __request(OpenAPI, {
       method: "GET",
-      url: "/api/user/picture/user/get/",
+      url: "/api/user/picture/user/get",
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,

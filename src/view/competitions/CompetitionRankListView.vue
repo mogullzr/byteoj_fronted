@@ -652,7 +652,7 @@ onMounted(async () => {
   margin-bottom: 50px;
   position: relative;
   z-index: 1;
-  padding: 40px 20px 50px;
+  padding: 70px 20px 50px;
   background: linear-gradient(
     to bottom,
     rgba(255, 255, 255, 0.8),
@@ -663,6 +663,15 @@ onMounted(async () => {
   border: 1px solid rgba(226, 232, 240, 0.7);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  -webkit-transition: all 0.8s;
+  -moz-transition: all 0.8s;
+  -o-transition: all 0.8s;
+  transition: all 0.8s;
+}
+
+.top-three-layout {
+  box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.3);
 }
 
 /* Background effect for convergence feeling */
@@ -679,6 +688,18 @@ onMounted(async () => {
     transparent 70%
   );
   z-index: 0;
+  -webkit-transition: all 0.8s;
+  -moz-transition: all 0.8s;
+  -o-transition: all 0.8s;
+  transition: all 0.8s;
+}
+
+.top-three-layout::before {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 193, 7, 0.2) 0%,
+    transparent 75%
+  );
 }
 
 /* Rays expanding from center */
@@ -715,6 +736,48 @@ onMounted(async () => {
     );
   z-index: 0;
   opacity: 0.7;
+  -webkit-transition: all 0.8s;
+  -moz-transition: all 0.8s;
+  -o-transition: all 0.8s;
+  transition: all 0.8s;
+}
+
+.top-three-layout::after {
+  background-image: linear-gradient(
+      45deg,
+      transparent 42%,
+      rgba(255, 193, 7, 0.08) 50%,
+      transparent 58%
+    ),
+    linear-gradient(
+      135deg,
+      transparent 42%,
+      rgba(255, 193, 7, 0.08) 50%,
+      transparent 58%
+    ),
+    linear-gradient(
+      225deg,
+      transparent 42%,
+      rgba(255, 193, 7, 0.08) 50%,
+      transparent 58%
+    ),
+    linear-gradient(
+      315deg,
+      transparent 42%,
+      rgba(255, 193, 7, 0.08) 50%,
+      transparent 58%
+    );
+  opacity: 1;
+  animation: rotate-bg 15s linear infinite;
+}
+
+@keyframes rotate-bg {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .winner-triangle {
@@ -727,6 +790,10 @@ onMounted(async () => {
   position: relative;
   height: auto;
   padding: 20px 0 10px;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
 /* Central point & converging lines */
@@ -744,16 +811,54 @@ onMounted(async () => {
     rgba(59, 130, 246, 0.5)
   );
   z-index: 0;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
 .winner-triangle::before {
   left: 5%;
-  transform: rotate(15deg);
+  transform: rotate(25deg) translateY(-10px);
+  width: 45%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 193, 7, 0.4) 80%,
+    rgba(255, 193, 7, 0.6)
+  );
+  animation: line-animation-left 3s ease-in-out infinite alternate;
 }
 
 .winner-triangle::after {
   right: 5%;
-  transform: rotate(-15deg);
+  transform: rotate(-25deg) translateY(-10px);
+  width: 45%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 193, 7, 0.4) 80%,
+    rgba(255, 193, 7, 0.6)
+  );
+  animation: line-animation-right 3s ease-in-out infinite alternate;
+}
+
+@keyframes line-animation-left {
+  0% {
+    transform: rotate(20deg) translateY(-8px);
+  }
+  100% {
+    transform: rotate(30deg) translateY(-12px);
+  }
+}
+
+@keyframes line-animation-right {
+  0% {
+    transform: rotate(-20deg) translateY(-8px);
+  }
+  100% {
+    transform: rotate(-30deg) translateY(-12px);
+  }
 }
 
 /* Center point pulse */
@@ -769,6 +874,18 @@ onMounted(async () => {
   z-index: 0;
   box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
   animation: pulse-center 2s infinite;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
+}
+
+.winner-triangle .center-point {
+  width: 25px;
+  height: 25px;
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  box-shadow: 0 0 20px 5px rgba(255, 193, 7, 0.5);
+  animation: pulse-center-hover 1.5s infinite;
 }
 
 @keyframes pulse-center {
@@ -783,6 +900,18 @@ onMounted(async () => {
   }
 }
 
+@keyframes pulse-center-hover {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 25px rgba(255, 193, 7, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+  }
+}
+
 .winner {
   background: white;
   border-radius: 12px;
@@ -792,16 +921,19 @@ onMounted(async () => {
   align-items: center;
   text-align: center;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   position: relative;
   z-index: 1;
   border: 1px solid rgba(226, 232, 240, 0.7);
   transform-origin: bottom center;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
-.winner:hover {
-  transform: translateY(-10px) scale(1.03);
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+.winner {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
 .first-place {
@@ -815,10 +947,26 @@ onMounted(async () => {
   order: 2;
   position: relative;
   transform: scale(1.1);
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
-.first-place:hover {
-  transform: translateY(-10px) scale(1.1);
+.first-place {
+  animation: first-place-float 3s ease-in-out infinite;
+}
+
+@keyframes first-place-float {
+  0% {
+    transform: translateY(0) scale(1.1);
+  }
+  50% {
+    transform: translateY(-20px) scale(1.15);
+  }
+  100% {
+    transform: translateY(0) scale(1.1);
+  }
 }
 
 /* Glow effect for first place */
@@ -838,10 +986,10 @@ onMounted(async () => {
   z-index: -1;
   filter: blur(15px);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.5s ease;
 }
 
-.first-place:hover::before {
+.first-place::before {
   opacity: 1;
 }
 
@@ -852,11 +1000,27 @@ onMounted(async () => {
   background: linear-gradient(to bottom, white, #f8fafc);
   z-index: 2;
   order: 1;
-  transform: perspective(800px) rotateY(10deg);
+  transform: perspective(800px) rotateY(-10deg);
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
-.second-place:hover {
-  transform: perspective(800px) rotateY(5deg) translateY(-10px) scale(1.05);
+.second-place {
+  animation: second-place-anim 4s ease-in-out infinite;
+}
+
+@keyframes second-place-anim {
+  0% {
+    transform: perspective(800px) rotateY(-10deg);
+  }
+  50% {
+    transform: perspective(800px) rotateY(-20deg) translateY(-10px) scale(1.05);
+  }
+  100% {
+    transform: perspective(800px) rotateY(-10deg);
+  }
 }
 
 .third-place {
@@ -866,11 +1030,27 @@ onMounted(async () => {
   background: linear-gradient(to bottom, white, #fff7ed);
   z-index: 2;
   order: 3;
-  transform: perspective(800px) rotateY(-10deg);
+  transform: perspective(800px) rotateY(10deg);
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
 }
 
-.third-place:hover {
-  transform: perspective(800px) rotateY(-5deg) translateY(-10px) scale(1.05);
+.third-place {
+  animation: third-place-anim 4s ease-in-out infinite;
+}
+
+@keyframes third-place-anim {
+  0% {
+    transform: perspective(800px) rotateY(10deg);
+  }
+  50% {
+    transform: perspective(800px) rotateY(20deg) translateY(-10px) scale(1.05);
+  }
+  100% {
+    transform: perspective(800px) rotateY(10deg);
+  }
 }
 
 /* Position crown icon */
@@ -882,6 +1062,29 @@ onMounted(async () => {
   font-size: 38px;
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.2));
   animation: float 3s ease-in-out infinite;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
+}
+
+.crown {
+  filter: drop-shadow(0 6px 15px rgba(255, 193, 7, 0.4));
+  animation: crown-float 2s ease-in-out infinite;
+  font-size: 42px;
+  top: -35px;
+}
+
+@keyframes crown-float {
+  0% {
+    transform: translateX(-50%) rotate(-5deg);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-8px) rotate(5deg);
+  }
+  100% {
+    transform: translateX(-50%) rotate(-5deg);
+  }
 }
 
 /* Position medal badges */
@@ -898,6 +1101,26 @@ onMounted(async () => {
   font-size: 16px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
   position: relative;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
+  transition: all 0.5s;
+}
+
+.medal:not(.gold):not(.silver):not(.bronze) {
+  animation: medal-rotate 4s ease-in-out infinite;
+}
+
+@keyframes medal-rotate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .first-place .medal {
@@ -906,21 +1129,57 @@ onMounted(async () => {
   font-size: 22px;
   animation: pulse-gold 2s infinite alternate;
   margin-bottom: 20px;
+  transform: none !important;
+  animation-name: pulse-gold !important;
+}
+
+.medal {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
 }
 
 .gold {
   background: linear-gradient(135deg, #ffd700, #ffc107);
   box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  transform: none !important;
+  animation: pulse-gold 2s infinite alternate !important;
 }
 
 .silver {
   background: linear-gradient(135deg, #e2e8f0, #94a3b8);
   box-shadow: 0 4px 15px rgba(148, 163, 184, 0.4);
+  transform: none !important;
+  animation: pulse-silver 2s infinite alternate !important;
 }
 
 .bronze {
   background: linear-gradient(135deg, #d97706, #b45309);
   box-shadow: 0 4px 15px rgba(180, 83, 9, 0.4);
+  transform: none !important;
+  animation: pulse-bronze 2s infinite alternate !important;
+}
+
+@keyframes pulse-silver {
+  0% {
+    box-shadow: 0 0 0 0 rgba(148, 163, 184, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(148, 163, 184, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(148, 163, 184, 0);
+  }
+}
+
+@keyframes pulse-bronze {
+  0% {
+    box-shadow: 0 0 0 0 rgba(180, 83, 9, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(180, 83, 9, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(180, 83, 9, 0);
+  }
 }
 
 @keyframes pulse-gold {
@@ -947,7 +1206,10 @@ onMounted(async () => {
   object-fit: cover;
   border: 2px solid white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
+  transition: all 0.5s ease;
+  -webkit-transition: all 0.5s;
+  -moz-transition: all 0.5s;
+  -o-transition: all 0.5s;
 }
 
 .first-place .avatar-img {
@@ -957,9 +1219,51 @@ onMounted(async () => {
   box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
 }
 
-.winner:hover .avatar-img {
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.first-place .avatar-img {
+  transform: scale(1.15);
+  box-shadow: 0 8px 20px rgba(255, 193, 7, 0.4);
+  border: 3px solid #ffeb3b;
+  animation: avatar-first-place 3s ease-in-out infinite;
+}
+
+.second-place .avatar-img {
+  transform: translateX(5px) scale(1.1);
+  animation: avatar-second-place 3s ease-in-out infinite alternate;
+}
+
+.third-place .avatar-img {
+  transform: translateX(-5px) scale(1.1);
+  animation: avatar-third-place 3s ease-in-out infinite alternate;
+}
+
+@keyframes avatar-first-place {
+  0% {
+    transform: scale(1.15);
+  }
+  50% {
+    transform: scale(1.2) rotate(5deg);
+  }
+  100% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes avatar-second-place {
+  0% {
+    transform: translateX(5px) scale(1.1);
+  }
+  100% {
+    transform: translateX(8px) scale(1.12);
+  }
+}
+
+@keyframes avatar-third-place {
+  0% {
+    transform: translateX(-5px) scale(1.1);
+  }
+  100% {
+    transform: translateX(-8px) scale(1.12);
+  }
 }
 
 .winner-info {

@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProblemDailyNumVo } from './ProblemDailyNumVo';
-export type BaseResponse_List_ProblemDailyNumVo_ = {
+import type { ProblemDailyInfo } from './ProblemDailyInfo';
+export type BaseResponse_List_ProblemDailyInfo_ = {
     code?: number;
-    data?: Array<ProblemDailyNumVo>;
+    data?: Array<ProblemDailyInfo>;
     message?: string;
 };
 
