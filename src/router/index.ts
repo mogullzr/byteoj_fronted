@@ -14,6 +14,7 @@ import Math408View from "../views/problems/math/Math408View.vue";
 import AlgorithmTestCaseAddView from "../views/problems/algorithm/AlgorithmTestCaseAddView.vue";
 import CompetitionView from "../views/competition/CompetitionView.vue";
 import AdminAuthManageView from "../views/user/AdminAuthManageView.vue";
+import LogView from "../views/log/index.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -109,18 +110,18 @@ const routes: Array<RouteRecordRaw> = [
             name: "测试样例编辑",
             meta: {
               access: "2",
-              show: true
+              show: true,
             },
-            component: AlgorithmTestCaseAddView
+            component: AlgorithmTestCaseAddView,
           },
           {
             path: ":problem_id",
             name: "算法试题修改",
             meta: {
               access: "2",
-              show: true
+              show: true,
             },
-            component: AlgorithmAddView
+            component: AlgorithmAddView,
           },
         ],
       },
@@ -158,6 +159,15 @@ const routes: Array<RouteRecordRaw> = [
       show: false,
     },
     component: CompetitionView,
+  },
+  {
+    path: "/log",
+    name: "日志管理",
+    meta: {
+      access: "2",
+      show: true,
+    },
+    component: LogView,
   },
   {
     path: "/404",
