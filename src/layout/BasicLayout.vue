@@ -2,6 +2,7 @@
   <div class="mx-auto">
     <NavbarView class="fixed" style="z-index: 999" v-if="isNavbarVisible" />
   </div>
+
   <div>
     <BottomView
       :is-navbar-visible="isNavbarVisible"
@@ -22,6 +23,7 @@
           : ' pb-32')
       "
     >
+      <PlaneGame />
       <transition name="fade" mode="out-in">
         <!-- 添加 key 和 activated 事件处理 -->
         <router-view v-slot="{ Component, route }">
@@ -161,9 +163,10 @@ import BottomView from "@/components/Menu/BottomView.vue";
 import { useRoute } from "vue-router";
 import router from "@/router";
 import axios from "axios";
+import PlaneGame from "@/view/components/PlaneGame.vue";
 
 export default defineComponent({
-  components: { NavbarView, BottomView },
+  components: { PlaneGame, NavbarView, BottomView },
   data() {
     return {
       status: localStorage.getItem("EditorStatus"),
