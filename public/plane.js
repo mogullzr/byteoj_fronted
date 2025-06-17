@@ -528,20 +528,54 @@
             this.keydownEvent = bind(this, this.keydown);
             this.keyupEvent = bind(this, this.keyup);
             this.multiplier = 10;
-            if (this.isCampaign()) {
-                this.audioManager = {
-                    explosion: new AudioManager(GameGlobals.path("static/sounds/game/explosion"), ["mp3", "ogg"]),
-                    shot: new AudioManager(GameGlobals.path("static/sounds/game/shot"), ["mp3", "ogg"])
-                }
-            } else {
-                this.audioManager = {};
+            this.currentShipType = "Standard"; // 默认飞机类型
+            
+            // 创建音频管理器
+            this.audioManager = {
+                explosion: new AudioManager(GameGlobals.path("static/sounds/game/explosion"), ["mp3", "ogg"]),
+                shot: new AudioManager(GameGlobals.path("static/sounds/game/shot"), ["mp3", "ogg"])
+            };
+            
+            // 特殊处理胜利音效，使用完整路径
+            try {
+                this.victorySound = document.createElement("audio");
+                this.victorySound.src = "vector.mp3";
+                this.victorySound.preload = "auto";
+            } catch(e) {
+                console.error("无法加载胜利音效", e);
             }
+            
+            // 创建飞机切换器
+            this.createShipSwitcher();
             if (window.KickAssStyle && window.KickAssStyle === "white") {
                 GameGlobals.bulletColor = "white";
             }
+            // 添加事件监听
             addEvent(document, 'keydown', this.keydownEvent);
             addEvent(document, 'keyup', this.keyupEvent);
             addEvent(document, 'keypress', this.keydownEvent);
+            
+            // 用户首次交互时解锁音频
+            var unlockAudio = bind(this, function() {
+                if (this.victorySound) {
+                    // 创建静音的上下文来解锁音频
+                    this.victorySound.volume = 0;
+                    this.victorySound.play().then(function() {
+                        this.victorySound.pause();
+                        this.victorySound.volume = 1;
+                    }.bind(this)).catch(function(){});
+                }
+                
+                // 移除事件监听器
+                removeEvent(document, 'click', unlockAudio);
+                removeEvent(document, 'keydown', unlockAudio);
+                removeEvent(document, 'touchstart', unlockAudio);
+            });
+            
+            // 添加解锁音频的事件监听器
+            addEvent(document, 'click', unlockAudio);
+            addEvent(document, 'keydown', unlockAudio);
+            addEvent(document, 'touchstart', unlockAudio);
         }, begin: function () {
             this.addPlayer();
             this.sessionManager.isPlaying = true;
@@ -609,7 +643,8 @@
             }
         }, addPlayer: function () {
             var data = false;
-            var ship = Ships.Standard;
+            var ship = Ships[this.currentShipType] || Ships.Standard;
+            
             if (window.KICKASSSHIP && window.KICKASSSHIP.points) {
                 ship = KICKASSSHIP;
             }
@@ -721,6 +756,70 @@
             return !this.mySite && !this.isCampaign();
         }, shouldShowHowToImage: function () {
             return this.mySite || this.isCampaign();
+        }, createShipSwitcher: function() {
+            // 创建飞机切换器容器
+            var container = document.createElement('div');
+            container.id = "ship-switcher-container";
+            container.className = "KICKASSELEMENT";
+            getAppContainerElement().appendChild(container);
+            this.registerElement(container);
+
+            // 创建每种飞机的按钮
+            var shipTypes = Object.keys(Ships);
+            for (var i = 0; i < shipTypes.length; i++) {
+                var shipType = shipTypes[i];
+                var ship = Ships[shipType];
+                
+                var button = document.createElement('div');
+                button.className = "ship-button KICKASSELEMENT" + (shipType === this.currentShipType ? " active" : "");
+                button.setAttribute('data-ship-type', shipType);
+                button.innerHTML = '<div class="ship-icon">' + (i + 1) + '</div>' +
+                                  '<div class="ship-tooltip">' + ship.name + '</div>';
+                
+                container.appendChild(button);
+                this.registerElement(button);
+                
+                // 保存对当前按钮的引用和飞机类型
+                (function(currentButton, currentShipType) {
+                    currentButton.onclick = function(e) {
+                        e = e || window.event;
+                        if (e.preventDefault) e.preventDefault();
+                        if (e.stopPropagation) e.stopPropagation();
+                        
+                        // 调试信息
+                        console.log("切换飞机类型为:", currentShipType);
+                        
+                        // 切换飞机类型
+                        GameGlobals.kickass.switchShipType(currentShipType);
+                        
+                        // 更新所有按钮状态
+                        var allButtons = document.querySelectorAll('.ship-button');
+                        for (var j = 0; j < allButtons.length; j++) {
+                            if (allButtons[j] === currentButton) {
+                                addClass(allButtons[j], 'active');
+                            } else {
+                                removeClass(allButtons[j], 'active');
+                            }
+                        }
+                        
+                        return false;
+                    };
+                })(button, shipType);
+            }
+        }, switchShipType: function(shipType) {
+            if (Ships[shipType]) {
+                // 强制移除当前玩家并创建新玩家
+                if (this.players.length > 0) {
+                    for (var i = 0; i < this.players.length; i++) {
+                        this.players[i].destroy();
+                    }
+                    this.players = [];
+                }
+                
+                this.currentShipType = shipType;
+                this.addPlayer();  // 使用新的飞机类型创建新玩家
+                this.ui.showMessage("切换为 <strong>" + Ships[shipType].name + "</strong> 飞船！");
+            }
         }
     });
     window.KickAss = KickAss;
@@ -1206,12 +1305,146 @@
         }
     });
     var Ships = {
-        Standard: {
-            points: [[-10, 10], [0, -15], [10, 10]],
-            thrusters: [{s: {w: 20, h: 7}, p: {x: 0, y: 14}, a: 0}],
-            cannons: [{p: {x: 0, y: -15}, a: 0}]
+    Standard: {
+        name: "战斗机",
+        // 定义一个更大、更炫酷的飞机形状
+        points: [
+            [-20, 15], // 左翼尖端
+            [-15, 5],  // 左翼内侧
+            [-8, 0],   // 左侧机身
+            [-10, -20], // 左侧机头
+            [0, -25],  // 机头尖端
+            [10, -20], // 右侧机头
+            [8, 0],    // 右侧机身
+            [15, 5],   // 右翼内侧
+            [20, 15],  // 右翼尖端
+            [0, 10]    // 尾部
+        ],
+        thrusters: [
+            {s: {w: 30, h: 10}, p: {x: -10, y: 15}, a: 0}, // 左侧推进器
+            {s: {w: 30, h: 10}, p: {x: 10, y: 15}, a: 0}   // 右侧推进器
+        ],
+        cannons: [
+            {p: {x: -8, y: -20}, a: 0}, // 左侧炮口
+            {p: {x: 8, y: -20}, a: 0}   // 右侧炮口
+        ],
+        colors: {
+            primary: '#3498db',    // 蓝色
+            secondary: '#9b59b6',  // 紫色
+            tertiary: '#2ecc71'    // 绿色
         }
-    };
+    },
+    Stealth: {
+        name: "隐形战机",
+        points: [
+            [-25, 15],  // 左翼尖端
+            [-15, 5],   // 左翼内侧
+            [-10, -5],  // 左侧机身
+            [-5, -20],  // 左侧机头
+            [0, -25],   // 机头尖端
+            [5, -20],   // 右侧机头
+            [10, -5],   // 右侧机身
+            [15, 5],    // 右翼内侧
+            [25, 15],   // 右翼尖端
+            [0, 10]     // 尾部
+        ],
+        thrusters: [
+            {s: {w: 20, h: 8}, p: {x: -7, y: 10}, a: 0},
+            {s: {w: 20, h: 8}, p: {x: 7, y: 10}, a: 0}
+        ],
+        cannons: [
+            {p: {x: -5, y: -20}, a: 0},
+            {p: {x: 5, y: -20}, a: 0}
+        ],
+        colors: {
+            primary: '#2c3e50',    // 深蓝色
+            secondary: '#34495e',  // 深灰蓝
+            tertiary: '#95a5a6'    // 灰色
+        }
+    },
+    Spaceship: {
+        name: "太空船",
+        points: [
+            [-15, 10],  // 左后翼
+            [-10, -5],  // 左侧机身
+            [-12, -15], // 左侧机头
+            [0, -20],   // 机头尖端
+            [12, -15],  // 右侧机头
+            [10, -5],   // 右侧机身
+            [15, 10],   // 右后翼
+            [7, 15],    // 右侧尾部
+            [0, 18],    // 中间尾部
+            [-7, 15]    // 左侧尾部
+        ],
+        thrusters: [
+            {s: {w: 12, h: 6}, p: {x: -4, y: 18}, a: 0},
+            {s: {w: 12, h: 6}, p: {x: 4, y: 18}, a: 0}
+        ],
+        cannons: [
+            {p: {x: -6, y: -15}, a: 0},
+            {p: {x: 6, y: -15}, a: 0},
+            {p: {x: 0, y: -18}, a: 0}
+        ],
+        colors: {
+            primary: '#e74c3c',    // 红色
+            secondary: '#f39c12',  // 橙色
+            tertiary: '#f1c40f'    // 黄色
+        }
+    },
+    TriangleShip: {
+        name: "三角战舰",
+        points: [
+            [-30, 20],  // 左翼尖端
+            [-15, 10],  // 左翼中段
+            [-10, 0],   // 左侧机身
+            [0, -30],   // 机头尖端
+            [10, 0],    // 右侧机身
+            [15, 10],   // 右翼中段
+            [30, 20]    // 右翼尖端
+        ],
+        thrusters: [
+            {s: {w: 25, h: 8}, p: {x: 0, y: 20}, a: 0}
+        ],
+        cannons: [
+            {p: {x: 0, y: -25}, a: 0}
+        ],
+        colors: {
+            primary: '#1abc9c',    // 青绿色
+            secondary: '#16a085',  // 深青绿色
+            tertiary: '#2ecc71'    // 绿色
+        }
+    },
+    UFO: {
+        name: "飞碟",
+        points: [
+            [-25, 0],   // 左侧
+            [-20, -5],  // 左上侧
+            [-10, -10], // 左顶部
+            [0, -12],   // 顶部中心
+            [10, -10],  // 右顶部
+            [20, -5],   // 右上侧
+            [25, 0],    // 右侧
+            [20, 5],    // 右下侧
+            [10, 8],    // 右底部
+            [0, 10],    // 底部中心
+            [-10, 8],   // 左底部
+            [-20, 5]    // 左下侧
+        ],
+        thrusters: [
+            {s: {w: 10, h: 5}, p: {x: -15, y: 5}, a: 0},
+            {s: {w: 10, h: 5}, p: {x: 0, y: 8}, a: 0},
+            {s: {w: 10, h: 5}, p: {x: 15, y: 5}, a: 0}
+        ],
+        cannons: [
+            {p: {x: 0, y: -12}, a: 0}
+        ],
+        colors: {
+            primary: '#9b59b6',    // 紫色
+            secondary: '#8e44ad',  // 深紫色
+            tertiary: '#ecf0f1'    // 白色
+        }
+    }
+};
     var PLAYERIDS = 0;
     var Player = new Class({
         initialize: function (game) {
@@ -1219,7 +1452,11 @@
             this.game = game;
             this.tween = false;
             this.isBound = true;
-            this.pos = new Vector(1630, 217);//飞机初始化位置
+            // 在窗口中间创建飞机
+            this.pos = new Vector(
+                this.game.windowSize.width / 2, 
+                this.game.windowSize.height / 2
+            );
             this.vel = new Vector(0, 0);
             this.acc = new Vector(0, 0);
             this.dir = new Vector(0, 1);
@@ -1339,7 +1576,7 @@
                     for (var i = 0, thruster; thruster = this.thrusters[i]; i++)
                         thruster.drawTo(this.sheet);
                 }
-                this.sheet.drawPlayer(this.verts);
+                this.sheet.drawPlayer(this.verts, this.ship.colors);
                 this.lastPos = this.pos.cp();
             }
             for (var i = 0, cannon; cannon = this.cannons[i]; i++) {
@@ -1460,6 +1697,7 @@
             }
             this.isShown = isShown;
         }, drawTo: function (sheet) {
+            // 传递推进器的角度，使火焰与飞机和推进器方向一致
             sheet.drawFlames(this.flames, this.angle);
         }, generateFlames: function () {
             var redWidth = this.size.width, redIncrease = this.size.width * 0.05, yellowWidth = this.size.width * 0.8,
@@ -1637,7 +1875,16 @@
             }
         }, weHaveWon: function () {
             this.isPlaying = false;
-            this.game.ui.showMessage("You're done!");
+            this.game.ui.showMessage("Victory！！！");
+            
+            // 播放胜利音效
+            if (this.game.victorySound) {
+                this.game.victorySound.currentTime = 0;
+                this.game.victorySound.play().catch(function(err) {
+                    console.error("播放胜利音效失败", err);
+                });
+            }
+            
             if (this.game.isCampaign()) {
                 this.game.menuManager.showMenu();
                 this.game.menuManager.navigateTo('highscores');
@@ -2116,14 +2363,61 @@
             this.drawer.updateCanvas();
         }, setAngle: function (angle) {
             this.drawer.setAngle(angle);
-        }, drawPlayer: function (verts) {
-            this.drawer.setFillColor('white');
-            this.drawer.setStrokeColor('black');
-            this.drawer.setLineWidth(1.5);
-            this.drawer.tracePoly(verts);
-            this.drawer.fillPath();
-            this.drawer.tracePoly(verts);
-            this.drawer.strokePath();
+        }, drawPlayer: function (verts, shipColors) {
+            // 创建渐变色填充
+            var ctx = this.drawer.ctx;
+            ctx.save();
+            ctx.translate(this.drawer.rect.size.width / 2, this.drawer.rect.size.height / 2);
+            ctx.rotate(this.drawer.angle);
+            
+            // 获取颜色，如果没有提供则使用默认颜色
+            var colors = shipColors || {
+                primary: '#3498db',
+                secondary: '#9b59b6',
+                tertiary: '#2ecc71'
+            };
+            
+            // 创建渐变填充
+            var gradient = ctx.createLinearGradient(-20, -25, 20, 15);
+            gradient.addColorStop(0, colors.primary);
+            gradient.addColorStop(0.5, colors.secondary);
+            gradient.addColorStop(1, colors.tertiary);
+            
+            // 绘制飞机主体
+            ctx.beginPath();
+            ctx.moveTo(verts[0].x, verts[0].y);
+            for (var i = 1; i < verts.length; i++) {
+                ctx.lineTo(verts[i].x, verts[i].y);
+            }
+            ctx.closePath();
+            
+            // 填充渐变色
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            
+            // 描边
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // 添加一些细节
+            ctx.beginPath();
+            ctx.moveTo(0, -25);
+            ctx.lineTo(0, 0);
+            ctx.strokeStyle = '#ecf0f1';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            // 驾驶舱
+            ctx.beginPath();
+            ctx.arc(0, -10, 5, 0, Math.PI*2);
+            ctx.fillStyle = '#f39c12';
+            ctx.fill();
+            ctx.strokeStyle = '#e67e22';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            ctx.restore();
         }, drawBrokenPlayer: function (verts, lineOffsets) {
             this.drawer.setStrokeColor('black');
             this.drawer.setLineWidth(1.5);
@@ -2132,16 +2426,73 @@
                 this.drawer.drawLine(lastVert.x + o.pos.x, lastVert.x + o.pos.y, vert.x + o.pos.x, vert.y + o.pos.y);
             }
         }, drawFlames: function (flames, angle) {
-            this.drawer.setLineWidth(1.5);
-            this.drawer.setFillColor('red');
-            this.drawer.tracePoly(flames.r);
-            this.drawer.fillPath();
-            this.drawer.setFillColor('yellow');
-            this.drawer.tracePoly(flames.y);
-            this.drawer.fillPath();
+            var ctx = this.drawer.ctx;
+            ctx.save();
+            ctx.translate(this.drawer.rect.size.width / 2, this.drawer.rect.size.height / 2);
+            // 旋转角度为飞机方向 + 推进器自身角度
+            ctx.rotate(this.drawer.angle + angle);
+            
+            // 外层火焰 - 使用渐变
+            var outerGradient = ctx.createLinearGradient(0, 0, 0, 30);
+            outerGradient.addColorStop(0, '#e74c3c');   // 红色
+            outerGradient.addColorStop(0.6, '#e67e22'); // 橙色
+            outerGradient.addColorStop(1, 'rgba(231, 76, 60, 0)'); // 透明红色
+            
+            ctx.beginPath();
+            for (var i = 0; i < flames.r.length; i++) {
+                if (i === 0) {
+                    ctx.moveTo(flames.r[i].x, flames.r[i].y);
+                } else {
+                    ctx.lineTo(flames.r[i].x, flames.r[i].y);
+                }
+            }
+            ctx.closePath();
+            ctx.fillStyle = outerGradient;
+            ctx.fill();
+            
+            // 内层火焰 - 明亮的黄色到白色渐变
+            var innerGradient = ctx.createLinearGradient(0, 0, 0, 20);
+            innerGradient.addColorStop(0, '#f1c40f');    // 黄色
+            innerGradient.addColorStop(0.7, '#f39c12');  // 橙黄色
+            innerGradient.addColorStop(1, 'rgba(241, 196, 15, 0)'); // 透明黄色
+            
+            ctx.beginPath();
+            for (var i = 0; i < flames.y.length; i++) {
+                if (i === 0) {
+                    ctx.moveTo(flames.y[i].x, flames.y[i].y);
+                } else {
+                    ctx.lineTo(flames.y[i].x, flames.y[i].y);
+                }
+            }
+            ctx.closePath();
+            ctx.fillStyle = innerGradient;
+            ctx.fill();
+            
+            // 添加一些火花效果
+            for (var i = 0; i < 5; i++) {
+                var sparkX = (Math.random() - 0.5) * 15;
+                var sparkY = Math.random() * 20 + 15;
+                var sparkSize = Math.random() * 2 + 1;
+                
+                ctx.beginPath();
+                ctx.arc(sparkX, sparkY, sparkSize, 0, Math.PI*2);
+                ctx.fillStyle = '#ffffff';
+                ctx.fill();
+            }
+            
+            ctx.restore();
         }, drawBullet: function () {
-            this.drawer.setFillColor(GameGlobals.bulletColor);
-            this.drawer.drawCircle(2.5);
+            // 随机选择显示"0"或"1"作为炮弹
+            var bulletText = Math.random() > 0.5 ? "0" : "1";
+            
+            this.drawer.ctx.save();
+            this.drawer.ctx.translate(this.drawer.rect.size.width / 2, this.drawer.rect.size.height / 2);
+            this.drawer.ctx.fillStyle = GameGlobals.bulletColor;
+            this.drawer.ctx.font = "bold 12px Arial";
+            this.drawer.ctx.textAlign = "center";
+            this.drawer.ctx.textBaseline = "middle";
+            this.drawer.ctx.fillText(bulletText, 0, 0);
+            this.drawer.ctx.restore();
         }, drawExplosion: function (particles) {
             for (var i = 0, particle; particle = particles[i]; i++) {
                 this.drawer.setFillColor(particle.color);
