@@ -70,6 +70,50 @@
     pointer-events: all;
 }
 
+/* 飞机按钮容器样式 */
+#ship-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: all;
+}
+
+/* 启动按钮样式 */
+.start-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #ff5733;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 10000001;
+    position: relative;
+    pointer-events: auto;
+    margin-bottom: 20px;
+}
+
+.start-button:hover {
+    transform: scale(1.1);
+    background-color: rgba(255, 87, 51, 0.8);
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255, 87, 51, 0.8);
+}
+
+.start-button .start-icon {
+    font-size: 20px;
+}
+
+.start-button .ship-tooltip {
+    right: 50px;
+}
+
 .ship-button {
     width: 40px;
     height: 40px;
@@ -123,4 +167,19 @@
 /* 飞船切换按钮图标 */
 .ship-icon {
     font-size: 20px;
+}
+
+/* 键盘快捷键提示样式 */
+.shortcut-info {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
 }

@@ -13,6 +13,8 @@ import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import { Ref } from "vue/dist/vue";
 
 let converter = new showdown.Converter();
+// 是否显示AI问答页面
+const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == "true");
 
 const content = ref("");
 const router = useRouter();
@@ -92,7 +94,10 @@ const click = () => {
   }
 };
 
-// 在页面刷新的时候记录一下
+const showBot = () => {
+  isBot.value = !isBot.value;
+  localStorage.setItem("isBot", String(isBot.value));
+};
 </script>
 
 <template>
@@ -210,7 +215,7 @@ const click = () => {
             </div>
           </div>
           <div>
-            <MarkdownEditorView />
+            <MarkdownEditorView @toggle-bot="showBot" :status="1" />
           </div>
         </div>
       </div>

@@ -120,7 +120,6 @@ const handleResizeEnd = () => {
 const showBot = () => {
   isBot.value = !isBot.value;
   localStorage.setItem("isBot", String(isBot.value));
-  // window.location.reload();
 };
 </script>
 
