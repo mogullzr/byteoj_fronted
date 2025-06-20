@@ -1,47 +1,104 @@
 <template>
   <div class="chat-container">
-    <h1 class="chat-title">AI 问答聊天</h1>
     <!-- 模型切换下拉菜单 -->
-    <div class="model-selector">
-      <label for="model-select">选择模型：</label>
-      <select id="model-select" v-model="selectedModel" @change="updateModel">
-        <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
-          DeepSeek Reasoner
-        </option>
-        <option value="deepseek-chat">DeepSeek V3 线路一</option>
-        <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 线路二</option>
-      </select>
+    <div class="header-section">
+      <div class="model-selector">
+        <label for="model-select" class="model-label">AI MODEL</label>
+        <select
+          id="model-select"
+          v-model="selectedModel"
+          @change="updateModel"
+          class="model-select"
+        >
+          <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
+            DeepSeek Reasoner
+          </option>
+          <option value="deepseek-chat">DeepSeek V3 线路一</option>
+          <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 线路二</option>
+        </select>
+      </div>
+      <div class="tech-badge">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 11C13.1046 11 14 10.1046 14 9C14 7.89543 13.1046 7 12 7C10.8954 7 10 7.89543 10 9C10 10.1046 10.8954 11 12 11Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="M12 15C10.3431 15 9 13.6569 9 12H15C15 13.6569 13.6569 15 12 15Z"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+        <span>ByteOJ AI</span>
+      </div>
     </div>
+
     <!-- 常见问题按钮组 -->
     <div v-if="route.path != '/chatbot' && !isLoading" class="quick-questions">
       <div
         v-for="(question, index) in quickQuestions"
         :key="index"
         @click="fillInput(question)"
+        class="quick-question-item"
       >
-        <button
-          class="quick-question-button font-bold text-lg mx-2 my-1 w-full"
-        >
-          <div class="flex">
-            <div class="my-auto mx-2">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 1024 1024"
-              >
-                <path
-                  fill="#666666"
-                  d="M512 1024q-104 0-199-40.5t-163.5-109T40.5 711T0 512t40.5-199t109-163.5T313 40.5T512 0t199 40.5t163.5 109t109 163.5t40.5 199t-40.5 199t-109 163.5t-163.5 109t-199 40.5m32-896q-40 0-68 28t-28 67.5t28 68t68 28.5t68-28.5t28-68t-28-67.5t-68-28m129 530q-60 63-88 81.5T530 758q-15 0-25.5-13.5T494 710q0-43 82-326l-155-29Q320 604 320 745q0 65 31 108t76 43q81 0 246-162z"
-                />
-              </svg>
-            </div>
-            <div>{{ question }}</div>
-          </div>
+        <button class="quick-question-button">
+          <span class="question-icon">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M9.09 9C9.3251 8.33167 9.78915 7.76811 10.4 7.40913C11.0108 7.05016 11.7289 6.91894 12.4272 7.03871C13.1255 7.15849 13.7588 7.52152 14.2151 8.06353C14.6713 8.60553 14.9211 9.29152 14.92 10C14.92 12 11.92 13 11.92 13"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M12 17H12.01"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+          <span class="question-text">{{ question }}</span>
+          <span class="tech-arrow"></span>
         </button>
       </div>
     </div>
+
     <div class="chat-output" ref="chatOutput">
+      <div class="circuit-bg"></div>
       <!-- 聊天记录 -->
       <div v-if="chatHistory.length > 0" class="message-container">
         <div
@@ -53,12 +110,17 @@
           ]"
         >
           <!-- AI 头像 -->
-          <img
+          <div
             v-if="message.role === 'system'"
-            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502121127266.jpg"
-            alt="ByteOJ出品"
-            class="avatar"
-          />
+            class="avatar-container ai-avatar"
+          >
+            <img
+              src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502121127266.jpg"
+              alt="ByteOJ出品"
+              class="avatar"
+            />
+            <div class="avatar-glow"></div>
+          </div>
           <!-- 消息内容 -->
           <div
             :class="[
@@ -66,6 +128,10 @@
               message.role === 'user' ? 'user-message' : 'ai-message',
             ]"
           >
+            <div class="tech-corner top-left"></div>
+            <div class="tech-corner top-right"></div>
+            <div class="tech-corner bottom-left"></div>
+            <div class="tech-corner bottom-right"></div>
             <div class="message-content">
               <span v-if="message.role === 'user'">{{ message.content }}</span>
               <MarkdownView
@@ -76,40 +142,138 @@
             </div>
           </div>
           <!-- 用户头像 -->
-          <img
+          <div
             v-if="message.role === 'user'"
-            :src="useStore.loginUser.avatar"
-            alt="ByteOJ出品"
-            class="avatar"
-          />
+            class="avatar-container user-avatar"
+          >
+            <img
+              :src="useStore.loginUser.avatar"
+              alt="ByteOJ用户"
+              class="avatar"
+            />
+            <div class="avatar-ring"></div>
+          </div>
         </div>
       </div>
+
       <!-- 加载状态 -->
       <div v-if="isLoading" class="loading-indicator">
-        <span>AI 正在思考中...</span>
+        <div class="tech-spinner">
+          <div class="spinner-circle"></div>
+          <div class="spinner-line line-1"></div>
+          <div class="spinner-line line-2"></div>
+          <div class="spinner-line line-3"></div>
+          <div class="spinner-line line-4"></div>
+        </div>
+        <span class="loading-text">AI PROCESSING</span>
+      </div>
+
+      <!-- 空白状态 -->
+      <div v-if="!isLoading && chatHistory.length === 0" class="empty-state">
+        <div class="empty-icon-container">
+          <svg
+            width="50"
+            height="50"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+            <path
+              d="M10.5 8.67001V15.33C10.5 15.61 10.69 15.84 10.96 15.93C11.23 16.02 11.52 15.93 11.7 15.71L14.2 12.52C14.42 12.24 14.42 11.76 14.2 11.48L11.7 8.29001C11.52 8.07001 11.23 7.98 10.96 8.07C10.69 8.16 10.5 8.39 10.5 8.67001Z"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </div>
+        <p class="status-text">请输入你的问题</p>
       </div>
     </div>
+
     <!-- 输入框 -->
-    <div class="input-container">
-      <input
-        v-model="currentChat.content"
-        type="text"
-        placeholder="请输入你的问题......"
-        class="chat-input"
-        @keyup.enter="startChat"
-        :disabled="isLoading"
-      />
-      <button
-        :disabled="isLoading"
-        @click="clearMessage"
-        class="ask-button"
-        style="background-color: #ff6a6b"
-      >
-        {{ isLoading ? "禁用中..." : "清空记录" }}
-      </button>
-      <button @click="startChat" class="ask-button" :disabled="isLoading">
-        {{ isLoading ? "发送中..." : "发送" }}
-      </button>
+    <div class="input-wrapper">
+      <div class="tech-frame"></div>
+      <div class="input-container">
+        <div class="input-prefix">></div>
+        <input
+          v-model="currentChat.content"
+          type="text"
+          placeholder="输入指令..."
+          class="chat-input"
+          @keyup.enter="startChat"
+          :disabled="isLoading"
+        />
+        <div class="button-group">
+          <button
+            :disabled="isLoading"
+            @click="clearMessage"
+            class="clear-button"
+            title="清空记录"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3 6H21"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M19 6V20C19 21 18 22 17 22H7C6 22 5 21 5 20V6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M8 6V4C8 3 9 2 10 2H14C15 2 16 3 16 4V6"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <button @click="startChat" class="ask-button" :disabled="isLoading">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M22 2L11 13"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M22 2L15 22L11 13L2 9L22 2Z"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -462,158 +626,685 @@ const clearMessage = () => {
 .chat-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  max-width: 1150px;
-  margin: 0 auto;
+  width: 100%;
+  height: 100%;
+  min-height: 480px;
   background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  box-sizing: border-box;
+  color: #445566;
+  position: relative;
+  border: 1px solid rgba(42, 171, 210, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
-.chat-title {
-  margin: 15px;
-  font-size: 36px;
-  font-weight: bold;
-  color: #1890ff;
+.chat-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: linear-gradient(90deg, #2aabd2, #44cefb);
+  z-index: 2;
+}
+
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.tech-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(42, 171, 210, 0.08);
+  color: #2aabd2;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  text-transform: uppercase;
 }
 
 .model-selector {
-  margin-bottom: 20px;
+  width: 65%;
+  position: relative;
 }
 
-.model-selector label {
-  font-size: 16px;
-  margin-right: 10px;
+.model-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #2aabd2;
+  letter-spacing: 1px;
+  text-transform: uppercase;
 }
 
-.model-selector select {
-  padding: 8px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  font-size: 16px;
+.model-selector::after {
+  content: "▾";
+  position: absolute;
+  bottom: 13px;
+  right: 12px;
+  color: #2aabd2;
+  pointer-events: none;
+  font-size: 12px;
+}
+
+.model-select {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 4px;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+  font-size: 13px;
+  color: #445566;
+  background-color: #f8fafc;
+  outline: none;
+  transition: all 0.2s;
+  appearance: none;
+  cursor: pointer;
+  height: 40px;
+}
+
+.model-select:hover {
+  border-color: rgba(42, 171, 210, 0.3);
+  box-shadow: 0 0 0 1px rgba(42, 171, 210, 0.1);
+}
+
+.model-select:focus {
+  border-color: #2aabd2;
+  box-shadow: 0 0 0 1px rgba(42, 171, 210, 0.2), 0 0 8px rgba(42, 171, 210, 0.1);
+}
+
+.model-select option {
+  background-color: #ffffff;
+  color: #445566;
 }
 
 .quick-questions {
   width: 100%;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-question-item {
+  width: 100%;
 }
 
 .quick-question-button {
-  margin-bottom: 4px;
-  padding: 8px 12px;
-  background-color: #f0f0f0;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background-color: #f8fafc;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.3s ease;
+  font-size: 13px;
+  text-align: left;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  height: 40px;
+  color: #445566;
+  position: relative;
+  overflow: hidden;
+}
+
+.question-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 10px;
+  color: #2aabd2;
+}
+
+.question-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tech-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-right: 2px solid rgba(42, 171, 210, 0.6);
+  border-bottom: 2px solid rgba(42, 171, 210, 0.6);
+  transform: translateY(-50%) rotate(-45deg);
 }
 
 .quick-question-button:hover {
-  background-color: #e0e0e0;
+  background-color: rgba(42, 171, 210, 0.05);
+  border-color: rgba(42, 171, 210, 0.4);
+  box-shadow: 0 0 10px rgba(42, 171, 210, 0.1);
+}
+
+.quick-question-button:hover .tech-arrow {
+  animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .chat-output {
   width: 100%;
-  height: 430px;
+  flex: 1;
+  min-height: 320px;
   overflow-y: auto;
-  margin-bottom: 10px;
-  padding: 15px;
-  border-radius: 8px;
-  background-color: #f9f9f9;
-  font-family: "Arial", sans-serif;
+  margin-bottom: 16px;
+  padding: 16px;
+  border-radius: 6px;
+  background-color: #f8fafc;
+  border: 1px solid rgba(42, 171, 210, 0.15);
+  font-size: 14px;
   line-height: 1.6;
+  scroll-behavior: smooth;
+  position: relative;
+  z-index: 1;
+}
+
+.circuit-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  opacity: 0.03;
+  background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 49%,
+        rgba(42, 171, 210, 0.5) 50%,
+        transparent 51%,
+        transparent 100%
+      )
+      0 0 / 50px 50px,
+    linear-gradient(
+        0deg,
+        transparent 0%,
+        transparent 49%,
+        rgba(42, 171, 210, 0.5) 50%,
+        transparent 51%,
+        transparent 100%
+      )
+      0 0 / 50px 50px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 20px;
+}
+
+.empty-icon-container {
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #2aabd2;
+  background: radial-gradient(
+    circle,
+    rgba(42, 171, 210, 0.1) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  position: relative;
+}
+
+.empty-icon-container::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  border: 1px dashed rgba(42, 171, 210, 0.3);
+  border-radius: 50%;
+  animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.status-text {
+  font-size: 15px;
+  margin: 0;
+  color: #667788;
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .message-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
+  padding: 4px;
 }
 
 .message-wrapper {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
+  gap: 14px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-wrapper {
   justify-content: flex-end;
+  margin-left: auto;
+  max-width: 85%;
 }
 
 .ai-wrapper {
   justify-content: flex-start;
+  margin-right: auto;
+  max-width: 85%;
+}
+
+.avatar-container {
+  width: 38px;
+  height: 38px;
+  border-radius: 4px;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ai-avatar::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(135deg, #2aabd2, #44cefb);
+  z-index: -1;
+}
+
+.user-avatar {
+  border: 1px solid rgba(42, 171, 210, 0.2);
+}
+
+.avatar-glow {
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 20px;
+  height: 5px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(42, 171, 210, 0.6),
+    rgba(42, 171, 210, 0) 70%
+  );
+}
+
+.avatar-ring {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+  border-radius: 4px;
 }
 
 .avatar {
-  width: 45px;
-  height: 45px;
-  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .message {
-  max-width: 85%;
-  padding: 10px 15px;
-  border-radius: 12px;
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 4px;
   word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: calc(100% - 48px);
+}
+
+.tech-corner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: transparent;
+}
+
+.top-left {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid rgba(42, 171, 210, 0.6);
+  border-left: 2px solid rgba(42, 171, 210, 0.6);
+}
+
+.top-right {
+  top: -1px;
+  right: -1px;
+  border-top: 2px solid rgba(42, 171, 210, 0.6);
+  border-right: 2px solid rgba(42, 171, 210, 0.6);
+}
+
+.bottom-left {
+  bottom: -1px;
+  left: -1px;
+  border-bottom: 2px solid rgba(42, 171, 210, 0.6);
+  border-left: 2px solid rgba(42, 171, 210, 0.6);
+}
+
+.bottom-right {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid rgba(42, 171, 210, 0.6);
+  border-right: 2px solid rgba(42, 171, 210, 0.6);
 }
 
 .user-message {
-  background-color: #1890ff;
-  color: white;
+  background-color: rgba(42, 171, 210, 0.08);
+  color: #445566;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+}
+
+.user-message .tech-corner {
+  border-color: rgba(42, 171, 210, 0.4);
 }
 
 .ai-message {
-  background-color: white;
-  border: 1px solid #e0e0e0;
-  color: #333;
+  background-color: #ffffff;
+  color: #445566;
+  border: 1px solid rgba(42, 171, 210, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.ai-message .tech-corner {
+  border-color: rgba(42, 171, 210, 0.6);
+}
+
+.message-content {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Make markdown content match other text */
+.message-content :deep(p) {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.message-content :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.message-content :deep(pre) {
+  margin: 8px 0;
+  background-color: #f0f5f9;
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 13px;
+  border: 1px solid rgba(42, 171, 210, 0.15);
+}
+
+.message-content :deep(code) {
+  background-color: rgba(42, 171, 210, 0.05);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.message-content :deep(pre code) {
+  background-color: transparent;
+  padding: 0;
+}
+
+.input-wrapper {
+  width: 100%;
+  position: relative;
+}
+
+.tech-frame {
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 1px solid rgba(42, 171, 210, 0.4);
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0.4;
 }
 
 .input-container {
   display: flex;
   width: 100%;
   gap: 10px;
+  border-radius: 4px;
+  background-color: #f8fafc;
+  border: 1px solid rgba(42, 171, 210, 0.2);
+  padding: 0 4px 0 0;
+}
+
+.input-prefix {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #2aabd2;
+  font-weight: bold;
+  font-size: 16px;
 }
 
 .chat-input {
   flex: 1;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 16px;
+  padding: 0 12px 0 0;
+  border: none;
+  border-radius: 0;
+  font-size: 14px;
   outline: none;
-  transition: border-color 0.3s ease;
+  height: 46px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: normal;
+  display: block;
+  box-sizing: border-box;
+  background-color: transparent;
+  color: #445566;
+  font-family: "SF Mono", "Roboto Mono", Menlo, monospace;
 }
 
-.chat-input:focus {
-  border-color: #1890ff;
+.chat-input::placeholder {
+  color: rgba(68, 85, 102, 0.4);
+}
+
+.button-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.ask-button,
+.clear-button {
+  width: 36px;
+  height: 36px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
 }
 
 .ask-button {
-  padding: 12px 20px;
-  background-color: #1890ff;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: background-color 0.3s ease;
+  background-color: rgba(42, 171, 210, 0.8);
 }
 
-.ask-button:hover {
-  background-color: #0069d9;
+.clear-button {
+  background-color: rgba(255, 106, 107, 0.7);
 }
 
-.ask-button:disabled {
-  background-color: #ccc;
+.ask-button:hover:not(:disabled),
+.clear-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(42, 171, 210, 0.3);
+}
+
+.ask-button:hover:not(:disabled) {
+  background-color: rgba(42, 171, 210, 1);
+}
+
+.clear-button:hover:not(:disabled) {
+  background-color: rgba(255, 106, 107, 0.9);
+}
+
+.ask-button:active:not(:disabled),
+.clear-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.ask-button:disabled,
+.clear-button:disabled {
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .loading-indicator {
-  text-align: center;
-  padding: 10px;
-  color: #666;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  height: 140px;
+  gap: 16px;
+}
+
+.loading-text {
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: #2aabd2;
+}
+
+.tech-spinner {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.spinner-circle {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid rgba(42, 171, 210, 0.1);
+  border-top-color: #2aabd2;
+  animation: tech-spinner-rotate 1.5s linear infinite;
+}
+
+.spinner-line {
+  position: absolute;
+  background-color: rgba(42, 171, 210, 0.2);
+}
+
+.line-1 {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.line-2 {
+  top: 0;
+  left: 50%;
+  width: 1px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.line-3,
+.line-4 {
+  top: 50%;
+  left: 50%;
+  width: 70%;
+  height: 1px;
+}
+
+.line-3 {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.line-4 {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+@keyframes tech-spinner-rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Custom scrollbar for the chat output */
+.chat-output::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.chat-output::-webkit-scrollbar-track {
+  background: rgba(240, 245, 250, 0.6);
+}
+
+.chat-output::-webkit-scrollbar-thumb {
+  background: rgba(42, 171, 210, 0.3);
+  border-radius: 3px;
+}
+
+.chat-output::-webkit-scrollbar-thumb:hover {
+  background: rgba(42, 171, 210, 0.5);
 }
 </style>

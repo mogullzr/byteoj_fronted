@@ -32,12 +32,15 @@ const handleNavigation = (path: string) => {
   // 如果在iframe中，向父窗口发送导航消息
   if (isInIframe.value) {
     try {
-      window.parent.postMessage({
-        type: 'navigation',
-        path: path
-      }, window.location.origin);
+      window.parent.postMessage(
+        {
+          type: "navigation",
+          path: path,
+        },
+        window.location.origin
+      );
     } catch (e) {
-      console.error('无法向父窗口发送导航消息', e);
+      console.error("无法向父窗口发送导航消息", e);
     }
   }
 };
@@ -146,22 +149,29 @@ const searchInfo = () => {
             <a @click.prevent="handleNavigation('/home')" href="/home">首页</a>
           </li>
           <li>
-            <a @click.prevent="handleNavigation('/problems')" href="/problems">题库</a>
+            <a @click.prevent="handleNavigation('/problems')" href="/problems"
+              >题库</a
+            >
           </li>
           <li>
-            <a @click.prevent="handleNavigation('/study')" href="/study">学习</a>
+            <a @click.prevent="handleNavigation('/study')" href="/study"
+              >学习</a
+            >
           </li>
           <!--        <li>-->
           <!--          <a @click.prevent="handleNavigation('/discussion')" href="/discussion">讨论</a>-->
           <!--        </li>-->
           <li>
-            <a @click.prevent="handleNavigation('/competition')" href="/competition">竞赛</a>
+            <a
+              @click.prevent="handleNavigation('/competition')"
+              href="/competition"
+              >竞赛</a
+            >
           </li>
           <li>
-            <a @click.prevent="handleNavigation('/chatbot')" href="/chatbot">学习机器人</a>
-          </li>
-          <li>
-            <a @click.prevent="handleNavigation('/special')" href="/special">Byte专栏</a>
+            <a @click.prevent="handleNavigation('/special')" href="/special"
+              >Byte专栏</a
+            >
           </li>
         </ul>
       </div>

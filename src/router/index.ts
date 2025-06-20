@@ -354,15 +354,6 @@ const routes: Array<RouteRecordRaw> = [
   //   component: () => import("@/view/WebChat/WebChatView.vue"),
   // },
   {
-    path: "/chatbot",
-    name: "AI学习问答机器人",
-    meta: {
-      access: "1",
-      title: "ByteOJ - DeepSeek问答机器人",
-    },
-    component: () => import("@/view/AI/ChatBoxView.vue"),
-  },
-  {
     path: "/special",
     name: "专栏",
     meta: {
