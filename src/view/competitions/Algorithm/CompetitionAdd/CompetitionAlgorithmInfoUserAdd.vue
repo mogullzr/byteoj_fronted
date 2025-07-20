@@ -120,13 +120,89 @@ const checkReasonAbility = () => {
   }
 };
 onMounted(() => {
-  if (competition_info.value != undefined) {
+  if (JSON.stringify(competition_info.value) != JSON.stringify({ status: 0, pattern: 0 }) ) {
     if (competition_info.value?.status == 1) {
       let el: any = document.getElementById("isPassword");
       if (el != null) {
         el.checked = true;
       }
     }
+  } else {
+    competition_info.value.description = "# 【竞赛说明】\n" +
+        "\n" +
+        "​\t【ByteOJ - 竞赛】是专门为**豫章师范学院**的**数学与计算机学院**的学生制定的竞赛。是针对初学者的难度，**老油条们** 就别来写咯。\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【出题人&内测】\n" +
+        "\n" +
+        "1.**出题人**：<font color=\"purple\">**Mogullzr**</font>\n" +
+        "\n" +
+        "2.**感谢内测人员：**<font color=\"red\">**@Siersi**</font>、<font color=\"grey\">**@424软工一班薛晓春**</font>\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【比赛形式】\n" +
+        "\n" +
+        "1.ACM赛制，一般4~10道题目不等。2 ~ 3h，每道题目记1分。\n" +
+        "\n" +
+        "2.每道题目的罚时为AC时刻与比赛开始时刻所经过的分钟数。\n" +
+        "\n" +
+        "3.通过题目的非AC提交每次罚时5min。\n" +
+        "\n" +
+        "4.通过题目数相同的情况下， 罚时短的同学名次靠前。\n" +
+        "\n" +
+        "5.注意，本网站对于提交出现Compile Error的情况，并不会进行罚时。\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【错误提示词】\n" +
+        "\n" +
+        "1.**Compile Error：**编译错误。\n" +
+        "\n" +
+        "2.**Wrong Error：**答案错误。\n" +
+        "\n" +
+        "3.**Memory Limit Exceeded**：超出内存上限。\n" +
+        "\n" +
+        "4.**Time Limit Exceeded：**超出时间上限。\n" +
+        "\n" +
+        "5.**OutPut Limit Exceeded：**超出输出上限。\n" +
+        "\n" +
+        "6.**Signalled：**严重不知名错误，比如除0操作、超出数组下标最大值。\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【比赛规范】\n" +
+        "\n" +
+        "1.**特别注意**：比赛期间不允许在互联网寻求题目答案，包括向DeepSeek等AI工具求助答案。\n" +
+        "\n" +
+        "2.对于本院**新生学生**如果存在实在不会的情况，可以在**大群ByteOJ交流大群**中交流寻求同学帮助，但是绝对不可通过抄袭进行题目的提交。\n" +
+        "\n" +
+        "3.**在与本人说明的情况下**，请不要尝试下面的任何违规行为。\n" +
+        "\n" +
+        "![image-20250713203218302](https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250713203222446.png)\n" +
+        "\n" +
+        "<img src=\"https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250713203225802.png\" alt=\"image-20250713203155077\" style=\"zoom:50%;\" />\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【违规行为】\n" +
+        "\n" +
+        "1.多人代码雷同\n" +
+        "\n" +
+        "2.比赛结束前发布答案\n" +
+        "\n" +
+        "3.**严禁使用任何代码生成工具或者外部辅助手段解题**，包括但不限于将题目描述、测试用例或解题代码输入到外部辅助工具中的行为。\n" +
+        "\n" +
+        "4.使用不正当手段影响他人竞赛的。\n" +
+        "\n" +
+        "5.一人使用多账号提交\n" +
+        "\n" +
+        "\n" +
+        "\n" +
+        "# 【奖励】\n" +
+        "\n" +
+        "本场比赛没有。";
   }
 });
 // 实时监听竞赛信息列表
@@ -134,6 +210,7 @@ watch(
   competition_info.value,
   (newValue, OldValue) => {
     nextTick(() => {
+      console.log(123)
       localStorage.setItem("competition_info", JSON.stringify(newValue));
     });
   },

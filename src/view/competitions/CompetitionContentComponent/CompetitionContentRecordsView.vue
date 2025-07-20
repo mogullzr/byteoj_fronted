@@ -1,40 +1,132 @@
 <script setup lang="ts">
-import { onMounted, ref, Ref } from "vue";
+import {onMounted, onUnmounted, ref, watch} from "vue";
 import dayjs from "dayjs";
 import router from "@/router";
 import UserStore from "@/store/user";
 import {
-  CompetitionControllerService,
-  ProblemAlgorithmControllerService,
+  CompetitionControllerService, SearchControllerService, SearchRequest,
 } from "../../../../generated";
+import {CompetitionRecordsRequest} from "../../../../generated/models/CompetitionRecordsRequest";
 
 const path = router.currentRoute.value.fullPath;
 const useStore = UserStore();
-const competition_id: Ref<number> = ref(parseInt(path.split("/")[2]));
-const rated_color_list: Ref<string[]> = ref(useStore.rated_color_list);
+const competition_id = ref<number>(parseInt(path.split("/")[2]));
+const rated_color_list = ref<string[]>(useStore.rated_color_list);
 
-const records: Ref<any> = ref([]);
-const pageSum = ref([]);
-const currentPage = ref(1);
-const isLoading = ref(false);
-const isExpanded = ref(false); // 控制是否显示完整视图
+const records = ref<any[]>([]);
+const pageSum = ref<number>(0);
+const currentPage = ref<number>(1);
+const isLoading = ref<boolean>(false);
+
+// 筛选条件
+const filterParams = ref({
+  idx: "",
+  results: "",
+  languages: "",
+  keyword: "",
+  is_code_length: 0,
+  is_submit_time: 0,
+});
+
+// 表头选项
+const headerOptions = [
+  { label: "题号", key: "idx", options: ["A", "B", "C"] },
+  { label: "运行结果", key: "results", options: ["答案正确", "答案错误", "运行超时", "内存超限", "输出超限", "未知错误"] },
+  { label: "使用语言", key: "languages", options: ["C", "C++", "Python", "Java", "JavaScript", "Go"] },
+  { label: "代码长度", key: "is_code_length", options: [{ value: 1, label: "从短到长" }, { value: 2, label: "从长到短" }] },
+  { label: "提交时间", key: "is_submit_time", options: [{ value: 1, label: "从早到晚" }, { value: 2, label: "从晚到早" }] },
+];
+
+// 题目数量
+const idx_num = ref(0);
 
 onMounted(async () => {
   await fetchRecords(1);
+  // 添加全局点击事件监听
+  document.addEventListener('click', handleClickOutside);
 });
+
+onUnmounted(() => {
+  // 移除全局点击事件监听
+  document.removeEventListener('click', handleClickOutside);
+});
+
+// 点击外部关闭所有下拉菜单
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  // 检查点击是否在下拉菜单或按钮内部
+  const isInsideDropdown = target.closest('.dropdown-menu') || target.closest('.filter-btn');
+  if (!isInsideDropdown) {
+    // 关闭所有下拉菜单
+    dropdowns.value = {
+      idx: false,
+      results: false,
+      languages: false,
+      is_code_length: false,
+      is_submit_time: false,
+    };
+  }
+};
+// 对于其他筛选条件（非 keyword）的变化，直接触发搜索（保持原有逻辑）
+watch(
+    () => ({
+      idx: filterParams.value.idx,
+      results: filterParams.value.results,
+      languages: filterParams.value.languages,
+      is_code_length: filterParams.value.is_code_length,
+      is_submit_time: filterParams.value.is_submit_time
+    }),
+    () => {
+      fetchRecords(1);
+      currentPage.value = 1;
+    },
+    { deep: true }
+);
 
 // 获取记录数据
 const fetchRecords = async (page: number) => {
   isLoading.value = true;
   try {
-    const res =
-      await CompetitionControllerService.competitionSearchRecordUsingPost(
-        competition_id.value,
-        page
-      );
+    const searchRequest = ref({
+      category: "record",
+      code: [],
+      current: 0,
+      difficulty: "",
+      endMilliSeconds: 0,
+      is_date_order: 0,
+      keyword: "",
+      module: "",
+      pageNum: 0,
+      pageSize: 0,
+      pages: 0,
+      size: 0,
+      sourceList: [],
+      startMilliSeconds: 0,
+      status: 0,
+      tagsList: [],
+      type: [],
+      competitionRecordsRequest: {
+        competition_id: competition_id.value,
+        pageNum: page,
+        pageSize: 10,
+        keyword: filterParams.value.keyword,
+        idx: filterParams.value.idx,
+        results: filterParams.value.results,
+        languages: filterParams.value.languages,
+        is_code_length: filterParams.value.is_code_length,
+        is_submit_time: filterParams.value.is_submit_time
+      } as CompetitionRecordsRequest
+    } as SearchRequest);
+
+    const res = await SearchControllerService.searchAllUsingPost(searchRequest.value);
     if (res.code === 0) {
-      records.value = res.data;
-      pageSum.value = records.value[0]?.page_num || 1;
+      records.value = res.data.dataList;
+      pageSum.value = res.data.dataList[0].page_num;
+      idx_num.value = res.data.dataList[0]?.test_num;
+      headerOptions[0].options = [];
+      for (let item = 0; item < idx_num.value; item++) {
+        headerOptions[0].options.push(String.fromCharCode('A'.charCodeAt(0) + item));
+      }
     }
   } finally {
     isLoading.value = false;
@@ -42,29 +134,109 @@ const fetchRecords = async (page: number) => {
 };
 
 // 分页查找
-const PageClick = async (Page: number | any) => {
+const PageClick = async (Page: number) => {
   if (Page <= 0 || Page > pageSum.value || isLoading.value) {
     return;
   }
-
   await fetchRecords(Page);
   currentPage.value = Page;
 };
 
-// 切换视图模式
-const toggleViewMode = () => {
-  isExpanded.value = !isExpanded.value;
+// 重置筛选条件
+const resetFilters = () => {
+  filterParams.value = {
+    idx: "",
+    results: "",
+    languages: "",
+    keyword: "",
+    is_code_length: 0,
+    is_submit_time: 0,
+  };
+};
+
+// 处理下拉菜单相关逻辑
+const dropdowns = ref<{ [key: string]: boolean }>({
+  idx: false,
+  results: false,
+  languages: false,
+  is_code_length: false,
+  is_submit_time: false,
+});
+
+const toggleDropdown = (key: string) => {
+  dropdowns.value = {
+    ...dropdowns.value,
+    [key]:!dropdowns.value[key],
+  };
+};
+
+const selectOption = (key: string, value: any) => {
+  filterParams.value[key] = value;
+  dropdowns.value[key] = false;
+};
+
+// 获取结果对应的CSS类
+const getResultClass = (result: string) => {
+  switch(result) {
+    case 'Accepted': return 'accepted';
+    case 'Time Limit Exceeded': return 'timeout';
+    case 'Memory Limit Exceeded': return 'memory-limit';
+    case 'Output Limit Exceeded': return 'output-limit';
+    case 'Runtime Error': return 'runtime-error';
+    default: return 'rejected';
+  }
+};
+
+// 获取结果对应的中文描述
+const getResultText = (result: string) => {
+  switch(result) {
+    case 'Accepted': return '答案正确';
+    case 'Time Limit Exceeded': return '运行超时';
+    case 'Memory Limit Exceeded': return '内存超限';
+    case 'Output Limit Exceeded': return '输出超限';
+    case 'Runtime Error': return '未知错误';
+    default: return '答案错误';
+  }
 };
 </script>
 
 <template>
   <div class="record-container">
-    <!-- 视图切换按钮 -->
-    <div class="view-toggle">
-      <button @click="toggleViewMode" class="toggle-btn">
-        {{ isExpanded ? "简洁视图" : "完整视图" }}
-        <span class="icon">{{ isExpanded ? "⇧" : "⇩" }}</span>
-      </button>
+    <!-- 筛选面板 -->
+    <div class="filter-panel">
+      <div class="search-bar">
+        <input
+            type="text"
+            v-model="filterParams.keyword"
+            placeholder="输入用户名称回车搜索"
+            class="search-input"
+            @keyup.enter="fetchRecords(currentPage)"
+        />
+        <button @click="resetFilters" class="reset-btn">重置筛选</button>
+      </div>
+
+      <div class="filter-options">
+        <div class="filter-group" v-for="(option, index) in headerOptions" :key="option.key">
+          <button
+              class="filter-btn"
+              @click="toggleDropdown(option.key)"
+              :class="{ active: filterParams[option.key] }"
+          >
+            {{ option.label }}
+            <span v-if="filterParams[option.key]" class="filter-indicator"></span>
+          </button>
+          <div v-show="dropdowns[option.key]" class="dropdown-menu">
+            <div
+                v-for="opt in option.options"
+                :key="opt.value || opt"
+                @click="selectOption(option.key, opt.value || opt)"
+                :class="{ selected: filterParams[option.key] === (opt.value || opt) }"
+            >
+              {{ opt.label || opt }}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 加载状态 -->
@@ -72,213 +244,132 @@ const toggleViewMode = () => {
       <div class="loading-spinner"></div>
     </div>
 
-    <!-- 记录表格 -->
-    <div class="table-wrapper" :class="{ 'compact-view': !isExpanded }">
-      <table class="record-table">
-        <!-- 表头 -->
-        <thead>
-          <tr>
-            <th class="id-col">运行ID号</th>
-            <th class="user-col">用户名</th>
-            <th class="problem-col">题号</th>
-            <th class="result-col">运行结果</th>
-            <th class="score-col">得分</th>
-            <th v-if="isExpanded" class="time-col">运行实现(ms)</th>
-            <th v-if="isExpanded" class="memory-col">内存大小(MB)</th>
-            <th v-if="isExpanded" class="length-col">代码长度</th>
-            <th class="lang-col">使用语言</th>
-            <th class="time-col">提交信息</th>
-          </tr>
-        </thead>
-
-        <!-- 表格内容 -->
-        <tbody>
-          <tr
-            v-for="record in records"
-            :key="record.record_id"
-            class="record-row"
+    <!-- 记录卡片列表 -->
+    <div class="record-list">
+      <div
+          v-for="record in records"
+          :key="record.record_id"
+          class="record-card"
+          :class="getResultClass(record.result)"
+      >
+        <div class="card-header">
+          <router-link
+              :to="`/user/space/${record.uuid}`"
+              class="user-link"
+              :style="{ color: rated_color_list[record.rated] }"
           >
-            <td class="id-cell">
-              <router-link
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.submission_id
-                "
-                class="record-link"
-              >
-                {{ record.submission_id }}
-              </router-link>
-            </td>
+            {{ record.user_name }}
+          </router-link>
 
-            <td class="user-cell">
-              <router-link
-                :to="'/user/space/' + record.uuid"
-                class="user-link"
-                :style="'color:' + rated_color_list[record.rated]"
-              >
-                {{ record.user_name }}
-              </router-link>
-            </td>
+          <!-- 修改后的题目编号部分 -->
+          <span class="problem-id">
+          <router-link
+              :to="`/competition/${competition_id}/problem/${record.chinese_name}`"
+              class="problem-link"
+          >
+            <span class="problem-badge">{{ record.idx }}</span>
+            <span class="problem-title">{{ record.chinese_name }}</span>
+          </router-link>
+        </span>
 
-            <td class="problem-cell">
-              <router-link
-                :to="competition_id + '/problem/' + record.chinese_name"
-                class="problem-link"
-              >
-                {{ record.chinese_name }}
-              </router-link>
-            </td>
+          <span class="submission-id">
+          <router-link
+              :to="`/competition/${competition_id}/records/${record.submission_id}`"
+              class="record-link"
+          >
+            #{{ record.submission_id }}
+          </router-link>
+        </span>
+        </div>
 
-            <td class="result-cell">
-              <router-link
-                v-if="record.result == 'Accepted'"
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.submission_id
-                "
-                class="accepted"
-              >
-                答案正确
-              </router-link>
-              <router-link
-                v-else
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.submission_id
-                "
-                class="rejected"
-              >
-                答案错误
-              </router-link>
-            </td>
+        <div class="card-content">
+          <div class="result-status" :class="getResultClass(record.result)">
+            <router-link
+                :to="`/competition/${competition_id}/records/${record.submission_id}`"
+            >
+              {{ getResultText(record.result) }}
+            </router-link>
+          </div>
 
-            <td class="score-cell">
-              <router-link
-                v-if="record.record_score / record.score >= 0.9"
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.record_id
-                "
-                class="high-score"
-              >
-                {{ record.score }}
-              </router-link>
-              <router-link
-                v-else-if="record.record_score / record.score >= 0.2"
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.record_id
-                "
-                class="medium-score"
-              >
-                {{ record.record_score }}
-              </router-link>
-              <router-link
-                v-else
-                :to="
-                  '/competition/' +
-                  competition_id +
-                  '/records/' +
-                  record.record_id
-                "
-                class="low-score"
-              >
-                {{ record.record_score }}
-              </router-link>
-            </td>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <span class="stat-label">语言</span>
+              <span class="stat-value">{{ record.language }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">时间</span>
+              <span class="stat-value">{{ record.time_used }}ms</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">内存</span>
+              <span class="stat-value">{{ record.memory_used }}KB</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">代码</span>
+              <span class="stat-value">{{ record.code_length }}B</span>
+            </div>
+          </div>
+        </div>
 
-            <td v-if="isExpanded" class="time-cell">{{ record.time_used }}</td>
-            <td v-if="isExpanded" class="memory-cell">
-              {{ record.memory_used }}
-            </td>
-            <td v-if="isExpanded" class="length-cell">
-              {{ record.code_length }}
-            </td>
+        <div class="card-footer">
+          <span class="submit-time">
+            {{ dayjs(record.submit_time).format("YYYY-MM-DD HH:mm:ss") }}
+          </span>
+        </div>
+      </div>
 
-            <td class="lang-cell">
-              <span class="lang-badge">{{ record.language }}</span>
-            </td>
-
-            <td class="submit-time">
-              {{ dayjs(record.submit_time).format("YYYY-MM-DD HH:mm:ss") }}
-              <span v-if="!isExpanded" class="compact-stats">
-                | {{ record.time_used }}ms | {{ record.memory_used }}MB
-                <span v-if="record.code_length"
-                  >| {{ record.code_length }}B</span
-                >
-              </span>
-            </td>
-          </tr>
-
-          <tr v-if="records.length === 0 && !isLoading">
-            <td :colspan="isExpanded ? 10 : 7" class="no-records">
-              暂无提交记录
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <div v-if="records?.length === 0 &&!isLoading" class="no-records">
+        暂无提交记录
+      </div>
     </div>
 
     <!-- 分页控件 -->
     <div class="pagination" v-if="pageSum > 1 && records.length > 0">
       <button
-        class="pagination-btn first"
-        @click="PageClick(1)"
-        :disabled="currentPage === 1"
+          class="pagination-btn first"
+          @click="PageClick(1)"
+          :disabled="currentPage === 1"
       >
         &laquo;
       </button>
 
       <button
-        class="pagination-btn prev"
-        @click="PageClick(currentPage - 1)"
-        :disabled="currentPage === 1"
+          class="pagination-btn prev"
+          @click="PageClick(currentPage - 1)"
+          :disabled="currentPage === 1"
       >
         &lsaquo;
       </button>
 
       <template v-for="page in pageSum" :key="page">
         <button
-          v-if="
-            Math.abs(page - currentPage) <= 2 || page === 1 || page === pageSum
-          "
-          class="pagination-btn"
-          :class="{ active: page === currentPage }"
-          @click="PageClick(page)"
+            v-if="Math.abs(page - currentPage) <= 2 || page === 1 || page === pageSum"
+            class="pagination-btn"
+            :class="{ active: page === currentPage }"
+            @click="PageClick(page)"
         >
           {{ page }}
         </button>
-
         <span
-          v-else-if="Math.abs(page - currentPage) === 3"
-          class="pagination-ellipsis"
+            v-else-if="Math.abs(page - currentPage) === 3"
+            class="pagination-ellipsis"
         >
           ...
         </span>
       </template>
 
       <button
-        class="pagination-btn next"
-        @click="PageClick(currentPage + 1)"
-        :disabled="currentPage === pageSum"
+          class="pagination-btn next"
+          @click="PageClick(currentPage + 1)"
+          :disabled="currentPage === pageSum"
       >
         &rsaquo;
       </button>
 
       <button
-        class="pagination-btn last"
-        @click="PageClick(pageSum)"
-        :disabled="currentPage === pageSum"
+          class="pagination-btn last"
+          @click="PageClick(pageSum)"
+          :disabled="currentPage === pageSum"
       >
         &raquo;
       </button>
@@ -287,258 +378,388 @@ const toggleViewMode = () => {
 </template>
 
 <style scoped>
+/* 基础样式重置 */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 .record-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
-  position: relative;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1.5rem;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #2c3e50;
 }
 
-.view-toggle {
+/* 筛选面板 - 现代化设计 */
+.filter-panel {
+  background-color: #ffffff;
+  padding: 1.25rem;
+  border-radius: 0.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
+}
+
+.search-bar {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
 }
 
-.toggle-btn {
-  padding: 8px 16px;
-  background-color: #3498db;
-  color: white;
-  border: none;
-  border-radius: 4px;
+.search-input {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 0.5rem;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.reset-btn {
+  padding: 0.625rem 1.25rem;
+  background-color: #f5f7fa;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
   cursor: pointer;
-  font-size: 14px;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.reset-btn:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* 筛选选项 */
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-group {
+  position: relative;
+}
+
+.filter-btn {
+  padding: 0.5rem 1rem;
+  background-color: #f8f9fa;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.9rem;
   display: flex;
   align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
+  gap: 0.25rem;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
-.toggle-btn:hover {
-  background-color: #2980b9;
+.filter-btn:hover {
+  background-color: #edf2f7;
+  border-color: #cbd5e0;
 }
 
-.toggle-btn .icon {
-  font-size: 16px;
+.filter-btn.active {
+  background-color: #e3f2fd;
+  border-color: #bbdefb;
 }
 
-.loading-overlay {
+.filter-indicator {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: #3498db;
+  border-radius: 50%;
+  margin-left: 4px;
+}
+
+.dropdown-menu {
   position: absolute;
+  background-color: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  padding: 0.5rem 0;
+  z-index: 10;
+  max-height: 15rem;
+  overflow-y: auto;
+  min-width: 120px;
+  left: 0;
+  top: 100%;
+  margin-top: 0.25rem;
+}
+
+.dropdown-menu div {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: #4a5568;
+  font-size: 0.9rem;
+  transition: all 0.1s ease;
+}
+
+.dropdown-menu div:hover {
+  background-color: #f8f9fa;
+  color: #2c3e50;
+}
+
+.dropdown-menu div.selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+/* 加载状态 - 更平滑的动画 */
+.loading-overlay {
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.85);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 10;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
 }
 
 .loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  width: 3rem;
+  height: 3rem;
+  border: 3px solid rgba(52, 152, 219, 0.2);
+  border-top-color: #3498db;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
+  animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
+  to {
     transform: rotate(360deg);
   }
 }
 
-.table-wrapper {
-  overflow-x: auto;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+/* 记录卡片列表 */
+.record-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
-.table-wrapper.compact-view {
-  overflow-x: hidden;
+.record-card {
+  background-color: #fff;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eaeaea;
+  transition: all 0.2s ease;
+  overflow: hidden;
 }
 
-.record-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background-color: white;
+.record-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.record-table th {
-  background-color: #2c3e50;
-  color: white;
+.card-header {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eaeaea;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.user-link {
   font-weight: 500;
-  padding: 12px 8px;
-  text-align: center;
-  position: sticky;
-  top: 0;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.record-table td {
-  padding: 10px 8px;
-  text-align: center;
-  border-bottom: 1px solid #e0e0e0;
+.user-link:hover {
+  text-decoration: underline;
 }
 
-.record-row:hover {
-  background-color: #f5f7fa;
+.problem-id {
+  margin-left: auto;
 }
 
-/* 列宽设置 */
-.id-col {
-  width: 8%;
-  min-width: 80px;
-}
-.user-col {
-  width: 12%;
-  min-width: 100px;
-}
-.problem-col {
-  width: 8%;
-  min-width: 80px;
-}
-.result-col {
-  width: 10%;
-  min-width: 90px;
-}
-.score-col {
-  width: 8%;
-  min-width: 70px;
-}
-.time-col {
-  width: 8%;
-  min-width: 80px;
-}
-.memory-col {
-  width: 8%;
-  min-width: 80px;
-}
-.length-col {
-  width: 8%;
-  min-width: 80px;
-}
-.lang-col {
-  width: 10%;
-  min-width: 90px;
-}
-.submit-time {
-  width: 20%;
-  min-width: 160px;
-}
-
-/* 简洁视图下的列宽调整 */
-.compact-view .id-col {
-  width: 8%;
-}
-.compact-view .user-col {
-  width: 15%;
-}
-.compact-view .problem-col {
-  width: 12%;
-}
-.compact-view .result-col {
-  width: 12%;
-}
-.compact-view .score-col {
-  width: 8%;
-}
-.compact-view .lang-col {
-  width: 12%;
-}
-.compact-view .submit-time {
-  width: 33%;
-}
-
-/* 链接样式 */
-.record-link,
-.user-link,
 .problem-link {
   text-decoration: none;
-  transition: color 0.2s;
   color: #3498db;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.record-link:hover,
-.user-link:hover,
 .problem-link:hover {
   color: #2980b9;
   text-decoration: underline;
 }
 
+.submission-id {
+  color: #718096;
+  font-size: 0.9rem;
+}
+
+.record-link {
+  text-decoration: none;
+  color: inherit;
+  transition: color 0.2s ease;
+}
+
+.record-link:hover {
+  color: #3498db;
+}
+
+.card-content {
+  padding: 1rem;
+}
+
+.result-status {
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+.result-status a {
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.result-status a:hover {
+  opacity: 0.8;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #718096;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.card-footer {
+  padding: 0.75rem 1rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #eaeaea;
+  font-size: 0.9rem;
+  color: #718096;
+}
+
 /* 结果样式 */
 .accepted {
+  border-left: 4px solid #27ae60;
+}
+
+.accepted .result-status a {
   color: #27ae60;
-  font-weight: 500;
 }
 
 .rejected {
+  border-left: 4px solid #e74c3c;
+}
+
+.rejected .result-status a {
   color: #e74c3c;
-  font-weight: 500;
 }
 
-/* 得分样式 */
-.high-score {
-  color: #27ae60;
-  font-weight: 500;
+.timeout {
+  border-left: 4px solid #f39c12;
 }
 
-.medium-score {
+.timeout .result-status a {
   color: #f39c12;
-  font-weight: 500;
 }
 
-.low-score {
-  color: #e74c3c;
-  font-weight: 500;
+.memory-limit {
+  border-left: 4px solid #9b59b6;
 }
 
-/* 语言标签 */
-.lang-badge {
-  display: inline-block;
-  padding: 3px 8px;
-  background-color: #ecf0f1;
-  border-radius: 12px;
-  font-size: 0.9em;
-  color: #2c3e50;
+.memory-limit .result-status a {
+  color: #9b59b6;
 }
 
-/* 简洁视图下的统计信息 */
-.compact-stats {
+.output-limit {
+  border-left: 4px solid #e67e22;
+}
+
+.output-limit .result-status a {
+  color: #e67e22;
+}
+
+.runtime-error {
+  border-left: 4px solid #7f8c8d;
+}
+
+.runtime-error .result-status a {
   color: #7f8c8d;
-  font-size: 0.85em;
-  margin-left: 5px;
 }
 
-/* 分页样式 */
+/* 无记录提示 */
+.no-records {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1rem;
+  color: #718096;
+  font-style: italic;
+  background-color: #f8f9fa;
+  border-radius: 0.5rem;
+}
+
+/* 分页控件 */
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 5px;
-  margin-top: 20px;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
 }
 
 .pagination-btn {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  background-color: white;
-  color: #2c3e50;
-  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  background-color: #fff;
+  color: #4a5568;
+  border-radius: 0.375rem;
   cursor: pointer;
-  transition: all 0.2s;
-  min-width: 36px;
+  transition: all 0.2s ease;
+  min-width: 2.25rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .pagination-btn:hover:not(:disabled) {
-  background-color: #f1f1f1;
+  background-color: #f8f9fa;
+  border-color: #cbd5e0;
 }
 
 .pagination-btn.active {
@@ -553,36 +774,130 @@ const toggleViewMode = () => {
 }
 
 .pagination-ellipsis {
-  padding: 8px 12px;
-  color: #7f8c8d;
+  padding: 0.5rem 0.75rem;
+  color: #a0aec0;
 }
 
-/* 无记录提示 */
-.no-records {
-  text-align: center;
-  padding: 20px;
-  color: #7f8c8d;
-  font-style: italic;
-}
-
-/* 响应式调整 */
+/* 响应式设计 */
 @media (max-width: 768px) {
   .record-container {
-    padding: 10px;
+    padding: 1rem;
   }
 
-  .record-table th,
-  .record-table td {
-    padding: 8px 4px;
-    font-size: 0.9em;
+  .filter-panel {
+    padding: 1rem;
   }
 
-  .compact-stats {
-    display: none;
+  .search-bar {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .search-input,
+  .reset-btn {
+    width: 100%;
+  }
+
+  .filter-options {
+    gap: 0.25rem;
+  }
+
+  .filter-btn {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .problem-id {
+    margin-left: 0;
   }
 
   .pagination {
     flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .pagination-btn {
+    min-width: 2rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+/* 新增的题目编号样式 */
+.problem-badge {
+  display: inline-block;
+  background-color: #3498db;
+  color: white;
+  font-weight: bold;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+  min-width: 1.5rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.problem-title {
+  font-weight: 500;
+}
+
+.problem-link:hover .problem-badge {
+  background-color: #2980b9;
+  transform: scale(1.05);
+}
+
+/* 根据题目类型设置不同颜色 */
+.problem-link[href*="problem/A"] .problem-badge {
+  background-color: #27ae60;
+}
+.problem-link[href*="problem/B"] .problem-badge {
+  background-color: #f39c12;
+}
+.problem-link[href*="problem/C"] .problem-badge {
+  background-color: #e74c3c;
+}
+.problem-link[href*="problem/D"] .problem-badge {
+  background-color: #9b59b6;
+}
+.problem-link[href*="problem/E"] .problem-badge {
+  background-color: #34495e;
+}
+
+.problem-link[href*="problem/A"]:hover .problem-badge {
+  background-color: #219653;
+}
+.problem-link[href*="problem/B"]:hover .problem-badge {
+  background-color: #e67e22;
+}
+.problem-link[href*="problem/C"]:hover .problem-badge {
+  background-color: #c0392b;
+}
+.problem-link[href*="problem/D"]:hover .problem-badge {
+  background-color: #8e44ad;
+}
+.problem-link[href*="problem/E"]:hover .problem-badge {
+  background-color: #2c3e50;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .problem-badge {
+    padding: 0.2rem 0.4rem;
+    font-size: 0.8rem;
+  }
+
+  .problem-title {
+    display: none; /* 在小屏幕上隐藏题目名称 */
   }
 }
 </style>

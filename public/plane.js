@@ -515,6 +515,8 @@
       27: "esc",
       17: "ctrl",
       76: "L",
+      80: "P",  // 添加P键支持
+      82: "R",  // 添加R键支持
       // 添加数字键的映射
       48: "0",
       49: "1",
@@ -677,6 +679,11 @@
       this.currentShipType = "Standard"; // 默认飞机类型
       this.bigBullets = false; // 追踪子弹大小状态
       this.gameStarted = false; // 游戏是否已启动
+      
+      // 显示游戏提示
+      // setTimeout(function() {
+      //   this.ui.showMessage("按 Ctrl+L 开始游戏！<br>游戏开始前键盘输入不受影响。", 5000);
+      // }.bind(this), 1000);
 
       // 创建音频管理器
       this.audioManager = {
@@ -753,6 +760,9 @@
         this.shipButtonsContainer.style.display = "flex";
       }
 
+      // 创建游戏状态指示器
+      this.createGameStatusIndicator();
+
       if (!GameGlobals.useAnimationFrame) {
         this.loopTimer = window.setInterval(
           bind(this, this.loop),
@@ -761,6 +771,74 @@
       }
       if (GameGlobals.useAnimationFrame) {
         requestAnimFrame(bind(this, this.loop));
+      }
+
+      this.ui.showMessage(
+          "欢迎来到2509工作室扩展升级kickassapp项目的小游戏",
+          3000
+      );
+
+      // 显示控制提示
+      this.ui.showMessage(
+        "游戏已开始！<br>方向键移动，空格射击<br>按ESC结束游戏<br>按P暂停/继续",
+        5000
+      );
+
+    },
+    
+    // 创建游戏状态指示器
+    createGameStatusIndicator: function() {
+      // 先移除旧的状态指示器
+      if (this.gameStatusIndicator) {
+        if (this.gameStatusIndicator.parentNode) {
+          this.gameStatusIndicator.parentNode.removeChild(this.gameStatusIndicator);
+        }
+        this.unregisterElement(this.gameStatusIndicator);
+      }
+      
+      // 创建新的状态指示器
+      var indicator = document.createElement("div");
+      indicator.className = "KICKASSELEMENT game-status-indicator";
+      indicator.style.position = "fixed";
+      indicator.style.bottom = "10px";
+      indicator.style.right = "10px";
+      indicator.style.backgroundColor = "rgba(0,0,0,0.6)";
+      indicator.style.color = "#fff";
+      indicator.style.padding = "5px 10px";
+      indicator.style.borderRadius = "5px";
+      indicator.style.fontSize = "14px";
+      indicator.style.zIndex = "10000001";
+      indicator.style.cursor = "pointer";
+      indicator.innerHTML = "游戏进行中 [P键暂停]";
+      
+      // 添加点击暂停/继续功能
+      indicator.onclick = bind(this, function() {
+        this.togglePause();
+      });
+      
+      getAppContainerElement().appendChild(indicator);
+      this.registerElement(indicator);
+      this.gameStatusIndicator = indicator;
+    },
+    
+    // 添加暂停/继续功能
+    togglePause: function() {
+      if (!this.gameStarted) return;
+      
+      this.isPaused = !this.isPaused;
+      
+      if (this.isPaused) {
+        if (this.gameStatusIndicator) {
+          this.gameStatusIndicator.innerHTML = "游戏已暂停 [P键继续]";
+          this.gameStatusIndicator.style.backgroundColor = "rgba(255,0,0,0.6)";
+        }
+        this.ui.showMessage("游戏已暂停<br>按P键或点击右下角继续", 3000);
+      } else {
+        if (this.gameStatusIndicator) {
+          this.gameStatusIndicator.innerHTML = "游戏进行中 [P键暂停]";
+          this.gameStatusIndicator.style.backgroundColor = "rgba(0,0,0,0.6)";
+        }
+        this.ui.showMessage("游戏已继续", 1000);
       }
     },
 
@@ -784,7 +862,6 @@
       if (c === "L" && this.keyMap["ctrl"]) {
         if (!this.gameStarted) {
           this.begin();
-          this.ui.showMessage("游戏开始！");
         } else {
           this.ui.showMessage("游戏已经开始！");
         }
@@ -792,73 +869,111 @@
         return;
       }
 
-      // 添加检测Ctrl+数字键的逻辑，用于切换飞机类型
-      if (this.keyMap["ctrl"] && this.gameStarted && !isNaN(parseInt(c))) {
-        var shipIndex = c === "0" ? 10 : parseInt(c);
-        this.switchShipByIndex(shipIndex);
-        stopEvent(e);
-        return;
-      }
-
-      switch (c) {
-        case "left":
-        case "right":
-        case "up":
-        case "down":
-        case "esc":
-        case " ":
-        case "R":
-        case "r": // 添加小写r键支持
-        case "ctrl": // 添加对ctrl键的处理
+      // 仅在游戏已启动时处理游戏控制
+      if (this.gameStarted) {
+        // 添加检测Ctrl+数字键的逻辑，用于切换飞机类型
+        if (this.keyMap["ctrl"] && !isNaN(parseInt(c))) {
+          var shipIndex = c === "0" ? 10 : parseInt(c);
+          this.switchShipByIndex(shipIndex);
           stopEvent(e);
-          break;
+          return;
+        }
+
+        switch (c) {
+          case "left":
+          case "right":
+          case "up":
+          case "down":
+          case "esc":
+          case " ":
+          case "R":
+          case "r": // 添加小写r键支持
+          case "P": // 添加P键支持
+          case "p": // 添加小写p键支持
+            stopEvent(e);
+            break;
+        }
       }
+      
+      // 即使游戏未启动也处理的按键
+      if (c === "ctrl") {
+        // 不阻止Ctrl键的默认行为，除非与其他键配合使用
+        // 只标记为已按下
+      }
+      
       switch (c) {
         case "esc":
           this.destroy();
           break;
         case "R": // 处理R键切换子弹大小
         case "r": // 添加小写r键支持
-          this.toggleBulletSize();
+          if (this.gameStarted) {
+            this.toggleBulletSize();
+          }
+          break;
+        case "P": // 添加P键暂停/继续游戏
+        case "p": // 添加小写p键支持
+          if (this.gameStarted) {
+            this.togglePause();
+            stopEvent(e);
+          }
           break;
       }
     },
     keyup: function (e) {
       var c = code(e.keyCode);
       this.keyMap[c] = false;
-      switch (c) {
-        case "left":
-        case "right":
-        case "up":
-        case "down":
-        case "esc":
-        case " ":
-        case "ctrl": // 添加对ctrl键的处理
-          if (e.stopPropogation) {
-            e.stopPropogation();
-          }
-          if (e.preventDefault) {
-            e.preventDefault();
-          }
-          e.returnValue = false;
-          break;
+      
+      // 仅在游戏已启动时阻止默认行为
+      if (this.gameStarted) {
+        switch (c) {
+          case "left":
+          case "right":
+          case "up":
+          case "down":
+          case "esc":
+          case " ":
+            if (e.stopPropogation) {
+              e.stopPropogation();
+            }
+            if (e.preventDefault) {
+              e.preventDefault();
+            }
+            e.returnValue = false;
+            break;
+        }
+      }
+      
+      // ctrl键特殊处理，仅在游戏中用于组合键时阻止
+      if (c === "ctrl" && !this.gameStarted) {
+        // 不阻止Ctrl键的默认行为
       }
     },
     loop: function () {
       var currentTime = now();
       var tdelta = (currentTime - this.lastUpdate) / 1000;
       this.updateWindowInfo();
-      for (var i = 0, player; (player = this.players[i]); i++) {
-        player.update(tdelta);
+      
+      // 检查游戏是否暂停
+      if (!this.isPaused) {
+        for (var i = 0, player; (player = this.players[i]); i++) {
+          player.update(tdelta);
+        }
+        this.bulletManager.update(tdelta);
+        this.bombManager.update(tdelta);
+        this.explosionManager.update(tdelta);
       }
-      this.bulletManager.update(tdelta);
-      this.bombManager.update(tdelta);
-      this.explosionManager.update(tdelta);
+      
+      // UI总是更新
       this.ui.update(tdelta);
-      if (this.statisticsManager) {
+      
+      if (this.statisticsManager && !this.isPaused) {
         this.statisticsManager.update(tdelta);
       }
-      this.sessionManager.update(tdelta);
+      if (!this.isPaused) {
+        this.sessionManager.update(tdelta);
+      }
+      
       this.lastUpdate = currentTime;
       if (GameGlobals.useAnimationFrame) {
         requestAnimFrame(bind(this, this.loop));
@@ -1432,26 +1547,26 @@
       }
       getAppContainerElement().appendChild(this.container);
       var adHTML = "";
-      this.container.innerHTML =
-        '<div id="kickass-howto-image" class="KICKASSELEMENT kickass-howto-invisible"></div>' +
-        '<div id="kickass-pointstab" style="width: 200px;" class="KICKASSELEMENT">' +
-        adHTML +
-        '<div id="kickass-bomb-menu" class="KICKASSELEMENT KICKASShidden">' +
-        '<ul id="kickass-bomb-list" class="KICKASSELEMENT">' +
-        "</ul>" +
-        "</div>" +
-        '<div id="kickass-weapons-menu" class="KICKASSELEMENT KICKASShidden" style="display:none">' +
-        '<ul id="kickass-weapons-list" class="KICKASSELEMENT">' +
-        "</ul>" +
-        "</div>" +
-        '<div id="kickass-pointstab-wrapper" class="KICKASSELEMENT">' +
-        '<div id="kickass-points" class="KICKASSELEMENT">' +
-        this.numPoints +
-        "</div>" +
-        '<div id="kickass-esctoquit" class="KICKASSELEMENT">Press esc to quit</div>' +
-        this.getShareHTML() +
-        "</div>" +
-        "</div>";
+      this.container.innerHTML = '<div id="kickass-howto-image" class="KICKASSELEMENT kickass-howto-invisible"></div>' +
+          '<div id="kickass-pointstab" style="width: 200px;" class="KICKASSELEMENT">' +
+          adHTML +
+          '<div id="kickass-bomb-menu" class="KICKASSELEMENT KICKASShidden">' +
+          '<ul id="kickass-bomb-list" class="KICKASSELEMENT">' +
+          "</ul>" +
+          "</div>" +
+          '<div id="kickass-weapons-menu" class="KICKASSELEMENT KICKASShidden" style="display:none">' +
+          '<ul id="kickass-weapons-list" class="KICKASSELEMENT">' +
+          "</ul>" +
+          "</div>" +
+          '<div id="kickass-pointstab-wrapper" class="KICKASSELEMENT">' +
+          '<div id="kickass-points" class="KICKASSELEMENT">' +
+          this.numPoints +
+          "</div>" +
+          '<div id="kickass-esctoquit" class="KICKASSELEMENT">Press esc to quit</div>' +
+          this.getShareHTML() +
+          "</div>" +
+          "</div>";
+
       this.pointsTab = document.getElementById("kickass-pointstab");
       this.pointsTabWrapper = document.getElementById(
         "kickass-pointstab-wrapper"
@@ -4408,14 +4523,13 @@
           namespace.KICKASSGAME = GameGlobals.kickass = new KickAss({
             mySite: ok ? mySite : false,
           });
-
-          // 不再自动调用begin()，等待用户点击启动按钮
-          // namespace.KICKASSGAME.begin();
+          // 游戏初始化但不启动，通过Ctrl+L启动
+          console.log("游戏已初始化，按Ctrl+L开始游戏");
         });
       } else {
         namespace.KICKASSGAME = GameGlobals.kickass = new KickAss();
-        // 不再自动调用begin()，等待用户点击启动按钮
-        // namespace.KICKASSGAME.begin();
+        // 游戏初始化但不启动，通过Ctrl+L启动
+        console.log("游戏已初始化，按Ctrl+L开始游戏");
       }
     } else {
       namespace.KICKASSGAME.addPlayer();

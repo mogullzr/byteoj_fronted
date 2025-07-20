@@ -15,10 +15,10 @@
     <div
       :class="
         'mx-auto' +
-        (isNavbarVisible ? ' pt-20' : '') +
-        (route.path.split('/')[1] == 'problems' &&
+        (isNavbarVisible ? (route.path.split('/')[1] == 'introduction' ? ' pt-18' : ' pt-20') : '') +
+        ((route.path.split('/')[1] == 'problems' &&
         route.path.split('/')[2] == 'algorithm' &&
-        status == '1'
+        status == '1') || (route.path.split('/')[1] == 'introduction')
           ? ''
           : ' pb-32')
       "
@@ -153,6 +153,10 @@
   background: linear-gradient(to right, #3498db, #2ecc71);
   border-radius: 3px;
   transition: width 0.3s ease;
+}
+
+.pt-18{
+  padding-top: 4rem;
 }
 </style>
 

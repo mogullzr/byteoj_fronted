@@ -13,9 +13,11 @@ import {
 import dayjs from "dayjs";
 import * as echarts from "echarts";
 import router from "@/router";
+import {useMessageBox} from "@/view/components/alert/useMessageBox";
 
 // 用户标签
 
+const { success, error, warning } = useMessageBox();
 const userStore = UserStore();
 const user_tags_list = ref();
 const loginUser: User = userStore.loginUser;
@@ -128,7 +130,6 @@ onMounted(async () => {
 });
 if (loginUser.tags != null) {
   user_tags_list.value = loginUser.tags.split(",");
-  console.log(user_tags_list.value[0]);
   if (user_tags_list.value[0] == "") {
     user_tags_list.value = [];
   }
@@ -225,15 +226,10 @@ const modifyUserLogin = async () => {
   );
 
   if (res.code === 0) {
-    message.value = "恭喜，你已经成功修改你的信息";
-    status.value = 0;
+    success("恭喜，你已经成功修改你的信息");
   } else {
-    message.value = res.message;
-    status.value = 1;
+    error(res.message);
   }
-  setTimeout(() => {
-    status.value = null;
-  }, 5000);
 };
 
 const upLoadAvatar = () => {
@@ -260,8 +256,9 @@ const LoadAvatar = async (event: any) => {
     if (res.code === 0) {
       loginUser.avatar = res.data;
       isLoading.value = false;
+      success("上传完毕");
     } else {
-      console.log("图片上传失败！！！");
+      error(res.message);
     }
   } catch (error) {
     console.error("上传过程中发生错误:", error);

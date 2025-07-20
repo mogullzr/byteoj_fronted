@@ -58,7 +58,7 @@ const getTagNamesByIds = (
   return ids.map((id) => getTagNameById(id, tags));
 };
 onMounted(async () => {
-  searchRequest.value.keyword = searchRequest.value.keyword?.repl;
+  // searchRequest.value.keyword = searchRequest.value.keyword?.repl;
 
   await initData();
   tags_name_list.value = getTagNamesByIds(
@@ -150,6 +150,7 @@ watchEffect(async () => {
   } else {
     sourceList = [sourceList];
   }
+  console.log(searchRequest.value)
   searchRequest.value = {
     category: route.query.category ?? "algorithm",
     difficulty: route.query.difficulty ?? "",
@@ -293,7 +294,7 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
         </button>
       </div>
     </div>
-    <div class="overflow-x-auto">
+    <div>
       <div class="flex">
         <div class="flex-1">
           <TagSelector
@@ -478,7 +479,7 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
       v-if="problem_list.length === 0"
       class="mx-auto font-bold text-gray-400"
     >
-      <span class="my-4" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
+      <span class="my-8" style="font-size: 48px"> 暂无任何匹配记录┭┮﹏┭┮ </span>
     </div>
     <Pagination
       :total-pages="PageSum ?? 1"

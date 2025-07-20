@@ -149,6 +149,11 @@ const searchInfo = () => {
             <a @click.prevent="handleNavigation('/home')" href="/home">首页</a>
           </li>
           <li>
+            <a @click.prevent="handleNavigation('/introduction')" href="/introduction"
+              >网站介绍</a
+            >
+          </li>
+          <li>
             <a @click.prevent="handleNavigation('/problems')" href="/problems"
               >题库</a
             >

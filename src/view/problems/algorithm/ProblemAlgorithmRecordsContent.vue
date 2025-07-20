@@ -344,8 +344,16 @@ const goBack = () => {
         <div class="flex my-6 font-bold text-lg">
           <div class="flex-1">所属题目</div>
           <router-link
-            class="link link-hover link-primary"
-            to="/problems/algorithm/1300"
+              v-if="competition_id == -1"
+            class="link link-hover link-primary element-hidden"
+            :to="'/problems/algorithm/' + record.chinese_name.split('.')[0]"
+          >
+            {{ record.chinese_name }}
+          </router-link>
+          <router-link
+              v-else
+              class="link link-hover link-primary element-hidden"
+              :to="'/competition/' + competition_id + '/problem/' + record.chinese_name.split('.')[0]"
           >
             {{ record.chinese_name }}
           </router-link>
@@ -408,5 +416,11 @@ const goBack = () => {
   border: lightgray 1px solid;
   white-space: pre;
   transition: height 0.3s ease;
+}
+.element-hidden{
+  overflow: hidden;      /* 隐藏超出内容 */
+  text-overflow: ellipsis;  /* 超出部分显示... */
+  white-space: nowrap;   /* 禁止换行 */
+  max-width: 230px;
 }
 </style>

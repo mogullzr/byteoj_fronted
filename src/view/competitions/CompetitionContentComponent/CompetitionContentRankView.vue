@@ -27,11 +27,16 @@ onMounted(async () => {
 
   if (res.code === 0) {
     rank_user_list.value = res.data.rank_user_list;
+
     problem_list.value = res.data.problem_list;
     pageSum.value = rank_user_list.value[0].page_num;
   }
 });
 
+const timeStrToMinutes = (timeStr: string) => {
+  const [hours, minutes] = timeStr.split(':').map(Number); // 拆分并转为数字
+  return hours * 60 + minutes; // 计算总分钟数（忽略秒）
+}
 // 分页查找
 const PageClick = async (Page: number | any) => {
   if (Page <= 0 || Page > pageSum.value) {
@@ -40,7 +45,8 @@ const PageClick = async (Page: number | any) => {
 
   const res = await CompetitionControllerService.competitionSearchRankUsingPost(
     competition_id.value,
-    Page
+    Page,
+      0
   );
   if (res.code === 0) {
     rank_user_list.value = res.data.rank_user_list;
@@ -70,6 +76,20 @@ const toggleProblemGroup = () => {
 const isTopThree = (index: number) => {
   return currentPage.value === 1 && index <= 3;
 };
+
+// 秒转时分秒
+const secondsToHMS = (seconds:number) => {
+  // 计算小时、分钟、剩余秒数
+  const hours = Math.floor(seconds / 3600);    // 1小时 = 3600秒
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = seconds % 60;
+
+  // 补零操作（确保两位数显示）
+  const pad = (num:number) => num.toString().padStart(2, '0');
+
+  // 组合成 HH:MM:SS 格式
+  return `${pad(hours)}:${pad(minutes)}:${pad(remainingSeconds)}`;
+}
 </script>
 
 <template>
@@ -170,7 +190,9 @@ const isTopThree = (index: number) => {
                 </button>
               </div>
             </td>
-            <td class="ac">{{ user.ac_num }}</td>
+            <td class="ac">
+              {{ user.ac_num }}
+            </td>
             <td class="penalty">
               <span>{{ user.time_penalty }}</span>
             </td>
@@ -236,8 +258,6 @@ const isTopThree = (index: number) => {
               <div class="ak-badge" v-if="user.is_ak == 0">AK</div>
             </td>
             <td class="penalty">
-              {{ user.ac_num * 100 }}
-              <br />
               <span class="time">
                 {{ user.time_penalty }}
               </span>
@@ -253,8 +273,8 @@ const isTopThree = (index: number) => {
               <div
                 class="tooltip"
                 :data-tip="
-                  record.language +
-                  dayjs(record.submit_time).format('YYYY-MM-DD HH:mm:ss')
+                secondsToHMS(record.time_used) + '\n(' +
+                  dayjs(record.submit_time).format('YYYY-MM-DD HH:mm:ss') + ')'
                 "
               >
                 <router-link
@@ -267,8 +287,8 @@ const isTopThree = (index: number) => {
                   "
                 >
                   <div v-if="record.submission_id != null">
-                    <div class="lang-icon">
-                      <svg
+                    <div class="lang-icon font-attempts">
+                        <svg
                         v-if="record.language == 'C++'"
                         xmlns="http://www.w3.org/2000/svg"
                         width="22"
@@ -513,10 +533,12 @@ const isTopThree = (index: number) => {
 
 /* 行样式 */
 .even-row {
+  font-weight: bold;
   background-color: #f8f9fa;
 }
 
 .odd-row {
+  font-weight: bold;
   background-color: #ffffff;
 }
 
@@ -634,7 +656,11 @@ const isTopThree = (index: number) => {
   font-size: 12px;
   color: #7f8c8d;
 }
-
+.font-attempts {
+  font-size: 14px;
+  font-weight: bold;
+  color: #636a6c;
+}
 .failed-attempts {
   color: #e74c3c;
   font-weight: bold;

@@ -3,7 +3,9 @@ import { onMounted, onUpdated, Ref, ref } from "vue";
 import { useRouter } from "vue-router";
 import { ProblemMath408ControllerService } from "../../../../generated";
 import UserStore from "@/store/user";
+import {useMessageBox} from "@/view/components/alert/useMessageBox";
 
+const { success, error, warning } = useMessageBox();
 const router = useRouter();
 const useStore = UserStore();
 const path = router.currentRoute.value.fullPath;
@@ -28,9 +30,8 @@ onMounted(async () => {
       }
     }
 
-    console.log(problem_list.value);
   } else if (res.code === 40101) {
-    router.replace("/404");
+    await router.replace("/404");
   }
 
   const response =
@@ -39,9 +40,8 @@ onMounted(async () => {
     );
   if (response.code === 0) {
     PageSum.value = response.data;
-    console.log(PageSum.value);
   } else {
-    console.log(res.message);
+    error(res.message);
   }
 });
 
@@ -76,10 +76,9 @@ const PageClick = async (Page: number) => {
     for (let item = 0; item < res.data.length; item++) {
       problem_list.value.push(res.data[item]);
     }
-    console.log(problem_list.value);
     currentPage.value = Page;
   } else {
-    console.log(res.message);
+    error(res.message);
   }
 };
 
@@ -114,7 +113,7 @@ const searchByTag = async (tag_name: string) => {
       problem_list.value.push(res1.data[item]);
     }
   } else {
-    console.log(res1.message);
+    error(res1.message);
   }
   PageSum.value = 1;
 };

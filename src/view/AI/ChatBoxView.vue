@@ -451,7 +451,7 @@ const startChat = async () => {
       } as any;
     }
 
-    const response: any = await fetch("http://localhost:7091/api/ai/ask", {
+    const response: any = await fetch("https://www.byteoj.com/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -636,7 +636,7 @@ const clearMessage = () => {
   position: relative;
   border: 1px solid rgba(42, 171, 210, 0.15);
   border-radius: 6px;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .chat-container::before {
@@ -902,14 +902,35 @@ const clearMessage = () => {
   font-weight: 500;
   letter-spacing: 1px;
 }
-
 .message-container {
   display: flex;
   flex-direction: column;
   gap: 18px;
   padding: 4px;
+  overflow-y: auto;
+  max-height: 450px; /* 添加最大高度限制 */
 }
 
+/* 可选：添加滚动条样式 */
+.message-container::-webkit-scrollbar {
+  width: 6px;
+}
+.message-container::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05);
+}
+.message-container::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+}
+.message-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Firefox 滚动条样式 */
+.message-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.1) rgba(0,0,0,0.05);
+}
 .message-wrapper {
   display: flex;
   align-items: flex-start;

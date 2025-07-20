@@ -16,6 +16,15 @@ const routes: Array<RouteRecordRaw> = [
     redirect: "/home",
   },
   {
+    path: "/introduction",
+    name: "网站介绍",
+    meta: {
+      access: "0",
+      title: "ByteOJ - 网站介绍",
+    },
+    component: () => import("@/view/IntroductionView.vue"),
+  },
+  {
     path: "/home",
     name: "主页",
     meta: {

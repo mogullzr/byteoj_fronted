@@ -1,13 +1,13 @@
+<!--  <iframe-->
+<!--    v-if="isIframeEnabled"-->
+<!--    :src="iframeSrc"-->
+<!--    class="iframe-container"-->
+<!--    @load="setupIframeListener"-->
+<!--    ref="iframeRef"-->
+<!--  ></iframe>-->
+<!--v-else-->
 <template>
-  <iframe
-    v-if="isIframeEnabled"
-    :src="iframeSrc"
-    class="iframe-container"
-    @load="setupIframeListener"
-    ref="iframeRef"
-  ></iframe>
   <div
-    v-else
     class="background-container"
     :style="
       'background-image: url(' + useStore.loginUser.background_picture + ')'

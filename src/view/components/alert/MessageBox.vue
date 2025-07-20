@@ -78,7 +78,7 @@ export default defineComponent({
   border-radius: 12px; /* 圆润边角 */
   background-color: #fff;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2); /* 更强的阴影效果 */
-  z-index: 9999;
+  z-index: 99999;
   transition: all 0.3s ease-in-out;
   overflow: hidden;
 }

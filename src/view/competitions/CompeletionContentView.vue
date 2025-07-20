@@ -13,6 +13,9 @@ import CompetitionContentRankView from "@/view/competitions/CompetitionContentCo
 import { Startup } from "mathjax-full/js/components/startup";
 import elements = Startup.elements;
 import CompetitionContentControlView from "@/view/competitions/CompetitionContentComponent/CompetitionContentControlView.vue";
+import {useMessageBox} from "@/view/components/alert/useMessageBox";
+
+const { success, error, warning } = useMessageBox();
 
 const dayjs = require("dayjs");
 const useStore = UserStore();
@@ -169,16 +172,10 @@ const Join = async () => {
   );
 
   if (res.code === 0) {
-    message.value = "恭喜，报名成功！！！";
-    status.value = 0;
   } else {
     message.value = res.message;
-    status.value = 1;
+    return;
   }
-  setTimeout(() => {
-    status.value = null;
-    window.location.reload();
-  }, 3000);
 };
 
 const cancelJoin = async () => {
@@ -188,14 +185,11 @@ const cancelJoin = async () => {
     );
 
   if (res.code === 0) {
-    message.value = "已经成功取消报名";
-    status.value = 0;
+    success("已经成功取消报名");
   } else {
-    message.value = res.message;
-    status.value = 1;
+    error(res.message);
   }
   setTimeout(() => {
-    status.value = null;
     window.location.reload();
   }, 3000);
 };
@@ -793,45 +787,38 @@ const changeShow = (key: number) => {
   </div>
 
   <!-- 密码输入模态框 -->
-  <dialog id="my_modal" class="modal">
-    <div class="modal-box bg-white rounded-lg shadow-xl max-w-md p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-gray-800">比赛邀请码</h3>
-        <button class="btn btn-sm btn-ghost" onclick="my_modal.close()">
-          <svg
-            class="w-5 h-5 text-gray-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
+  <dialog id="my_modal" class="modal backdrop-blur-sm">
+    <div class="modal-box bg-gradient-to-br from-white to-gray-50 rounded-xl shadow-2xl max-w-md p-8 border border-gray-100 z-[101]">
+      <div class="flex justify-between items-center mb-6">
+        <h3 class="text-2xl font-bold text-gray-800">
+        <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-cyan-500">
+          比赛邀请码
+        </span>
+        </h3>
+        <button class="hover:bg-gray-100 transition" onclick="my_modal.close()">
+          <svg t="1752501270969" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4601" width="48" height="48"><path d="M512 127.99c-212.2 0-384.22 172.02-384.22 384.22S299.8 896.42 512 896.42 896.22 724.4 896.22 512.21 724.2 127.99 512 127.99z m177.7 518.24c11.72 11.72 11.72 30.71 0 42.43s-30.71 11.72-42.43 0L512.93 554.3 378.58 688.65c-11.72 11.72-30.71 11.72-42.43 0-11.72-11.72-11.72-30.71 0-42.43L470.5 511.88 336.15 377.53c-11.72-11.72-11.72-30.71 0-42.43 11.72-11.72 30.71-11.72 42.43 0l134.35 134.35L647.28 335.1c11.72-11.72 30.71-11.72 42.43 0 11.72 11.72 11.72 30.71 0 42.43L555.35 511.88 689.7 646.23z" fill="#1296db" p-id="4602"></path></svg>
         </button>
       </div>
-      <p class="text-gray-600 mb-4">
+      <p class="text-gray-600 mb-6 text-sm leading-relaxed">
         这场比赛需要邀请码才能参加，请输入比赛邀请码：
       </p>
       <input
-        type="password"
-        placeholder="请输入比赛邀请码"
-        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-        v-model="password"
+          type="password"
+          placeholder="请输入比赛邀请码"
+          class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition-all duration-200 placeholder-gray-400"
+          v-model="password"
       />
-      <div class="modal-action mt-6">
+      <div style="color: red; font-weight: bold">{{message}}</div>
+      <div class="modal-action mt-8 flex justify-end space-x-3">
         <button
-          class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-lg shadow transition duration-300 mr-2"
-          onclick="my_modal.close()"
+            class="bg-white hover:bg-gray-50 text-gray-600 font-medium py-2.5 px-5 rounded-xl shadow-sm hover:shadow transition-all duration-200 border border-gray-200"
+            onclick="my_modal.close()"
         >
           取消
         </button>
         <button
-          class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition duration-300"
-          @click="Join"
+            class="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium py-2.5 px-5 rounded-xl shadow-md hover:shadow-lg transition-all duration-200"
+            @click="Join"
         >
           确认
         </button>
@@ -890,7 +877,6 @@ const changeShow = (key: number) => {
 
 /* 模态框 */
 .modal {
-  background-color: #ffffff !important; /* 纯白背景 */
   border-radius: 1rem;
   padding: 2rem;
   border: 1px solid #e5e7eb;

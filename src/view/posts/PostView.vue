@@ -94,7 +94,7 @@ const PostAdd = async () => {
     });
 
     if (res.code === 0) {
-      success("恭喜你发帖成功！！！");
+      success("发帖成功！！！");
       content.value = "";
       tag_list.value = [];
       title.value = "";
@@ -227,7 +227,6 @@ const submitComment = async (post_id: number) => {
   });
 
   if (res.code === 0) {
-    success("评论成功!");
     comment_content.value = "";
     to_comment_id.value = 0;
     root_comment_id.value = 0;

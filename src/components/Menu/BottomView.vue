@@ -7,7 +7,9 @@ import {
 
 import UserStore from "@/store/user";
 import router from "@/router";
+import {useMessageBox} from "@/view/components/alert/useMessageBox";
 
+const { success, error, warning } = useMessageBox();
 const emit = defineEmits(["toggle-navbar"]);
 const useStore = UserStore();
 const pictures: Ref<WebsiteBackgroundPictures[] | undefined> = ref([]);
@@ -23,9 +25,8 @@ const changeShow = async (key: number) => {
     const res = await UserControllerService.userGetPictureUsingGet();
     if (res.code === 0) {
       pictures.value = res.data;
-      console.log(pictures.value);
     } else if (res.code === 40101) {
-      router.replace("/404");
+      await router.replace("/404");
     }
   }
 };
@@ -56,9 +57,9 @@ const upLoad_2 = async () => {
     if (res.code === 0) {
       pictures.value = [];
       pictures.value.push(res.data);
-      console.log("图片上传成功！！！");
+      success("图片上传成功！！！");
     } else {
-      console.log("图片上传失败！！！");
+      error(res.message);
     }
   } catch (error) {
     console.error("上传过程中发生错误:", error);
@@ -90,7 +91,6 @@ const DeletePicture = async (id: number | undefined) => {
     for (let item = 0; item < pictures.value.length; item++) {
       if (pictures.value[item].id == id) {
         pictures.value.splice(item, item);
-        console.log(pictures.value);
         break;
       }
     }
@@ -104,7 +104,7 @@ const pictureGet = async () => {
       pictures.value = res.data;
       console.log(pictures.value);
     } else if (res.code === 40101) {
-      router.replace("/404");
+      await router.replace("/404");
     }
   }
 };
