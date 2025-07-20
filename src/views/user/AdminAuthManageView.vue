@@ -144,9 +144,10 @@
                   <el-button
                       size="small"
                       text
-                      @click="handleEdit(child)"
+                      type="danger"
+                      @click="handleDeletePermission(category, child)"
                   >
-                    <el-icon><Edit /></el-icon>
+                    <el-icon><Delete /></el-icon>
                   </el-button>
                 </div>
               </div>
@@ -213,7 +214,7 @@
             <el-form-item label="类别名称" prop="name">
               <el-input
                   v-model="categoryForm.name"
-                  placeholder="如：用户管理"
+                  placeholder="如：管理员"
                   clearable
               />
             </el-form-item>
@@ -222,11 +223,11 @@
             <el-form-item label="标识码" prop="code">
               <el-input
                   v-model="categoryForm.code"
-                  placeholder="如：USER_MANAGE"
+                  placeholder="如：admin"
                   clearable
               >
                 <template #prefix>
-                  <el-tooltip content="大写字母和下划线组成" placement="top">
+                  <el-tooltip content="字母、数字或下划线组成" placement="top">
                     <el-icon><InfoFilled /></el-icon>
                   </el-tooltip>
                 </template>
@@ -234,6 +235,23 @@
             </el-form-item>
           </el-col>
         </el-row>
+
+        <el-form-item label="权限列表" prop="authIds">
+          <el-select
+              v-model="categoryForm.authIds"
+              multiple
+              placeholder="选择关联权限"
+              style="width: 100%"
+              clearable
+          >
+            <el-option
+                v-for="auth in authOptions"
+                :key="auth.id"
+                :label="auth.name"
+                :value="auth.id"
+            />
+          </el-select>
+        </el-form-item>
 
         <el-row :gutter="20">
           <el-col :span="8">
@@ -263,7 +281,7 @@
               v-model="categoryForm.description"
               type="textarea"
               :rows="3"
-              placeholder="请输入类别描述信息"
+              placeholder="请输入角色标识信息"
               maxlength="200"
               show-word-limit
           />
@@ -348,34 +366,39 @@
 import {
   Menu, Plus, FolderOpened, Folder, Document,
   MoreFilled, Edit, CircleClose, CircleCheck, View,
-  PriceTag, Sort, Clock, InfoFilled
+  PriceTag, Sort, Clock, InfoFilled, Delete
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import {computed, onMounted, reactive, ref} from "vue";
+import { computed, onMounted, reactive, ref, nextTick } from "vue";
+import { RbacControllerService } from "../../../generated/services/RbacControllerService.ts";
 
 export default {
   components: {
     Menu, Plus, FolderOpened, Folder, Document,
     MoreFilled, Edit, CircleClose, CircleCheck, View,
-    PriceTag, Sort, Clock, InfoFilled
+    PriceTag, Sort, Clock, InfoFilled, Delete
   },
   setup() {
     // 数据状态
     const permissionCategories = ref([])
+    const authOptions = ref([])
     const loading = ref(false)
     const searchQuery = ref('')
     const currentPage = ref(1)
     const pageSize = ref(12)
     const totalItems = ref(0)
     const currentCategory = ref(null)
+
     // 搜索过滤
     const filteredCategories = computed(() => {
       if (!searchQuery.value) return permissionCategories.value
+      const searchLower = searchQuery.value.toLowerCase()
       return permissionCategories.value.filter(item =>
-          item.name.includes(searchQuery.value) ||
-          item.code.includes(searchQuery.value.toUpperCase())
+          (item.name && item.name.toLowerCase().includes(searchLower)) ||
+          (item.code && item.code.toLowerCase().includes(searchLower))
       )
     })
+
     // UI状态
     const dialogVisible = ref(false)
     const detailVisible = ref(false)
@@ -390,7 +413,8 @@ export default {
       code: '',
       status: 1,
       sort: 0,
-      description: ''
+      description: '',
+      authIds: []
     })
 
     const categoryOptions = ref([])
@@ -399,41 +423,88 @@ export default {
     const formRules = reactive({
       name: [
         { required: true, message: '请输入类别名称', trigger: 'blur' },
-        { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+        { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
       ],
       code: [
         { required: true, message: '请输入标识码', trigger: 'blur' },
-        { pattern: /^[A-Z_]+$/, message: '只能包含大写字母和下划线', trigger: 'blur' }
+        { pattern: /^[a-zA-Z0-9_]+$/, message: '只能包含字母、数字和下划线', trigger: 'blur' }
       ],
       status: [
         { required: true, message: '请选择状态', trigger: 'change' }
       ],
       sort: [
         { required: true, message: '请输入排序值', trigger: 'blur' }
+      ],
+      authIds: [
+        { required: true, message: '请至少选择一个权限', trigger: 'change', type: 'array' }
       ]
     })
 
-    // 方法实现
+    // 获取所有权限
+    const fetchAuthOptions = async () => {
+      try {
+        const request = {
+          keyword: null,
+          pageNum: 1,
+          pageSize: 10
+        }
+        const res = await RbacControllerService.adminGetAuthUsingGet(request)
+        if (res.code !== 0) {
+          throw new Error(res.message || '获取权限列表失败')
+        }
+        authOptions.value = res.data.map(auth => ({
+          id: auth.auth_id,
+          name: auth.auth_name
+        }))
+      } catch (error) {
+        console.error('获取权限列表失败:', error)
+        ElMessage.error('获取权限列表失败')
+      }
+    }
+
+    // 获取权限类别
     const fetchPermissionCategories = async () => {
       loading.value = true
       try {
-        // 模拟API请求
-        await new Promise(resolve => setTimeout(resolve, 800))
+        const res = await RbacControllerService.adminGetRolesUsingGet()
+        if (res.code !== 0) {
+          throw new Error(res.message || '获取权限类别失败')
+        }
 
-        // 模拟数据
-        const mockData = generateMockCategories()
+        // 转换API数据到组件所需格式
+        const apiData = res.data.map((role, index) => ({
+          id: role.role_id,
+          parentId: null,
+          name: role.description || '未命名角色',
+          code: role.role_name || `ROLE_${index}`,
+          status: 1,
+          sort: index,
+          description: role.role_name || '',
+          createTime: new Date().toISOString(),
+          updateTime: new Date().toISOString(),
+          children: role.user_auth_list.map((auth, authIndex) => ({
+            id: auth.auth_id,
+            parentId: role.role_id,
+            name: auth.auth_name || '未命名权限',
+            code: `AUTH_${auth.auth_id}`,
+            status: 1,
+            sort: authIndex,
+            description: auth.auth_name || '',
+            createTime: new Date().toISOString()
+          }))
+        }))
 
         // 模拟搜索
-        let filteredData = mockData
+        let filteredData = apiData
         if (searchQuery.value) {
           const searchLower = searchQuery.value.toLowerCase()
-          filteredData = mockData.filter(item =>
-              item.name.toLowerCase().includes(searchLower) ||
-              item.code.toLowerCase().includes(searchLower)
+          filteredData = apiData.filter(item =>
+              (item.name && item.name.toLowerCase().includes(searchLower)) ||
+              (item.code && item.code.toLowerCase().includes(searchLower))
           )
         }
 
-        // 模拟分页
+        // 分页
         const start = (currentPage.value - 1) * pageSize.value
         const end = start + pageSize.value
         permissionCategories.value = filteredData.slice(start, end).map(item => ({
@@ -443,163 +514,13 @@ export default {
         totalItems.value = filteredData.length
 
         // 生成级联选择器选项
-        generateCategoryOptions(mockData)
+        generateCategoryOptions(apiData)
       } catch (error) {
         console.error('获取权限类别失败:', error)
         ElMessage.error('获取权限类别失败')
       } finally {
         loading.value = false
       }
-    }
-
-    const generateMockCategories = () => {
-      const baseCategories = [
-        {
-          id: 1,
-          parentId: null,
-          name: '系统管理',
-          code: 'SYSTEM',
-          status: 1,
-          sort: 0,
-          description: '系统设置、用户权限等核心功能',
-          createTime: '2023-01-01 10:00:00',
-          updateTime: '2023-06-15 14:30:00',
-          children: [
-            {
-              id: 101,
-              parentId: 1,
-              name: '用户管理',
-              code: 'USER_MANAGE',
-              status: 1,
-              sort: 1,
-              description: '管理系统用户账号',
-              createTime: '2023-01-01 10:01:00'
-            },
-            {
-              id: 102,
-              parentId: 1,
-              name: '角色管理',
-              code: 'ROLE_MANAGE',
-              status: 1,
-              sort: 2,
-              description: '管理系统角色和权限分配',
-              createTime: '2023-01-01 10:02:00'
-            },
-            {
-              id: 103,
-              parentId: 1,
-              name: '权限配置',
-              code: 'PERMISSION',
-              status: 1,
-              sort: 3,
-              description: '配置系统权限点',
-              createTime: '2023-01-01 10:03:00'
-            }
-          ]
-        },
-        {
-          id: 2,
-          parentId: null,
-          name: '内容管理',
-          code: 'CONTENT',
-          status: 1,
-          sort: 1,
-          description: '网站内容发布与管理',
-          createTime: '2023-01-02 10:00:00',
-          updateTime: '2023-05-20 09:15:00',
-          children: [
-            {
-              id: 201,
-              parentId: 2,
-              name: '文章管理',
-              code: 'ARTICLE',
-              status: 1,
-              sort: 1,
-              description: '发布和管理文章内容',
-              createTime: '2023-01-02 10:01:00'
-            },
-            {
-              id: 202,
-              parentId: 2,
-              name: '分类管理',
-              code: 'CATEGORY',
-              status: 1,
-              sort: 2,
-              description: '管理内容分类',
-              createTime: '2023-01-02 10:02:00'
-            },
-            {
-              id: 203,
-              parentId: 2,
-              name: '标签管理',
-              code: 'TAG',
-              status: 1,
-              sort: 3,
-              description: '管理内容标签',
-              createTime: '2023-01-02 10:03:00'
-            }
-          ]
-        },
-        {
-          id: 3,
-          parentId: null,
-          name: '订单管理',
-          code: 'ORDER',
-          status: 1,
-          sort: 2,
-          description: '处理系统订单',
-          createTime: '2023-01-03 10:00:00',
-          children: [
-            {
-              id: 301,
-              parentId: 3,
-              name: '订单列表',
-              code: 'ORDER_LIST',
-              status: 1,
-              sort: 1,
-              description: '查看和管理订单',
-              createTime: '2023-01-03 10:01:00'
-            },
-            {
-              id: 302,
-              parentId: 3,
-              name: '退款处理',
-              code: 'REFUND',
-              status: 0,
-              sort: 2,
-              description: '处理订单退款',
-              createTime: '2023-01-03 10:02:00'
-            }
-          ]
-        },
-        {
-          id: 4,
-          parentId: null,
-          name: '数据统计',
-          code: 'STATISTICS',
-          status: 1,
-          sort: 3,
-          description: '系统数据分析和报表',
-          createTime: '2023-01-04 10:00:00',
-          children: []
-        }
-      ]
-
-      // 添加更多模拟数据
-      for (let i = 5; i <= 15; i++) {
-        baseCategories.push({
-          id: i,
-          parentId: null,
-          name: `业务模块${i}`,
-          code: `MODULE_${i}`,
-          status: i % 2,
-          sort: i,
-          description: `业务模块${i}的描述信息`,
-          createTime: `2023-01-${i < 10 ? '0' + i : i} 10:00:00`
-        })
-      }
-
-      return baseCategories
     }
 
     const generateCategoryOptions = (categories) => {
@@ -642,21 +563,33 @@ export default {
       dialogTitle.value = '新增权限类别'
       resetForm()
       dialogVisible.value = true
+      nextTick(() => {
+        if (categoryFormRef.value) {
+          categoryFormRef.value.clearValidate()
+        }
+      })
     }
 
     const handleEdit = (row) => {
+      console.log('Editing category:', row)
       dialogTitle.value = '编辑权限类别'
       resetForm()
       Object.assign(categoryForm, {
         id: row.id,
-        parentId: row.parentId,
-        name: row.name,
-        code: row.code,
-        status: row.status,
-        sort: row.sort,
-        description: row.description
+        parentId: row.parentId || null,
+        name: row.name || '',
+        code: row.code || '',
+        status: row.status ?? 1,
+        sort: row.sort ?? 0,
+        description: row.description || '',
+        authIds: row.children ? row.children.map(child => child.id) : []
       })
       dialogVisible.value = true
+      nextTick(() => {
+        if (categoryFormRef.value) {
+          categoryFormRef.value.clearValidate()
+        }
+      })
     }
 
     const resetForm = () => {
@@ -667,21 +600,70 @@ export default {
       categoryForm.status = 1
       categoryForm.sort = 0
       categoryForm.description = ''
+      categoryForm.authIds = []
+      if (categoryFormRef.value) {
+        categoryFormRef.value.resetFields()
+      }
+    }
+
+    const handleDeletePermission = async (category, child) => {
+      try {
+        await ElMessageBox.confirm(
+            `确定要从【${category.name}】中移除权限【${child.name}】吗？`,
+            '删除确认',
+            {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+        )
+
+        // 构建新的 auth_id_list，排除要删除的权限
+        const updatedAuthIds = category.children
+            .filter(c => c.id !== child.id)
+            .map(c => c.id)
+
+        const request = {
+          role_name: category.code,
+          description: category.name,
+          auth_id_list: updatedAuthIds
+        }
+
+        const res = await RbacControllerService.adminSetRoleUsingPost(request)
+        if (res.code !== 0) {
+          throw new Error(res.message || '移除权限失败')
+        }
+
+        ElMessage.success('权限已移除')
+        await fetchPermissionCategories()
+      } catch (error) {
+        if (error !== 'cancel') {
+          ElMessage.error('移除权限失败: ' + (error.message || '未知错误'))
+        }
+      }
     }
 
     const submitForm = async () => {
       try {
         await categoryFormRef.value.validate()
 
-        // 模拟API请求
-        await new Promise(resolve => setTimeout(resolve, 1000))
+        const request = {
+          role_name: categoryForm.code,
+          description: categoryForm.name,
+          auth_id_list: categoryForm.authIds
+        }
+
+        const res = await RbacControllerService.adminSetRoleUsingPost(request)
+        if (res.code !== 0) {
+          throw new Error(res.message || '保存角色失败')
+        }
 
         ElMessage.success(categoryForm.id ? '修改成功' : '添加成功')
         dialogVisible.value = false
         await fetchPermissionCategories()
       } catch (error) {
         if (error !== 'validate') {
-          ElMessage.error('保存失败')
+          ElMessage.error('保存失败: ' + (error.message || '未知错误'))
         }
       }
     }
@@ -745,14 +727,18 @@ export default {
     }
 
     // 初始化
-    onMounted(() => {
-      fetchPermissionCategories()
+    onMounted(async () => {
+      await Promise.all([
+        fetchPermissionCategories(),
+        fetchAuthOptions()
+      ])
     })
 
     return {
       // 数据
       filteredCategories,
       permissionCategories,
+      authOptions,
       loading,
       searchQuery,
       currentPage,
@@ -773,8 +759,10 @@ export default {
 
       // 方法
       fetchPermissionCategories,
+      fetchAuthOptions,
       showAddDialog,
       handleEdit,
+      handleDeletePermission,
       submitForm,
       toggleStatus,
       showDetail,
@@ -980,6 +968,14 @@ export default {
           margin-top: 16px;
           padding-top: 16px;
           border-top: 1px solid #f0f0f0;
+          max-height: 300px;
+          overflow: hidden;
+          transition: max-height 0.3s ease-in-out;
+
+          &.collapsed {
+            max-height: 0;
+            padding-top: 0;
+          }
 
           .sub-category {
             display: flex;
@@ -988,6 +984,9 @@ export default {
             background-color: #f9f9f9;
             border-radius: 4px;
             margin-bottom: 8px;
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.3s ease, transform 0.3s ease;
 
             .sub-icon {
               width: 24px;
@@ -1056,7 +1055,7 @@ export default {
     }
   }
 
-  .el-cascader {
+  .el-cascader, .el-select {
     width: 100%;
   }
 }

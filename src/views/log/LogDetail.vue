@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { ArrowLeft } from "@element-plus/icons-vue";
-import { MdPreview } from "md-editor-v3";
+import {ref, onMounted} from "vue";
+import {useRouter} from "vue-router";
+import {ArrowLeft} from "@element-plus/icons-vue";
+import {MdPreview} from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
-import { ElMessage } from "element-plus";
+import {ElMessage} from "element-plus";
+import {LogControllerService} from "../../../generated/services/LogControllerService.ts";
+import {LogGetSingleInfo} from "../../../generated/models/LogGetSingleInfo.ts";
 
 // Define props first without depending on route
 const props = defineProps({
@@ -29,81 +31,81 @@ const logId = ref(props.logId);
 const logData = ref<any>(null);
 const loading = ref(true);
 
-// Mock data for a single log
-const mockOperationLog = {
-  id: 1,
-  username: "管理员",
-  userId: "admin001",
-  operation: "登录系统",
-  description: "用户从IP地址192.168.1.1登录系统",
-  ip: "192.168.1.1",
-  deviceInfo: "Windows 10 / Chrome 98.0.4758.102",
-  module: "认证中心",
-  status: "成功",
-  time: "2023-06-15 09:30:25",
-  duration: "0.35秒",
-  requestParams: JSON.stringify(
-    { username: "admin", password: "******", rememberMe: true },
-    null,
-    2,
-  ),
-  responseData: JSON.stringify(
-    {
-      code: 200,
-      message: "登录成功",
-      data: { token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." },
-    },
-    null,
-    2,
-  ),
+// 辅助函数：安全地格式化JSON字符串
+const safeFormatJson = (jsonStr: string | null) => {
+  if (!jsonStr) return '{}';
+
+  try {
+    // 尝试解析并重新格式化JSON
+    const parsed = JSON.parse(jsonStr);
+    return JSON.stringify(parsed, null, 2);
+  } catch (e) {
+    // 如果不是有效的JSON，返回原始字符串
+    return jsonStr;
+  }
 };
 
-const mockExceptionLog = {
-  id: 1,
-  type: "系统错误",
-  level: "ERROR",
-  description: "数据库连接失败",
-  module: "用户管理",
-  className: "com.example.service.UserServiceImpl",
-  methodName: "getUserById",
-  lineNumber: 42,
-  params: JSON.stringify({ userId: "user123" }, null, 2),
-  stacktrace: `java.sql.SQLException: Connection refused
-  at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:965)
-  at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:898)
-  at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:887)
-  at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:861)
-  at com.mysql.jdbc.ConnectionImpl.connectOneTryOnly(ConnectionImpl.java:2330)
-  at com.mysql.jdbc.ConnectionImpl.createNewIO(ConnectionImpl.java:2083)
-  at com.mysql.jdbc.ConnectionImpl.<init>(ConnectionImpl.java:806)
-  at com.mysql.jdbc.JDBC4Connection.<init>(JDBC4Connection.java:47)
-  at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)`,
-  status: "未处理",
-  time: "2023-06-15 08:13:27",
-  ip: "192.168.1.2",
-  userId: "user001",
-};
-
-// Fetch log data function (mock implementation)
-const fetchLogData = () => {
+// Fetch log data function
+const fetchLogData = async () => {
   loading.value = true;
 
-  // Simulate API call
-  setTimeout(() => {
-    // In a real application, we would use the logId to fetch specific log data
-    // For now, we'll use our mock data
-    if (logType.value === "operation") {
-      logData.value = { ...mockOperationLog, id: logId.value };
-    } else if (logType.value === "exception") {
-      logData.value = { ...mockExceptionLog, id: logId.value };
+  try {
+    const request = {
+      log_id: logId.value,
+      status: logType.value
+    } as LogGetSingleInfo;
+
+    const res = await LogControllerService.logDetailInfoGetUsingGet(request);
+
+    if (res.code === 0 && res.data) {
+      const apiData = res.data;
+
+      if (logType.value === "operation") {
+        // 映射操作日志数据
+        logData.value = {
+          id: apiData.log_id,
+          username: apiData.username,
+          operation: apiData.description || '无描述',
+          description: `访问 ${apiData.module} 模块的 ${apiData.url} 接口`,
+          ip: apiData.ip,
+          deviceInfo: '未知设备',
+          module: apiData.module,
+          status: apiData.code === 0 ? '成功' : '失败',
+          time: apiData.create_time,
+          duration: `${apiData.operation_time}ms`,
+          requestParams: safeFormatJson(apiData.request_param),
+          responseData: safeFormatJson(apiData.response_param)
+        };
+      } else if (logType.value === "exception") {
+        // 映射异常日志数据
+        logData.value = {
+          id: apiData.log_id,
+          type: '系统异常',
+          level: 'ERROR',
+          description: apiData.error_message?.split('\n')[0] || '未知异常',
+          module: apiData.module,
+          className: apiData.method?.split('(')[0] || '未知类',
+          methodName: apiData.method?.split('.').pop()?.split('(')[0] || '未知方法',
+          lineNumber: 0,
+          params: safeFormatJson(apiData.request_param),
+          stacktrace: apiData.error_message || '无堆栈信息',
+          status: '未处理',
+          time: apiData.create_time,
+          ip: apiData.ip,
+          userId: apiData.username
+        };
+      }
     } else {
-      // Handle invalid log type
-      ElMessage.error("无效的日志类型");
+      ElMessage.error(res.message || '获取日志详情失败');
       router.push("/log");
     }
-
+  } catch (error) {
+    ElMessage.error('请求日志详情出错');
+    console.error(error);
+    router.push("/log");
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 };
 
 // Mark exception as handled
@@ -124,11 +126,11 @@ const goBack = () => {
 
 const emit = defineEmits(["back"]);
 
-onMounted(() => {
-  fetchLogData();
+onMounted(async () => {
+  console.log(props);
+  await fetchLogData();
 });
 </script>
-
 <template>
   <div class="log-detail">
     <el-card v-loading="loading">
@@ -138,13 +140,13 @@ onMounted(() => {
             返回
           </el-button>
           <span>{{
-            logType === "operation" ? "操作日志详情" : "异常日志详情"
-          }}</span>
+              logType === "operation" ? "操作日志详情" : "异常日志详情"
+            }}</span>
           <div class="header-actions">
             <el-button
-              v-if="logType === 'exception' && logData?.status === '未处理'"
-              type="success"
-              @click="markAsHandled"
+                v-if="logType === 'exception' && logData?.status === '未处理'"
+                type="success"
+                @click="markAsHandled"
             >
               标记为已处理
             </el-button>
@@ -157,55 +159,61 @@ onMounted(() => {
         <div v-if="logType === 'operation'" class="detail-content">
           <el-descriptions :column="2" border>
             <el-descriptions-item label="日志ID">{{
-              logData.id
-            }}</el-descriptions-item>
+                logData.id
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="用户名">{{
-              logData.username
-            }}</el-descriptions-item>
-            <el-descriptions-item label="用户ID">{{
-              logData.userId
-            }}</el-descriptions-item>
+                logData.username
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="操作">{{
-              logData.operation
-            }}</el-descriptions-item>
+                logData.operation
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="描述">{{
-              logData.description
-            }}</el-descriptions-item>
+                logData.description
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="模块">{{
-              logData.module
-            }}</el-descriptions-item>
+                logData.module
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="IP地址">{{
-              logData.ip
-            }}</el-descriptions-item>
+                logData.ip
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="设备信息">{{
-              logData.deviceInfo
-            }}</el-descriptions-item>
+                logData.deviceInfo
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="操作状态">
               <el-tag :type="logData.status === '成功' ? 'success' : 'danger'">
                 {{ logData.status }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="操作时间">{{
-              logData.time
-            }}</el-descriptions-item>
+                logData.time
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="执行耗时">{{
-              logData.duration
-            }}</el-descriptions-item>
+                logData.duration
+              }}
+            </el-descriptions-item>
           </el-descriptions>
 
           <div class="section-title">请求参数</div>
           <el-card class="code-block">
             <MdPreview
-              :modelValue="`\`\`\`json\n${logData.requestParams}\n\`\`\``"
-              :preview-theme="'github'"
+                :modelValue="`\`\`\`json\n${logData.requestParams}\n\`\`\``"
+                :preview-theme="'github'"
             />
           </el-card>
 
           <div class="section-title">响应数据</div>
           <el-card class="code-block">
             <MdPreview
-              :modelValue="`\`\`\`json\n${logData.responseData}\n\`\`\``"
-              :preview-theme="'github'"
+                :modelValue="`\`\`\`json\n${logData.responseData}\n\`\`\``"
+                :preview-theme="'github'"
             />
           </el-card>
         </div>
@@ -214,62 +222,72 @@ onMounted(() => {
         <div v-if="logType === 'exception'" class="detail-content">
           <el-descriptions :column="2" border>
             <el-descriptions-item label="日志ID">{{
-              logData.id
-            }}</el-descriptions-item>
+                logData.id
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="异常类型">{{
-              logData.type
-            }}</el-descriptions-item>
+                logData.type
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="异常级别">
               <el-tag :type="logData.level === 'ERROR' ? 'danger' : 'warning'">
                 {{ logData.level }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="异常描述">{{
-              logData.description
-            }}</el-descriptions-item>
+                logData.description
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="模块">{{
-              logData.module
-            }}</el-descriptions-item>
+                logData.module
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="类名">{{
-              logData.className
-            }}</el-descriptions-item>
+                logData.className
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="方法名">{{
-              logData.methodName
-            }}</el-descriptions-item>
+                logData.methodName
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="行号">{{
-              logData.lineNumber
-            }}</el-descriptions-item>
+                logData.lineNumber
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="处理状态">
               <el-tag
-                :type="logData.status === '已处理' ? 'success' : 'warning'"
+                  :type="logData.status === '已处理' ? 'success' : 'warning'"
               >
                 {{ logData.status }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="发生时间">{{
-              logData.time
-            }}</el-descriptions-item>
+                logData.time
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="IP地址">{{
-              logData.ip
-            }}</el-descriptions-item>
+                logData.ip
+              }}
+            </el-descriptions-item>
             <el-descriptions-item label="用户ID">{{
-              logData.userId
-            }}</el-descriptions-item>
+                logData.userId
+              }}
+            </el-descriptions-item>
           </el-descriptions>
 
           <div class="section-title">请求参数</div>
           <el-card class="code-block">
             <MdPreview
-              :modelValue="`\`\`\`json\n${logData.params}\n\`\`\``"
-              :preview-theme="'github'"
+                :modelValue="`\`\`\`json\n${logData.params}\n\`\`\``"
+                :preview-theme="'github'"
             />
           </el-card>
 
           <div class="section-title">堆栈信息</div>
           <el-card class="code-block">
             <MdPreview
-              :modelValue="`\`\`\`java\n${logData.stacktrace}\n\`\`\``"
-              :preview-theme="'github'"
+                :modelValue="`\`\`\`java\n${logData.stacktrace}\n\`\`\``"
+                :preview-theme="'github'"
             />
           </el-card>
         </div>
@@ -384,6 +402,6 @@ onMounted(() => {
 
 .code-block :deep(.md-editor-preview code) {
   font-family: "Monaco", "Menlo", "Ubuntu Mono", "Consolas", "source-code-pro",
-    monospace;
+  monospace;
 }
 </style>

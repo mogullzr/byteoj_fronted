@@ -70,7 +70,7 @@ const routes: Array<RouteRecordRaw> = [
       },
       {
         path: "auth",
-        name: "权限管理页面",
+        name: "角色管理页面",
         meta: {
           access: "2",
           show: true,

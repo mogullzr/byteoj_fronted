@@ -24,7 +24,7 @@
       >
         <template #title><span>管理员</span></template>
         <el-menu-item index="1-1-1" @click="RouterToAdminList">管理员管理</el-menu-item>
-        <el-menu-item index="1-1-2" @click="RouterToAdminAuth">权限管理</el-menu-item>
+        <el-menu-item index="1-1-2" @click="RouterToAdminAuth">角色管理</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>用户</span></template>
@@ -253,6 +253,18 @@
         <el-menu-item index="9-1-2">视频信息管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
+    <el-sub-menu index="10">
+      <template #title>
+        <svg t="1752938041479" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="4630" width="30" height="30"><path d="M819.9 472.9L675 723.9l1.7 99.4 86.9-48.3 144.9-251-88.6-51.1zM871.1 384.3L837 443.4l88.6 51.1 34.1-59.1-88.6-51.1zM544.3 703h-288c-17.7 0-32 14.3-32 32s14.3 32 32 32h288c17.7 0 32-14.3 32-32s-14.3-32-32-32zM256.3 511c-17.7 0-32 14.3-32 32s14.3 32 32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32h-384zM256.3 319c-17.7 0-32 14.3-32 32s14.3 32 32 32h384c17.7 0 32-14.3 32-32s-14.3-32-32-32h-384zM288 64h64v160h-64zM384 128h128v64H384zM544 64h64v160h-64z" p-id="4631"></path><path d="M768 864c0 17.7-14.3 32-32 32H160c-17.7 0-32-14.3-32-32V224c0-17.7 14.3-32 32-32h96v-64h-96c-53 0-96 43-96 96v640c0 53 43 96 96 96h576c53 0 96-43 96-96V686.7L768 798v66zM832 224c0-53-43-96-96-96h-96v64h96c17.7 0 32 14.3 32 32v311l64-111.3V224z" p-id="4632"></path></svg>
+        <span>日志管理页面</span>
+      </template>
+      <el-menu-item-group>
+        <template #title>
+          <span>日志管理模块</span>
+        </template>
+        <el-menu-item index="10-1-1" @click="RouterToLogAdmin">日志管理</el-menu-item>
+      </el-menu-item-group>
+    </el-sub-menu>
   </el-menu>
 </template>
 
@@ -311,6 +323,11 @@ const RouterToMath408Add = () => {
 // 跳转导竞赛页面
 const RouterToCompetition = () => {
   router.push("/competition/list");
+}
+
+// 跳转至日志管理页面
+const RouterToLogAdmin = () => {
+  router.push("/log");
 }
 </script>
 

@@ -21,6 +21,7 @@
           <template #default>
             <div>用户名: {{ scope.row.username }}</div>
             <div>手机号: {{ scope.row.phone }}</div>
+            <div>邮箱: {{ scope.row.email }}</div>
           </template>
           <template #reference>
             <el-tag>{{ scope.row.account }}</el-tag>
