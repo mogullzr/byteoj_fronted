@@ -2,19 +2,21 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BaseResponse_boolean_ } from "../models/BaseResponse_boolean_";
-import type { BaseResponse_CompetitionInfoVo_ } from "../models/BaseResponse_CompetitionInfoVo_";
-import type { BaseResponse_CompetitionRankVo_ } from "../models/BaseResponse_CompetitionRankVo_";
-import type { BaseResponse_List_CompetitionInfoVo_ } from "../models/BaseResponse_List_CompetitionInfoVo_";
-import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_";
-import type { BaseResponse_List_UserVo_ } from "../models/BaseResponse_List_UserVo_";
-import type { BaseResponse_long_ } from "../models/BaseResponse_long_";
-import type { BaseResponse_Void_ } from "../models/BaseResponse_Void_";
-import type { CompetitionAddRequest } from "../models/CompetitionAddRequest";
-import type { ProblemAlgorithmRequest } from "../models/ProblemAlgorithmRequest";
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
+import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_CompetitionInfoVo_ } from '../models/BaseResponse_CompetitionInfoVo_';
+import type { BaseResponse_CompetitionRankVo_ } from '../models/BaseResponse_CompetitionRankVo_';
+import type { BaseResponse_List_CompetitionInfoVo_ } from '../models/BaseResponse_List_CompetitionInfoVo_';
+import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from '../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_';
+import type { BaseResponse_List_UserRatingVo_ } from '../models/BaseResponse_List_UserRatingVo_';
+import type { BaseResponse_List_UserVo_ } from '../models/BaseResponse_List_UserVo_';
+import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
+import type { BaseResponse_Void_ } from '../models/BaseResponse_Void_';
+import type { CompetitionAddRequest } from '../models/CompetitionAddRequest';
+import type { CompetitionSearchRequest } from '../models/CompetitionSearchRequest';
+import type { ProblemAlgorithmRequest } from '../models/ProblemAlgorithmRequest';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class CompetitionControllerService {
   /**
    * competitionAlgorithmAddByAdmin
@@ -26,16 +28,16 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionAlgorithmAddByAdminUsingPost(
-    problemAlgorithmRequest: ProblemAlgorithmRequest,
-    status?: number,
-    username?: string
+      problemAlgorithmRequest: ProblemAlgorithmRequest,
+      status?: number,
+      username?: string,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/admin/algorithm/add",
+      method: 'POST',
+      url: '/api/competition/admin/algorithm/add',
       query: {
-        status: status,
-        username: username,
+        'status': status,
+        'username': username,
       },
       body: problemAlgorithmRequest,
       errors: {
@@ -53,14 +55,34 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionDeleteByAdminUsingPost(
-    competitionId?: number
+      competitionId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/admin/delete",
+      method: 'POST',
+      url: '/api/competition/admin/delete',
       query: {
-        competition_id: competitionId,
+        'competition_id': competitionId,
       },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * competitionModifyByUser
+   * @param competitionAddRequest competitionAddRequest
+   * @returns BaseResponse_boolean_ OK
+   * @throws ApiError
+   */
+  public static competitionModifyByUserUsingGet(
+      competitionAddRequest: CompetitionAddRequest,
+  ): CancelablePromise<BaseResponse_boolean_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/competition/get',
+      body: competitionAddRequest,
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -75,13 +97,13 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionAdminGetRankExcelUsingGet(
-    competitionId?: number
+      competitionId?: number,
   ): CancelablePromise<BaseResponse_Void_> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/api/competition/get/rank/excel",
+      method: 'GET',
+      url: '/api/competition/get/rank/excel',
       query: {
-        competition_id: competitionId,
+        'competition_id': competitionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -99,15 +121,15 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionUserJoinUsingPost(
-    competitionId?: number,
-    password?: string
+      competitionId?: number,
+      password?: string,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/join",
+      method: 'POST',
+      url: '/api/competition/join',
       query: {
-        competition_id: competitionId,
-        password: password,
+        'competition_id': competitionId,
+        'password': password,
       },
       errors: {
         401: `Unauthorized`,
@@ -124,13 +146,13 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionUserJoinCancelUsingPost(
-    competitionId?: number
+      competitionId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/join/cancel",
+      method: 'POST',
+      url: '/api/competition/join/cancel',
       query: {
-        competition_id: competitionId,
+        'competition_id': competitionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -147,13 +169,13 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionSearchByCompetitionIdUsingPost(
-    competitionId?: number
+      competitionId?: number,
   ): CancelablePromise<BaseResponse_CompetitionInfoVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/search/competitionId",
+      method: 'POST',
+      url: '/api/competition/search/competitionId',
       query: {
-        competition_id: competitionId,
+        'competition_id': competitionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -170,13 +192,13 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionSearchByPageUsingPost(
-    pageNum?: number
+      pageNum?: number,
   ): CancelablePromise<BaseResponse_List_CompetitionInfoVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/search/page",
+      method: 'POST',
+      url: '/api/competition/search/page',
       query: {
-        PageNum: pageNum,
+        'PageNum': pageNum,
       },
       errors: {
         401: `Unauthorized`,
@@ -189,23 +211,23 @@ export class CompetitionControllerService {
    * competitionSearchRank
    * @param competitionId competition_id
    * @param pageNum PageNum
-   * @param status
+   * @param status status
    * @returns BaseResponse_CompetitionRankVo_ OK
    * @returns any Created
    * @throws ApiError
    */
   public static competitionSearchRankUsingPost(
-    competitionId?: number,
-    pageNum?: number,
-    status?: number
+      competitionId?: number,
+      pageNum?: number,
+      status?: number,
   ): CancelablePromise<BaseResponse_CompetitionRankVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/search/rank/pageNum",
+      method: 'POST',
+      url: '/api/competition/search/rank/pageNum',
       query: {
-        competition_id: competitionId,
-        PageNum: pageNum,
-        status: status,
+        'competition_id': competitionId,
+        'PageNum': pageNum,
+        'status': status,
       },
       errors: {
         401: `Unauthorized`,
@@ -223,15 +245,15 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionSearchRecordUsingPost(
-    competitionId?: number,
-    pageNum?: number
+      competitionId?: number,
+      pageNum?: number,
   ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/search/records/pageNum",
+      method: 'POST',
+      url: '/api/competition/search/records/pageNum',
       query: {
-        competition_id: competitionId,
-        PageNum: pageNum,
+        'competition_id': competitionId,
+        'PageNum': pageNum,
       },
       errors: {
         401: `Unauthorized`,
@@ -246,12 +268,10 @@ export class CompetitionControllerService {
    * @returns any Created
    * @throws ApiError
    */
-  public static competitionSearchRankTop10UsingPost(): CancelablePromise<
-    BaseResponse_List_UserVo_ | any
-  > {
+  public static competitionSearchRankTop10UsingPost(): CancelablePromise<BaseResponse_List_UserVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/search/top",
+      method: 'POST',
+      url: '/api/competition/search/top',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -267,11 +287,11 @@ export class CompetitionControllerService {
    * @throws ApiError
    */
   public static competitionAddByUserUsingPost(
-    competitionAddRequest: CompetitionAddRequest
+      competitionAddRequest: CompetitionAddRequest,
   ): CancelablePromise<BaseResponse_long_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/user/add",
+      method: 'POST',
+      url: '/api/competition/user/add',
       body: competitionAddRequest,
       errors: {
         401: `Unauthorized`,
@@ -281,19 +301,19 @@ export class CompetitionControllerService {
     });
   }
   /**
-   * competitionModifyByUser
-   * @param competitionAddRequest competitionAddRequest
-   * @returns BaseResponse_boolean_ OK
+   * competitionUserJoinsInfoGet
+   * @param competitionSearchRequest competitionSearchRequest
+   * @returns BaseResponse_List_UserRatingVo_ OK
    * @returns any Created
    * @throws ApiError
    */
-  public static competitionModifyByUserUsingPost(
-    competitionAddRequest: CompetitionAddRequest
-  ): CancelablePromise<BaseResponse_boolean_ | any> {
+  public static competitionUserJoinsInfoGetUsingPost(
+      competitionSearchRequest: CompetitionSearchRequest,
+  ): CancelablePromise<BaseResponse_List_UserRatingVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/competition/user/modify",
-      body: competitionAddRequest,
+      method: 'POST',
+      url: '/api/competition/user/joins/get',
+      body: competitionSearchRequest,
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,

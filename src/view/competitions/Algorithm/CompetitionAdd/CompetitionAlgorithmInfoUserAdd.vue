@@ -158,17 +158,17 @@ onMounted(() => {
         "\n" +
         "# 【错误提示词】\n" +
         "\n" +
-        "1.**Compile Error：**编译错误。\n" +
+        "1.**Compile Error**：编译错误。\n" +
         "\n" +
-        "2.**Wrong Error：**答案错误。\n" +
+        "2.**Wrong Error**：答案错误。\n" +
         "\n" +
         "3.**Memory Limit Exceeded**：超出内存上限。\n" +
         "\n" +
-        "4.**Time Limit Exceeded：**超出时间上限。\n" +
+        "4.**Time Limit Exceeded**：超出时间上限。\n" +
         "\n" +
-        "5.**OutPut Limit Exceeded：**超出输出上限。\n" +
+        "5.**OutPut Limit Exceeded**：超出输出上限。\n" +
         "\n" +
-        "6.**Signalled：**严重不知名错误，比如除0操作、超出数组下标最大值。\n" +
+        "6.**Signalled**：严重不知名错误，比如除0操作、超出数组下标最大值。\n" +
         "\n" +
         "\n" +
         "\n" +

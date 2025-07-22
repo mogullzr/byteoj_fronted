@@ -4,6 +4,7 @@ import UserStore from "@/store/user";
 import DatePicker from "@/view/components/DatePicker.vue";
 import { format } from "date-fns";
 import {
+  CompetitionControllerService,
   ProblemAlgorithmControllerService,
   ProblemDailyNumVo,
   User,
@@ -14,7 +15,7 @@ import dayjs from "dayjs";
 import * as echarts from "echarts";
 import router from "@/router";
 import {useMessageBox} from "@/view/components/alert/useMessageBox";
-
+import CardRatingCharts from "@/view/competitions/CardRatingCharts.vue"
 // 用户标签
 
 const { success, error, warning } = useMessageBox();
@@ -23,8 +24,8 @@ const user_tags_list = ref();
 const loginUser: User = userStore.loginUser;
 const userModifyRequest: Ref<UserModifyRequest> = ref(loginUser);
 const message = ref("");
-const status = ref();
 const isLoading: Ref<boolean> = ref(false);
+const activeCategory: Ref<string> = ref("userCenter");
 
 // 生日
 const birthValue = ref(format(loginUser.birth ?? new Date(), "yyyy-MM-dd"));
@@ -65,6 +66,9 @@ const tags_list_color: any = ref([]);
 const user_daily: Ref<ProblemDailyNumVo[] | undefined> = ref();
 const user_daily_list: any = ref([]);
 
+const changeShow = (key: string) => {
+  activeCategory.value = key;
+};
 onMounted(async () => {
   const res =
     await ProblemAlgorithmControllerService.getProblemDailyNumUsingPost();
@@ -347,267 +351,318 @@ const LoadAvatar = async (event: any) => {
         </div>
       </div>
     </div>
-    <!--    右侧卡片-->
-    <div class="card bg-base-100 w-9/12 shadow-xl">
-      <div class="card-body">
-        <button @click="upLoadAvatar">
-          <div class="avatar">
-            <div
-              :class="
+    <div
+        role="tablist"
+        class="tabs tabs-lifted tabs-lg mx-auto"
+    >
+      <input
+          type="radio"
+          name="my_tabs_2"
+          role="tab"
+          :class="
+          'tab font-bold' +
+          (activeCategory === 'userCenter' ? ' text-black' : ' text-white')
+        "
+          aria-label="用户中心"
+          style="font-size: 18px"
+          @click="changeShow('userCenter')"
+          :checked="activeCategory === 'userCenter'"
+      />
+      <div
+          role="tabpanel"
+          class="tab-content bg-base-100 border-base-300 rounded-box"
+          v-if="activeCategory === 'userCenter'"
+      >
+
+        <!--    右侧卡片1 -->
+        <div class="card bg-base-100 shadow-xl">
+          <div class="card-body">
+            <button @click="upLoadAvatar">
+              <div class="avatar">
+                <div
+                    :class="
                 'ring-primary ring-offset-base-100 ring ring-offset-2 w-24 rounded-full m-auto card bg-base-100 shadow-xl' +
                 (isLoading == true ? ' image-full' : '')
               "
-            >
-              <div class="card-body my-auto mx-auto" v-if="isLoading">
-                <span class="loading loading-dots loading-md"></span>
-              </div>
-              <img
-                @dragstart.prevent
-                v-else-if="loginUser.avatar != ''"
-                :src="loginUser.avatar"
-                alt="ByteOJ出品"
-              />
-              <span v-else class="loading loading-dots loading-"></span>
-              <input
-                id="uploadAvatar"
-                type="file"
-                style="display: none"
-                @change="LoadAvatar"
-              />
-            </div>
-          </div>
-        </button>
-        <div
-          class="card-body p-0 mx-auto"
-          id="main_0"
-          style="width: 710px; height: 250px"
-        ></div>
-
-        <!--        第一行-->
-        <div class="flex">
-          <!--      名称-->
-          <div class="flex-1 w-40">
-            <div>昵称</div>
-            <input
-              type="text"
-              placeholder="填写你的昵称（必填项）"
-              class="input input-bordered input-sm w-full max-w-xs"
-              style="margin: 10px 0"
-              v-model="loginUser.username"
-            />
-          </div>
-          <!--          性别-->
-          <div class="flex-1 w-24">
-            <div>性别</div>
-            <div class="flex my-1">
-              <div class="form-control w-1/2 font-bold">
-                <label
-                  id="male"
-                  class="label cursor-pointer bg-blue-100 text-blue-500 rounded-lg"
-                  @click="GenderCheck(0)"
                 >
+                  <div class="card-body my-auto mx-auto" v-if="isLoading">
+                    <span class="loading loading-dots loading-md"></span>
+                  </div>
+                  <img
+                      @dragstart.prevent
+                      v-else-if="loginUser.avatar != ''"
+                      :src="loginUser.avatar"
+                      alt="ByteOJ出品"
+                  />
+                  <span v-else class="loading loading-dots loading-"></span>
+                  <input
+                      id="uploadAvatar"
+                      type="file"
+                      style="display: none"
+                      @change="LoadAvatar"
+                  />
+                </div>
+              </div>
+            </button>
+            <div
+                class="card-body p-0 mx-auto"
+                id="main_0"
+                style="width: 710px"
+            ></div>
+            <!--        第一行-->
+            <div class="flex">
+              <!--      名称-->
+              <div class="flex-1 w-40">
+                <div>昵称</div>
+                <input
+                    type="text"
+                    placeholder="填写你的昵称（必填项）"
+                    class="input input-bordered input-sm w-full max-w-xs"
+                    style="margin: 10px 0"
+                    v-model="loginUser.username"
+                />
+              </div>
+              <!--          性别-->
+              <div class="flex-1 w-24">
+                <div>性别</div>
+                <div class="flex my-1">
+                  <div class="form-control w-1/2 font-bold">
+                    <label
+                        id="male"
+                        class="label cursor-pointer bg-blue-100 text-blue-500 rounded-lg"
+                        @click="GenderCheck(0)"
+                    >
                   <span class="label-text text-blue-500"
-                    ><span
-                      ><svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        width="1em"
-                        height="1em"
-                        fill="currentColor"
-                        class="text-blue-s dark:text-dark-blue-s mr-[6px]"
-                      >
+                  ><span
+                  ><svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      width="1em"
+                      height="1em"
+                      fill="currentColor"
+                      class="text-blue-s dark:text-dark-blue-s mr-[6px]"
+                  >
                         <path
-                          fill-rule="evenodd"
-                          d="M17.022 5.564h-2.586a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V6.978L16.17 9.243a7.001 7.001 0 01-10.557 9.143 7 7 0 019.143-10.557l2.265-2.265zM14.1 9.9a5 5 0 10-7.071 7.072 5 5 0 007.07-7.072z"
-                          clip-rule="evenodd"
+                            fill-rule="evenodd"
+                            d="M17.022 5.564h-2.586a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V6.978L16.17 9.243a7.001 7.001 0 01-10.557 9.143 7 7 0 019.143-10.557l2.265-2.265zM14.1 9.9a5 5 0 10-7.071 7.072 5 5 0 007.07-7.072z"
+                            clip-rule="evenodd"
                         ></path></svg></span></span
                   ><span>男性</span>
-                  <input type="radio" value="男性" v-model="loginUser.gender" />
-                </label>
-              </div>
-              <div class="form-control flex-1 w-1/2 ml-6 font-bold">
-                <label
-                  id="female"
-                  class="label cursor-pointer bg-gray-100 text-pink-500 rounded-lg"
-                  @click="GenderCheck(1)"
-                >
+                      <input type="radio" value="男性" v-model="loginUser.gender" />
+                    </label>
+                  </div>
+                  <div class="form-control flex-1 w-1/2 ml-6 font-bold">
+                    <label
+                        id="female"
+                        class="label cursor-pointer bg-gray-100 text-pink-500 rounded-lg"
+                        @click="GenderCheck(1)"
+                    >
                   <span class="label-text text-pink-500"
-                    ><svg
+                  ><svg
                       xmlns="http://www.w3.org/2000/svg"
                       viewBox="0 0 24 24"
                       width="1em"
                       height="1em"
                       fill="currentColor"
                       class="text-label-2 dark:text-dark-label-2 mr-[6px]"
-                    >
+                  >
                       <path
-                        fill-rule="evenodd"
-                        d="M13 15.93V17h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H9a1 1 0 110-2h2v-1.07A7.001 7.001 0 0112 2a7 7 0 011 13.93zM12 14a5 5 0 100-10 5 5 0 000 10z"
-                        clip-rule="evenodd"
+                          fill-rule="evenodd"
+                          d="M13 15.93V17h2a1 1 0 110 2h-2v2a1 1 0 11-2 0v-2H9a1 1 0 110-2h2v-1.07A7.001 7.001 0 0112 2a7 7 0 011 13.93zM12 14a5 5 0 100-10 5 5 0 000 10z"
+                          clip-rule="evenodd"
                       ></path></svg></span
                   ><span class="">女性</span>
-                  <input type="radio" value="女性" v-model="loginUser.gender" />
+                      <input type="radio" value="女性" v-model="loginUser.gender" />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!--        第二行-->
+            <div class="flex">
+              <!--          生日-->
+              <div class="flex-1 w-1/2">
+                <div>生日</div>
+                <DatePicker
+                    placeholder="请选择日期"
+                    format="yyyy-MM-dd"
+                    v-model="birthValue"
+                    class="my-2"
+                />
+              </div>
+              <!--          就读学校-->
+              <div class="flex-1 w-1/2">
+                <div>就读学校</div>
+                <input
+                    type="text"
+                    placeholder="填写你的学校"
+                    class="input input-bordered input-sm w-full"
+                    style="margin: 10px 0"
+                    v-model="loginUser.school"
+                />
+              </div>
+            </div>
+            <!--        第三行-->
+            <div class="flex">
+              <div class="flex-1 full w-64">
+                <div>联系方式</div>
+                <input
+                    type="text"
+                    placeholder="填写你的联系方式"
+                    class="input input-bordered input-sm w-full max-w-xs"
+                    style="margin: 10px 0"
+                    v-model="loginUser.phone"
+                />
+              </div>
+              <div class="flex-1 full w-64">
+                <div>邮箱地址</div>
+                <input
+                    type="text"
+                    placeholder="填写你的邮箱"
+                    class="input input-bordered input-sm w-full"
+                    style="margin: 10px 0"
+                    v-model="loginUser.email"
+                />
+              </div>
+            </div>
+            <!--        第四行-->
+            <div class="flex">
+              <div class="flex-1 full w-64">
+                <div>个人网站</div>
+                <input
+                    type="text"
+                    placeholder="填写你的个人网站地址"
+                    class="input input-bordered input-md w-full"
+                    style="margin: 10px 0"
+                    v-model="loginUser.url"
+                />
+              </div>
+            </div>
+            <!--        第五行-->
+            <div class="flex">
+              <div class="flex-1 full w-64">
+                <label class="form-control">
+                  <div class="label">
+                    <span class="label-text" style="font-size: 16px">个人简介</span>
+                  </div>
+                  <textarea
+                      class="textarea textarea-bordered h-24"
+                      style="font-size: 18px"
+                      placeholder="请填写您的个人简介"
+                      v-model="loginUser.profile"
+                      @input="limitInput"
+                  ></textarea>
+
+                  <div class="label">
+                    <span class="label-text"></span>
+                    <span class="label-text"
+                    >{{
+                        !loginUser.profile ? 0 : loginUser.profile?.length
+                      }}/100</span
+                    >
+                  </div>
                 </label>
               </div>
             </div>
-          </div>
-        </div>
-        <!--        第二行-->
-        <div class="flex">
-          <!--          生日-->
-          <div class="flex-1 w-1/2">
-            <div>生日</div>
-            <DatePicker
-              placeholder="请选择日期"
-              format="yyyy-MM-dd"
-              v-model="birthValue"
-              class="my-2"
-            />
-          </div>
-          <!--          就读学校-->
-          <div class="flex-1 w-1/2">
-            <div>就读学校</div>
-            <input
-              type="text"
-              placeholder="填写你的学校"
-              class="input input-bordered input-sm w-full"
-              style="margin: 10px 0"
-              v-model="loginUser.school"
-            />
-          </div>
-        </div>
-        <!--        第三行-->
-        <div class="flex">
-          <div class="flex-1 full w-64">
-            <div>联系方式</div>
-            <input
-              type="text"
-              placeholder="填写你的联系方式"
-              class="input input-bordered input-sm w-full max-w-xs"
-              style="margin: 10px 0"
-              v-model="loginUser.phone"
-            />
-          </div>
-          <div class="flex-1 full w-64">
-            <div>邮箱地址</div>
-            <input
-              type="text"
-              placeholder="填写你的邮箱"
-              class="input input-bordered input-sm w-full"
-              style="margin: 10px 0"
-              v-model="loginUser.email"
-            />
-          </div>
-        </div>
-        <!--        第四行-->
-        <div class="flex">
-          <div class="flex-1 full w-64">
-            <div>个人网站</div>
-            <input
-              type="text"
-              placeholder="填写你的个人网站地址"
-              class="input input-bordered input-md w-full"
-              style="margin: 10px 0"
-              v-model="loginUser.url"
-            />
-          </div>
-        </div>
-        <!--        第五行-->
-        <div class="flex">
-          <div class="flex-1 full w-64">
-            <label class="form-control">
-              <div class="label">
-                <span class="label-text" style="font-size: 16px">个人简介</span>
-              </div>
-              <textarea
-                class="textarea textarea-bordered h-24"
-                style="font-size: 18px"
-                placeholder="请填写您的个人简介"
-                v-model="loginUser.profile"
-                @input="limitInput"
-              ></textarea>
-
-              <div class="label">
-                <span class="label-text"></span>
-                <span class="label-text"
-                  >{{
-                    !loginUser.profile ? 0 : loginUser.profile?.length
-                  }}/100</span
-                >
-              </div>
-            </label>
-          </div>
-        </div>
-        <!--        第六行-->
-        <div class="flex">
-          <div class="flex-1 full w-64">
-            <div style="font-size: 16px">常用标签</div>
-            <div class="alert text-sm my-4 flex" id="tagContainer">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                class="stroke-current shrink-0 w-6 h-6"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-              <button
-                :id="tag"
-                class="m-1"
-                v-for="tag in user_tags_list"
-                :key="tag"
-                @click="tagsRemove(tag)"
-              >
-                <div class="badge badge-success gap-2">
+            <!--        第六行-->
+            <div class="flex">
+              <div class="flex-1 full w-64">
+                <div style="font-size: 16px">常用标签</div>
+                <div class="alert text-sm my-4 flex" id="tagContainer">
                   <svg
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    class="inline-block h-4 w-4 stroke-current"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      class="stroke-current shrink-0 w-6 h-6"
                   >
                     <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M6 18L18 6M6 6l12 12"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                     ></path>
                   </svg>
-                  {{ tag }}
+                  <button
+                      :id="tag"
+                      class="m-1"
+                      v-for="tag in user_tags_list"
+                      :key="tag"
+                      @click="tagsRemove(tag)"
+                  >
+                    <div class="badge badge-success gap-2">
+                      <svg
+                          aria-hidden="true"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          class="inline-block h-4 w-4 stroke-current"
+                      >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        ></path>
+                      </svg>
+                      {{ tag }}
+                    </div>
+                  </button>
                 </div>
-              </button>
-            </div>
-            <button
-              class="m-1"
-              v-for="(tag, index) in tags_list"
-              :key="tag"
-              @click="tagsAdd(tag)"
-            >
-              <div
-                :class="'badge badge-lg gap-2 ' + tags_list_color[index]"
-                :id="'remove' + tag"
-              >
-                {{ tag }}
+                <button
+                    class="m-1"
+                    v-for="(tag, index) in tags_list"
+                    :key="tag"
+                    @click="tagsAdd(tag)"
+                >
+                  <div
+                      :class="'badge badge-lg gap-2 ' + tags_list_color[index]"
+                      :id="'remove' + tag"
+                  >
+                    {{ tag }}
+                  </div>
+                </button>
               </div>
-            </button>
+            </div>
+            <!-- 保存-->
+            <button class="btn btn-success" @click="modifyUserLogin">保存</button>
           </div>
         </div>
-        <!-- 保存-->
-        <button class="btn btn-success" @click="modifyUserLogin">保存</button>
+      </div>
+
+      <input
+          type="radio"
+          name="my_tabs_2"
+          role="tab"
+          :class="
+          'tab font-bold' +
+          (activeCategory === 'competition' ? ' text-black' : ' text-white')
+        "
+          aria-label="竞赛"
+          style="font-size: 18px; white-space: nowrap"
+          @click="changeShow('competition')"
+          :checked="activeCategory === 'competition'"
+      />
+      <div
+          role="tabpanel"
+          class="tab-content bg-base-100 border-base-300 rounded-box"
+          v-if="activeCategory === 'competition'"
+      >
+        <CardRatingCharts />
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.container {
-  display: flex;
-  gap: 16px; /* 控制两个 div 之间的间距 */
+
+.card-body {
+  word-wrap: break-word;
+}
+
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .card-body {

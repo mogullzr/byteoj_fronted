@@ -14,7 +14,7 @@
 import UserProfile from "@/view/user/UserProfile.vue";
 import { onMounted, ref, Ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { UserControllerService, UserVo } from "../../../generated";
+import {CompetitionControllerService, UserControllerService, UserVo} from "../../../generated";
 import user from "@/store/user";
 
 const route = useRoute();
@@ -22,7 +22,6 @@ const router = useRouter();
 const uuid: number = parseInt(route.path.split("/")[3]);
 const userInfo: Ref<UserVo> = ref({} as UserVo);
 onMounted(async () => {
-  console.log(route.path);
   const res = await UserControllerService.userSearchByUuidUsingPost(uuid);
   if (res.code === 0) {
     userInfo.value = res.data;

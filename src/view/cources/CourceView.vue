@@ -14,13 +14,13 @@ onMounted(async () => {
     courses.value = res.data;
   }
 });
-function downloadFile() {
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src =
-    "http://mogullzr001.oss-cn-beijing.aliyuncs.com/files/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E5%9F%BA%E6%9C%AC%E8%B7%AF%E7%BA%BF.xmind";
-  document.body.appendChild(iframe);
-}
+// const downloadFile = () => {
+//   const iframe = document.createElement("iframe");
+//   iframe.style.display = "none";
+//   iframe.src =
+//     "http://mogullzr001.oss-cn-beijing.aliyuncs.com/files/%E7%AE%97%E6%B3%95%E5%AD%A6%E4%B9%A0%E5%9F%BA%E6%9C%AC%E8%B7%AF%E7%BA%BF.xmind";
+//   document.body.appendChild(iframe);
+// }
 </script>
 <template>
   <div
@@ -30,8 +30,7 @@ function downloadFile() {
     <div class="font-bold mx-auto text-4xl pt-6">ByteOJ原创学习路线</div>
     <a
       class="mx-auto btn bg-blue-300 hover:bg-blue-500 active:bg-blue-600 text-white text-lg m-4"
-      href="javascript:void(0);"
-      onclick="downloadFile();"
+      href="https://mogullzr001.oss-cn-beijing.aliyuncs.com/files/Mogullzr%E7%BB%BC%E5%90%88%E5%AD%A6%E4%B9%A0%E8%B7%AF%E7%BA%BF%EF%BC%88%E5%8E%9F%E5%88%9B%EF%BC%89.xmind"
     >
       <span>学习路线</span>
     </a>
