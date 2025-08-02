@@ -18,10 +18,7 @@
         </el-icon>
         <span>用户管理页面</span>
       </template>
-      <el-menu-item-group
-        v-if="useStore.loginUser.uuid == 9"
-
-      >
+      <el-menu-item-group>
         <template #title><span>管理员</span></template>
         <el-menu-item index="1-1-1" @click="RouterToAdminList">管理员管理</el-menu-item>
         <el-menu-item index="1-1-2" @click="RouterToAdminAuth">角色管理</el-menu-item>
@@ -272,6 +269,7 @@
 import { ref } from "vue";
 import router from "../../router";
 import UseStore from "../../store/store.ts";
+import {User} from "@element-plus/icons-vue";
 
 const useStore = UseStore();
 const isCollapse = ref(false);

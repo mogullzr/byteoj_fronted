@@ -6,7 +6,7 @@
     :ellipsis="false"
     @select="handleSelect"
   >
-    <el-menu-item index="0"> MogullzrAdmin</el-menu-item>
+    <el-menu-item index="0"> ByteOJ后台管理页面</el-menu-item>
     <el-menu-item index="1">管理员控制中心</el-menu-item>
     <el-sub-menu index="2">
       <template #title>

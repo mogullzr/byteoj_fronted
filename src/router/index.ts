@@ -189,40 +189,40 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach(async (to, from, next) => {
-  const userStore = UseStore();
-  let loginUser = userStore.loginUser;
-
-  // 如果之前没有登录，自动登录
-  if (String(loginUser.role) == "0") {
-    // 加await是为了获取用户登录态之后再执行代码
-    await userStore.getLoginUser();
-    loginUser = userStore.loginUser;
-  }
-  const needAccess: string =
-    (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
-  console.log(needAccess, loginUser.role, 123123);
-
-  // 要跳转的页面需要登录
-  if (needAccess != ACCESS_ENUM.NOT_LOGIN) {
-    // 如果没有登录，跳转到登录页面
-    if (!loginUser.role || String(loginUser.role) === ACCESS_ENUM.NOT_LOGIN) {
-      userStore.isShow = false;
-      next("/login");
-    }
-    // 如果已经登录了，但是权限不足，那么跳转到无权限的页面
-    else if (!checkAccess(loginUser, needAccess)) {
-      userStore.isShow = false;
-      next("/login");
-    }
-    // 如果已经登录并且有权限，继续导航
-    else {
-      next();
-    }
-  } else {
-    userStore.isShow = to.meta.show;
-    next();
-  }
-});
+// router.beforeEach(async (to, from, next) => {
+//   const userStore = UseStore();
+//   let loginUser = userStore.loginUser;
+//
+//   // 如果之前没有登录，自动登录
+//   if (String(loginUser.role) == "0") {
+//     // 加await是为了获取用户登录态之后再执行代码
+//     await userStore.getLoginUser();
+//     loginUser = userStore.loginUser;
+//   }
+//   const needAccess: string =
+//     (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
+//   console.log(needAccess, loginUser.role, 123123);
+//
+//   // 要跳转的页面需要登录
+//   if (needAccess != ACCESS_ENUM.NOT_LOGIN) {
+//     // 如果没有登录，跳转到登录页面
+//     if (!loginUser.role || String(loginUser.role) === ACCESS_ENUM.NOT_LOGIN) {
+//       userStore.isShow = false;
+//       next("/login");
+//     }
+//     // 如果已经登录了，但是权限不足，那么跳转到无权限的页面
+//     else if (!checkAccess(loginUser, needAccess)) {
+//       userStore.isShow = false;
+//       next("/login");
+//     }
+//     // 如果已经登录并且有权限，继续导航
+//     else {
+//       next();
+//     }
+//   } else {
+//     userStore.isShow = to.meta.show;
+//     next();
+//   }
+// });
 
 export default router;
