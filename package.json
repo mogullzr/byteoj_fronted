@@ -8,6 +8,7 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@heroicons/vue": "^2.2.0",
     "@milkdown/core": "^7.3.6",
     "@milkdown/ctx": "^7.3.6",
     "@milkdown/preset-commonmark": "^7.3.6",
@@ -21,16 +22,20 @@
     "core-js": "^3.8.3",
     "dayjs": "^1.11.10",
     "echarts": "^5.6.0",
+    "file-saver": "^2.0.5",
     "github-markdown-css": "^5.5.1",
     "highlight": "^0.2.4",
     "highlight.js": "^11.9.0",
     "javascript-obfuscator": "^4.1.1",
     "jsencrypt": "^3.3.2",
-    "marked": "^12.0.2",
+    "jspdf": "^3.0.1",
+    "jspdf-autotable": "^5.0.2",
+    "marked": "^16.1.1",
     "mathjax-full": "^3.2.2",
     "mavon-editor": "^2.10.4",
     "md-editor-v3": "^4.16.7",
     "openapi-typescript-codegen": "^0.29.0",
+    "parse-markdown-table": "^0.0.6",
     "pina": "^0.20.2204228",
     "pinia": "^2.1.7",
     "qs": "^6.12.1",
@@ -44,7 +49,8 @@
     "vue-router": "^4.0.3",
     "vue3-ace-editor": "^2.2.4",
     "vue3-puzzle-vcode": "^1.1.7",
-    "webpack-obfuscator": "^3.5.1"
+    "webpack-obfuscator": "^3.5.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@types/showdown": "^2.0.6",

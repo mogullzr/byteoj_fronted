@@ -381,6 +381,11 @@ const routes: Array<RouteRecordRaw> = [
     name: "IP锁定页面",
     component: () => import("@/view/components/NotFoundView.vue"),
   },
+  // {
+  //   path: "/ai",
+  //   name: "ai",
+  //   component: () => import("@/view/AI/AIView.vue"),
+  // },
   {
     path: "/404",
     name: "404",

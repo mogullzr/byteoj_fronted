@@ -676,7 +676,7 @@
       this.keydownEvent = bind(this, this.keydown);
       this.keyupEvent = bind(this, this.keyup);
       this.multiplier = 10;
-      this.currentShipType = "Standard"; // 默认飞机类型
+      this.currentShipType = "J20"; // 默认飞机类型为歼-20（Ctrl+1）
       this.bigBullets = false; // 追踪子弹大小状态
       this.gameStarted = false; // 游戏是否已启动
       
@@ -878,6 +878,38 @@
           stopEvent(e);
           return;
         }
+        
+        // 歼-20特殊能力快捷键
+        if (this.players.length > 0) {
+          var player = this.players[0];
+          
+          // Z键激活隐身模式
+          if (c === "Z" || c === "z") {
+            if (player.isJ20) {
+              player.activateStealthMode();
+              stopEvent(e);
+              return;
+            }
+          }
+          
+          // X键激活超机动性
+          if (c === "X" || c === "x") {
+            if (player.isJ20) {
+              player.activateSuperManeuver();
+              stopEvent(e);
+              return;
+            }
+          }
+          
+          // C键发射导弹
+          if (c === "C" || c === "c") {
+            if (player.isJ20) {
+              player.fireMissile();
+              stopEvent(e);
+              return;
+            }
+          }
+        }
 
         switch (c) {
           case "left":
@@ -890,6 +922,12 @@
           case "r": // 添加小写r键支持
           case "P": // 添加P键支持
           case "p": // 添加小写p键支持
+          case "Z": // 歼-20隐身模式
+          case "z":
+          case "X": // 歼-20超机动性
+          case "x":
+          case "C": // 歼-20导弹
+          case "c":
             stopEvent(e);
             break;
         }
@@ -1923,33 +1961,116 @@
     },
   });
   var Ships = {
-    Standard: {
-      name: "战斗机",
-      // 定义一个更大、更炫酷的飞机形状
+    J20: {
+      name: "歼-20 威龙",
+      // 中国最先进的隐形战斗机形状 - 增强版
       points: [
-        [-20, 15], // 左翼尖端
-        [-15, 5], // 左翼内侧
-        [-8, 0], // 左侧机身
-        [-10, -20], // 左侧机头
-        [0, -25], // 机头尖端
-        [10, -20], // 右侧机头
-        [8, 0], // 右侧机身
-        [15, 5], // 右翼内侧
-        [20, 15], // 右翼尖端
-        [0, 10], // 尾部
+        [-50, 40], // 左翼尖端
+        [-45, 35], // 左翼外部
+        [-40, 30], // 左翼中部
+        [-35, 25], // 左翼内部
+        [-30, 20], // 左翼根部
+        [-25, 15], // 左侧尾翼连接点
+        [-20, 10], // 左侧机身后部
+        [-18, 5], // 左侧机身中部
+        [-16, 0], // 左侧机身前部
+        [-20, -10], // 左侧前机翼
+        [-15, -20], // 左侧机头
+        [-8, -35], // 机头左侧
+        [0, -45], // 机头尖端
+        [8, -35], // 机头右侧
+        [15, -20], // 右侧机头
+        [20, -10], // 右侧前机翼
+        [16, 0], // 右侧机身前部
+        [18, 5], // 右侧机身中部
+        [20, 10], // 右侧机身后部
+        [25, 15], // 右侧尾翼连接点
+        [30, 20], // 右翼根部
+        [35, 25], // 右翼内部
+        [40, 30], // 右翼中部
+        [45, 35], // 右翼外部
+        [50, 40], // 右翼尖端
+        [20, 35], // 右侧尾部
+        [10, 40], // 右垂尾
+        [0, 45], // 中央垂尾
+        [-10, 40], // 左垂尾
+        [-20, 35], // 左侧尾部
       ],
       thrusters: [
-        { s: { w: 30, h: 10 }, p: { x: -10, y: 15 }, a: 0 }, // 左侧推进器
-        { s: { w: 30, h: 10 }, p: { x: 10, y: 15 }, a: 0 }, // 右侧推进器
+        { s: { w: 60, h: 25 }, p: { x: -20, y: 35 }, a: 0 }, // 左侧超级推进器
+        { s: { w: 60, h: 25 }, p: { x: 20, y: 35 }, a: 0 }, // 右侧超级推进器
+        { s: { w: 40, h: 20 }, p: { x: 0, y: 40 }, a: 0 }, // 中央大推进器
+        { s: { w: 30, h: 15 }, p: { x: -10, y: 38 }, a: 0 }, // 左侧辅助推进器
+        { s: { w: 30, h: 15 }, p: { x: 10, y: 38 }, a: 0 }, // 右侧辅助推进器
       ],
       cannons: [
-        { p: { x: -8, y: -20 }, a: 0 }, // 左侧炮口
-        { p: { x: 8, y: -20 }, a: 0 }, // 右侧炮口
+        { p: { x: -20, y: -35 }, a: 0 }, // 左侧主炮
+        { p: { x: 20, y: -35 }, a: 0 }, // 右侧主炮
+        { p: { x: -30, y: 0 }, a: 0 }, // 左侧机翼炮
+        { p: { x: 30, y: 0 }, a: 0 }, // 右侧机翼炮
+        { p: { x: -15, y: -40 }, a: 0 }, // 左侧前炮
+        { p: { x: 15, y: -40 }, a: 0 }, // 右侧前炮
+        { p: { x: -5, y: -42 }, a: 0 }, // 左前炮
+        { p: { x: 5, y: -42 }, a: 0 }, // 右前炮
+        { p: { x: 0, y: -45 }, a: 0 }, // 中央前炮
+        { p: { x: -40, y: 20 }, a: 0 }, // 左翼外侧炮
+        { p: { x: 40, y: 20 }, a: 0 }, // 右翼外侧炮
       ],
       colors: {
-        primary: "#3498db", // 蓝色
-        secondary: "#9b59b6", // 紫色
-        tertiary: "#2ecc71", // 绿色
+        primary: "#0a0a0a", // 隐形涂装深黑色
+        secondary: "#c0392b", // 中国红
+        tertiary: "#f39c12", // 金色高光
+      },
+      // 歼-20特殊能力
+      specialAbilities: {
+        stealthMode: {
+          name: "隐身模式",
+          description: "激活高级隐身涂层，降低被敌方发现的几率",
+          level: 1,
+          maxLevel: 3,
+          active: false,
+          cooldown: 0,
+          maxCooldown: 10, // 10秒冷却时间
+          duration: 5, // 5秒持续时间
+          effect: function(level) {
+            return {
+              visibility: 1 - (level * 0.25), // 1级降低25%可见度，2级50%，3级75%
+              color: level === 3 ? "#000000" : this.colors.primary // 3级时完全隐形黑色
+            };
+          }
+        },
+        superManeuver: {
+          name: "超机动性",
+          description: "启动矢量推进系统，大幅提升机动性和速度",
+          level: 1,
+          maxLevel: 3,
+          active: false,
+          cooldown: 0,
+          maxCooldown: 15, // 15秒冷却时间
+          duration: 4, // 4秒持续时间
+          effect: function(level) {
+            return {
+              speed: 1 + (level * 0.3), // 1级提升30%速度，2级60%，3级90%
+              turnRate: 1 + (level * 0.25) // 1级提升25%转向速度，2级50%，3级75%
+            };
+          }
+        },
+        missileLock: {
+          name: "导弹锁定",
+          description: "发射高精度空对空导弹，可锁定并追踪目标",
+          level: 1,
+          maxLevel: 3,
+          active: false,
+          cooldown: 0,
+          maxCooldown: 20, // 20秒冷却时间
+          effect: function(level) {
+            return {
+              damage: 10 * level, // 1级10点伤害，2级20点，3级30点
+              speed: 1 + (level * 0.2), // 导弹速度
+              tracking: 0.5 + (level * 0.15) // 追踪能力
+            };
+          }
+        }
       },
     },
     Stealth: {
@@ -2056,7 +2177,7 @@
         tertiary: "#ecf0f1", // 白色
       },
     },
-    // 添加新的飞机设计
+
     J60: {
       name: "歼60战机",
       // 更大、更详细的战斗机形状
@@ -2154,6 +2275,35 @@
         primary: "#2c3e50", // 深蓝色
         secondary: "#e74c3c", // 红色
         tertiary: "#f1c40f", // 金色高光
+      },
+    },
+    Standard: {
+      name: "战斗机",
+      // 定义一个更大、更炫酷的飞机形状
+      points: [
+        [-20, 15], // 左翼尖端
+        [-15, 5], // 左翼内侧
+        [-8, 0], // 左侧机身
+        [-10, -20], // 左侧机头
+        [0, -25], // 机头尖端
+        [10, -20], // 右侧机头
+        [8, 0], // 右侧机身
+        [15, 5], // 右翼内侧
+        [20, 15], // 右翼尖端
+        [0, 10], // 尾部
+      ],
+      thrusters: [
+        { s: { w: 30, h: 10 }, p: { x: -10, y: 15 }, a: 0 }, // 左侧推进器
+        { s: { w: 30, h: 10 }, p: { x: 10, y: 15 }, a: 0 }, // 右侧推进器
+      ],
+      cannons: [
+        { p: { x: -8, y: -20 }, a: 0 }, // 左侧炮口
+        { p: { x: 8, y: -20 }, a: 0 }, // 右侧炮口
+      ],
+      colors: {
+        primary: "#3498db", // 蓝色
+        secondary: "#9b59b6", // 紫色
+        tertiary: "#2ecc71", // 绿色
       },
     },
     SuperBomber: {
@@ -2363,6 +2513,20 @@
       this.friction = 0.95;
       this.terminalVelocity = 2000;
       this.lastPos = new Vector(0, 0);
+      
+      // 特殊能力相关属性
+      this.activeAbilities = {};
+      this.abilityTimers = {};
+      this.abilityLevels = {};
+      this.isJ20 = false; // 是否是歼-20飞机
+      this.originalColors = null; // 保存原始颜色
+      this.originalFriction = this.friction; // 保存原始摩擦力
+      this.originalTerminalVelocity = this.terminalVelocity; // 保存原始最大速度
+      this.stealthModeActive = false; // 隐身模式激活状态
+      this.superManeuverActive = false; // 超机动性激活状态
+      this.missileLockActive = false; // 导弹锁定激活状态
+      this.experiencePoints = 0; // 经验值，用于升级能力
+      this.experienceNeeded = 100; // 升级所需经验值
     },
     setShip: function (ship) {
       this.ship = ship;
@@ -2381,6 +2545,41 @@
       }
       this.sheet = new Sheet(new Rect(100, 100, this.bounds.x, this.bounds.y));
       this.forceRedraw = true;
+      
+      // 检查是否是歼-20飞机
+      this.isJ20 = (this.ship.name === "歼-20 威龙");
+      
+      // 如果是歼-20飞机，初始化特殊能力
+      if (this.isJ20 && this.ship.specialAbilities) {
+        this.originalColors = JSON.parse(JSON.stringify(this.ship.colors));
+        
+        // 初始化能力等级
+        for (var ability in this.ship.specialAbilities) {
+          if (this.ship.specialAbilities.hasOwnProperty(ability)) {
+            this.abilityLevels[ability] = this.ship.specialAbilities[ability].level || 1;
+          }
+        }
+        
+        // 显示歼-20特殊能力提示
+        if (this.game && this.game.ui) {
+          this.game.ui.showMessage(
+            "歼-20 威龙已准备就绪!<br>" +
+            "按 Z 键激活隐身模式<br>" +
+            "按 X 键激活超机动性<br>" +
+            "按 C 键发射导弹<br>" +
+            "击毁敌人获得经验值升级能力!"
+          );
+        }
+      } else {
+        // 重置歼-20相关属性
+        this.isJ20 = false;
+        this.originalColors = null;
+        this.stealthModeActive = false;
+        this.superManeuverActive = false;
+        this.missileLockActive = false;
+        this.friction = this.originalFriction;
+        this.terminalVelocity = this.originalTerminalVelocity;
+      }
     },
     setCannons: function (cannonClass) {
       var newCannons = [];
@@ -2396,6 +2595,176 @@
         cannon.destroy();
       }
       this.cannons = newCannons;
+    },
+    
+    // 特殊能力相关方法
+    activateStealthMode: function() {
+      if (!this.isJ20 || this.stealthModeActive) return false;
+      
+      var ability = this.ship.specialAbilities.stealthMode;
+      var level = this.abilityLevels.stealthMode || 1;
+      
+      // 检查冷却时间
+      if (this.abilityTimers.stealthMode && now() - this.abilityTimers.stealthMode < ability.maxCooldown * 1000) {
+        var remainingCooldown = Math.ceil((ability.maxCooldown * 1000 - (now() - this.abilityTimers.stealthMode)) / 1000);
+        this.game.ui.showMessage("隐身模式冷却中: " + remainingCooldown + "秒");
+        return false;
+      }
+      
+      // 激活隐身模式
+      this.stealthModeActive = true;
+      var effect = ability.effect.call(this.ship, level);
+      
+      // 保存原始颜色并应用隐身效果
+      if (!this.originalColors) {
+        this.originalColors = JSON.parse(JSON.stringify(this.ship.colors));
+      }
+      
+      // 应用隐身效果（改变颜色）
+      this.ship.colors.primary = effect.color || "#000000";
+      this.forceRedraw = true;
+      
+      // 设置持续时间
+      var duration = ability.duration * (1 + (level - 1) * 0.2); // 每级增加20%持续时间
+      
+      this.game.ui.showMessage("隐身模式激活! (等级 " + level + ")");
+      
+      // 设置定时器，在持续时间结束后关闭隐身模式
+      setTimeout(function() {
+        this.deactivateStealthMode();
+      }.bind(this), duration * 1000);
+      
+      return true;
+    },
+    
+    deactivateStealthMode: function() {
+      if (!this.stealthModeActive) return;
+      
+      // 恢复原始颜色
+      if (this.originalColors) {
+        this.ship.colors = JSON.parse(JSON.stringify(this.originalColors));
+        this.forceRedraw = true;
+      }
+      
+      this.stealthModeActive = false;
+      
+      // 设置冷却时间
+      this.abilityTimers.stealthMode = now();
+      
+      this.game.ui.showMessage("隐身模式已关闭");
+    },
+    
+    activateSuperManeuver: function() {
+      if (!this.isJ20 || this.superManeuverActive) return false;
+      
+      var ability = this.ship.specialAbilities.superManeuver;
+      var level = this.abilityLevels.superManeuver || 1;
+      
+      // 检查冷却时间
+      if (this.abilityTimers.superManeuver && now() - this.abilityTimers.superManeuver < ability.maxCooldown * 1000) {
+        var remainingCooldown = Math.ceil((ability.maxCooldown * 1000 - (now() - this.abilityTimers.superManeuver)) / 1000);
+        this.game.ui.showMessage("超机动性冷却中: " + remainingCooldown + "秒");
+        return false;
+      }
+      
+      // 激活超机动性
+      this.superManeuverActive = true;
+      var effect = ability.effect.call(this.ship, level);
+      
+      // 保存原始属性
+      this.originalFriction = this.friction;
+      this.originalTerminalVelocity = this.terminalVelocity;
+      
+      // 应用超机动性效果
+      this.friction = this.originalFriction * 0.8; // 降低摩擦力，提高操控性
+      this.terminalVelocity = this.originalTerminalVelocity * effect.speed; // 提高最大速度
+      
+      this.game.ui.showMessage("超机动性激活! (等级 " + level + ")");
+      
+      // 设置持续时间
+      var duration = ability.duration * (1 + (level - 1) * 0.2); // 每级增加20%持续时间
+      
+      // 设置定时器，在持续时间结束后关闭超机动性
+      setTimeout(function() {
+        this.deactivateSuperManeuver();
+      }.bind(this), duration * 1000);
+      
+      return true;
+    },
+    
+    deactivateSuperManeuver: function() {
+      if (!this.superManeuverActive) return;
+      
+      // 恢复原始属性
+      this.friction = this.originalFriction;
+      this.terminalVelocity = this.originalTerminalVelocity;
+      
+      this.superManeuverActive = false;
+      
+      // 设置冷却时间
+      this.abilityTimers.superManeuver = now();
+      
+      this.game.ui.showMessage("超机动性已关闭");
+    },
+    
+    fireMissile: function() {
+      if (!this.isJ20) return false;
+      
+      var ability = this.ship.specialAbilities.missileLock;
+      var level = this.abilityLevels.missileLock || 1;
+      
+      // 检查冷却时间
+      if (this.abilityTimers.missileLock && now() - this.abilityTimers.missileLock < ability.maxCooldown * 1000) {
+        var remainingCooldown = Math.ceil((ability.maxCooldown * 1000 - (now() - this.abilityTimers.missileLock)) / 1000);
+        this.game.ui.showMessage("导弹系统冷却中: " + remainingCooldown + "秒");
+        return false;
+      }
+      
+      // 获取导弹效果
+      var effect = ability.effect.call(this.ship, level);
+      
+      // 创建导弹（这里简化处理，实际应该创建一个特殊的导弹对象）
+      for (var i = 0; i < this.cannons.length; i++) {
+        if (i < 2) { // 只从前两个炮发射导弹
+          this.cannons[i].fire(effect.damage, effect.speed);
+        }
+      }
+      
+      this.game.ui.showMessage("导弹已发射! (等级 " + level + ")");
+      
+      // 设置冷却时间
+      this.abilityTimers.missileLock = now();
+      
+      return true;
+    },
+    
+    gainExperience: function(amount) {
+      if (!this.isJ20) return;
+      
+      this.experiencePoints += amount;
+      
+      // 检查是否可以升级
+      if (this.experiencePoints >= this.experienceNeeded) {
+        this.experiencePoints -= this.experienceNeeded;
+        this.experienceNeeded = Math.floor(this.experienceNeeded * 1.5); // 下一级需要更多经验
+        
+        // 随机选择一个能力升级
+        var abilities = ["stealthMode", "superManeuver", "missileLock"];
+        var abilityToUpgrade = abilities[Math.floor(Math.random() * abilities.length)];
+        
+        // 检查是否已达到最大等级
+        if (this.abilityLevels[abilityToUpgrade] < this.ship.specialAbilities[abilityToUpgrade].maxLevel) {
+          this.abilityLevels[abilityToUpgrade]++;
+          
+          var abilityName = this.ship.specialAbilities[abilityToUpgrade].name;
+          var newLevel = this.abilityLevels[abilityToUpgrade];
+          
+          this.game.ui.showMessage(abilityName + " 升级到等级 " + newLevel + "!");
+        } else {
+          // 如果已达最大等级，给予额外奖励
+          this.game.ui.showMessage("所有能力已达最大等级，获得额外奖励!");
+        }
+      }
     },
     addThrusters: function (thrusters) {
       for (var i = 0, data; (data = thrusters[i]); i++) {
@@ -3181,10 +3550,18 @@
         hit,
         this.getExplosionClass()
       );
-      this.game.menuManager.addPoints(
-        Math.min(hit.getElementsByTagName("*").length + 1, 100),
-        bullet.pos
-      );
+      
+      // 计算得分
+      var points = Math.min(hit.getElementsByTagName("*").length + 1, 100);
+      this.game.menuManager.addPoints(points, bullet.pos);
+      
+      // 如果是歼-20飞机，增加经验值
+      if (this.player && this.player.isJ20) {
+        // 根据得分增加经验值
+        var expPoints = Math.floor(points / 5) + 1; // 每5分获得1点经验值，最少1点
+        this.player.gainExperience(expPoints);
+      }
+      
       if (!hit.isShot) {
         hit.parentNode.removeChild(hit);
       }
