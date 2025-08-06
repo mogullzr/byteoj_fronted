@@ -62,72 +62,72 @@
       <!-- Split Layout: Left (Problem Selection) and Right (Chapters/Categories/Problems/Users) -->
       <div class="flex gap-6">
         <!-- Left: Problem Selection -->
-        <div class="w-1/2">
-          <h2 class="text-xl font-semibold text-gray-800 mb-4">题目库</h2>
-          <el-form :model="searchRequest" inline class="mb-4">
-            <el-form-item label="分类" class="mr-4">
-              <el-select v-model="searchRequest.category" placeholder="选择分类" class="w-32">
-                <el-option label="算法" value="algorithm"></el-option>
-                <!-- Add more categories as needed -->
-              </el-select>
-            </el-form-item>
-            <el-form-item label="关键词">
-              <el-input v-model="searchRequest.keyword" placeholder="输入关键词" class="w-48"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" @click="fetchProblems" class="bg-blue-600 hover:bg-blue-700 shadow-md">搜索
-              </el-button>
-            </el-form-item>
-          </el-form>
-          <el-table
-              v-if="problemList.length && selectedCategory && selectedCategory.courseProblemList"
-              :data="problemList"
-              border
-              stripe
-              class="rounded-lg shadow-sm"
-              row-class-name="hover:bg-blue-50 transition-colors duration-150"
-          >
-            <el-table-column prop="problem_id" label="ID" width="80" align="center"/>
-            <el-table-column prop="chinese_name" label="题目名称" min-width="200"/>
-            <el-table-column prop="difficulty_name" label="难度" width="100" align="center"/>
-            <el-table-column prop="ac_total" label="通过人数" width="120" align="center"/>
-            <el-table-column prop="algorithm_tags" label="标签" width="150">
-              <template #default="{ row }">
-                <el-tag v-for="tag in parseTags(row.tags)" :key="tag" size="small" class="mr-1" type="info">{{
-                    tag
-                  }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="状态" width="100" align="center">
-              <template #default="{ row }">
-                <el-button
-                    v-if="selectedCategory && !selectedCategory.courseProblemList.some(p => String(p.problem_id) === String(row.problem_id))"
-                    type="primary"
-                    size="small"
-                    @click.stop="addProblemOnClick(row)"
-                    class="bg-blue-600 hover:bg-blue-700 shadow-md"
-                >
-                  添加
-                </el-button>
-                <el-tag v-else-if="selectedCategory" type="success">已添加</el-tag>
-                <el-tag v-else type="warning">未选择类别</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-          <div v-else class="text-gray-500 text-center py-4">
-            {{ selectedCategory ? '暂无题目，请尝试搜索' : '请先选择一个类别' }}
-          </div>
-          <el-pagination
-              v-if="totalProblems > 0"
-              v-model:current-page="searchRequest.pageNum"
-              :page-size="searchRequest.pageSize"
-              :total="totalProblems"
-              layout="prev, pager, next"
-              @current-change="fetchProblems"
-              class="mt-4 flex justify-center"
-          />
-        </div>
+<!--        <div class="w-1/2">-->
+<!--          <h2 class="text-xl font-semibold text-gray-800 mb-4">题目库</h2>-->
+<!--          <el-form :model="searchRequest" inline class="mb-4">-->
+<!--            <el-form-item label="分类" class="mr-4">-->
+<!--              <el-select v-model="searchRequest.category" placeholder="选择分类" class="w-32">-->
+<!--                <el-option label="算法" value="algorithm"></el-option>-->
+<!--                &lt;!&ndash; Add more categories as needed &ndash;&gt;-->
+<!--              </el-select>-->
+<!--            </el-form-item>-->
+<!--            <el-form-item label="关键词">-->
+<!--              <el-input v-model="searchRequest.keyword" placeholder="输入关键词" class="w-48"></el-input>-->
+<!--            </el-form-item>-->
+<!--            <el-form-item>-->
+<!--              <el-button type="primary" @click="fetchProblems" class="bg-blue-600 hover:bg-blue-700 shadow-md">搜索-->
+<!--              </el-button>-->
+<!--            </el-form-item>-->
+<!--          </el-form>-->
+<!--          <el-table-->
+<!--              v-if="problemList.length && selectedCategory && selectedCategory.courseProblemList"-->
+<!--              :data="problemList"-->
+<!--              border-->
+<!--              stripe-->
+<!--              class="rounded-lg shadow-sm"-->
+<!--              row-class-name="hover:bg-blue-50 transition-colors duration-150"-->
+<!--          >-->
+<!--            <el-table-column prop="problem_id" label="ID" width="80" align="center"/>-->
+<!--            <el-table-column prop="chinese_name" label="题目名称" min-width="200"/>-->
+<!--            <el-table-column prop="difficulty_name" label="难度" width="100" align="center"/>-->
+<!--            <el-table-column prop="ac_total" label="通过人数" width="120" align="center"/>-->
+<!--            <el-table-column prop="algorithm_tags" label="标签" width="150">-->
+<!--              <template #default="{ row }">-->
+<!--                <el-tag v-for="tag in parseTags(row.tags)" :key="tag" size="small" class="mr-1" type="info">{{-->
+<!--                    tag-->
+<!--                  }}-->
+<!--                </el-tag>-->
+<!--              </template>-->
+<!--            </el-table-column>-->
+<!--            <el-table-column label="状态" width="100" align="center">-->
+<!--              <template #default="{ row }">-->
+<!--                <el-button-->
+<!--                    v-if="selectedCategory && !selectedCategory.courseProblemList.some(p => String(p.problem_id) === String(row.problem_id))"-->
+<!--                    type="primary"-->
+<!--                    size="small"-->
+<!--                    @click.stop="addProblemOnClick(row)"-->
+<!--                    class="bg-blue-600 hover:bg-blue-700 shadow-md"-->
+<!--                >-->
+<!--                  添加-->
+<!--                </el-button>-->
+<!--                <el-tag v-else-if="selectedCategory" type="success">已添加</el-tag>-->
+<!--                <el-tag v-else type="warning">未选择类别</el-tag>-->
+<!--              </template>-->
+<!--            </el-table-column>-->
+<!--          </el-table>-->
+<!--          <div v-else class="text-gray-500 text-center py-4">-->
+<!--            {{ selectedCategory ? '暂无题目，请尝试搜索' : '请先选择一个类别' }}-->
+<!--          </div>-->
+<!--          <el-pagination-->
+<!--              v-if="totalProblems > 0"-->
+<!--              v-model:current-page="searchRequest.pageNum"-->
+<!--              :page-size="searchRequest.pageSize"-->
+<!--              :total="totalProblems"-->
+<!--              layout="prev, pager, next"-->
+<!--              @current-change="fetchProblems"-->
+<!--              class="mt-4 flex justify-center"-->
+<!--          />-->
+<!--        </div>-->
 
         <!-- Right: Chapters, Categories, Problems, and Users -->
         <div class="w-1/2">
