@@ -149,11 +149,6 @@ const searchInfo = () => {
             <a @click.prevent="handleNavigation('/home')" href="/home">首页</a>
           </li>
           <li>
-            <a @click.prevent="handleNavigation('/introduction')" href="/introduction"
-              >网站介绍</a
-            >
-          </li>
-          <li>
             <a @click.prevent="handleNavigation('/problems')" href="/problems"
               >题库</a
             >
@@ -176,6 +171,16 @@ const searchInfo = () => {
           <li>
             <a @click.prevent="handleNavigation('/special')" href="/special"
               >Byte专栏</a
+            >
+          </li>
+          <li>
+            <a @click.prevent="handleNavigation('/introduction')" href="/introduction"
+            >网站介绍</a
+            >
+          </li>
+          <li>
+            <a @click.prevent="handleNavigation('/requirements')" href="/requirements"
+            >需求模块</a
             >
           </li>
         </ul>

@@ -387,6 +387,15 @@ const routes: Array<RouteRecordRaw> = [
   //   component: () => import("@/view/AI/AIView.vue"),
   // },
   {
+    path: "/requirements",
+    name: "需求分析",
+    meta: {
+      access: "0",
+      title: "ByteOJ - 需求分析",
+    },
+    component: () => import("@/view/RequirementsAnalysis.vue"),
+  },
+  {
     path: "/404",
     name: "404",
     component: () => import("@/view/components/NotFoundView.vue"),
