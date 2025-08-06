@@ -20,12 +20,12 @@
       </template>
       <el-menu-item-group>
         <template #title><span>管理员</span></template>
-        <el-menu-item index="1-1-1" @click="RouterToAdminList">管理员管理</el-menu-item>
-        <el-menu-item index="1-1-2" @click="RouterToAdminAuth">角色管理</el-menu-item>
+        <el-menu-item index="1-1-1" @click="RouterToView('/admin/list')">管理员管理</el-menu-item>
+        <el-menu-item index="1-1-2" @click="RouterToView('/admin/auth')">角色管理</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>用户</span></template>
-        <el-menu-item index="1-2" @click="RouterToUserList"
+        <el-menu-item index="1-2" @click="RouterToView('/user/list')"
           >用户管理
         </el-menu-item>
       </el-menu-item-group>
@@ -47,10 +47,10 @@
       </template>
       <el-menu-item-group>
         <template #title><span>Algorithm管理</span></template>
-        <el-menu-item index="2-1-1" @click="RouterToAlgorithmAdd"
+        <el-menu-item index="2-1-1" @click="RouterToView('/problem/algorithm/add')"
           >算法试题创建</el-menu-item
         >
-        <el-menu-item index="2-1-2" @click="RouterToAlgorithm"
+        <el-menu-item index="2-1-2" @click="RouterToView('/problem/algorithm/list')"
           >算法试题管理</el-menu-item
         >
       </el-menu-item-group>
@@ -59,7 +59,7 @@
         <el-menu-item index="2-2-1" @click="RouterToMath408Add"
           >数学408试题创建</el-menu-item
         >
-        <el-menu-item index="2-2-2" @click="RouterToMath408"
+        <el-menu-item index="2-2-2" @click="RouterToView('/problem/math408/add')"
           >数学408试题管理</el-menu-item
         >
       </el-menu-item-group>
@@ -82,7 +82,7 @@
       <el-menu-item-group>
         <template #title><span>比赛</span></template>
         <el-menu-item index="3-1-1">比赛创建(含管理员特权)</el-menu-item>
-        <el-menu-item index="3-1-2" @click="RouterToCompetition">比赛管理</el-menu-item>
+        <el-menu-item index="3-1-2" @click="RouterToView('/competition/list')">比赛管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="4">
@@ -126,21 +126,21 @@
             d="M1920 128v1792H0V128h384V0h128v128h896V0h128v128zM128 256v256h1664V256h-256v128h-128V256H512v128H384V256zm1664 1536V640H128v1152zm-440-768l-241 189l101 315l-252-197l-252 197l101-315l-241-189h302l90-280l90 280z"
           />
         </svg>
-        <span>专题管理页面</span>
+        <span>课程管理页面</span>
       </template>
       <el-menu-item-group>
         <template #title>
-          <span>创建专题</span>
+          <span>创建课程</span>
         </template>
-        <el-menu-item index="5-1-1">专题创建</el-menu-item>
-        <el-menu-item index="5-1-2">专题帖子创建</el-menu-item>
+        <el-menu-item index="5-1-1">课程创建</el-menu-item>
+        <el-menu-item index="5-1-2">课程帖子创建</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title>
-          <span>管理专题</span>
+          <span>管理课程</span>
         </template>
-        <el-menu-item index="5-2-1">专题帖子管理</el-menu-item>
-        <el-menu-item index="5-2-2">专题信息管理</el-menu-item>
+        <el-menu-item index="5-2-1" @click="RouterToView('/course')">课程帖子管理</el-menu-item>
+        <el-menu-item index="5-2-2">课程信息管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="6">
@@ -259,7 +259,7 @@
         <template #title>
           <span>日志管理模块</span>
         </template>
-        <el-menu-item index="10-1-1" @click="RouterToLogAdmin">日志管理</el-menu-item>
+        <el-menu-item index="10-1-1" @click="RouterToView('/log')">日志管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
   </el-menu>
@@ -270,6 +270,7 @@ import { ref } from "vue";
 import router from "../../router";
 import UseStore from "../../store/store.ts";
 import {User} from "@element-plus/icons-vue";
+import Router from "../../router";
 
 const useStore = UseStore();
 const isCollapse = ref(false);
@@ -284,48 +285,8 @@ const swap = () => {
   isCollapse.value = isCollapse.value != true;
 };
 
-// 跳转用户信息管理页面
-const RouterToUserList = () => {
-  router.push("/user/list");
-};
-
-// 跳转管理员信息管理页面(仅仅BOSS管理员可进行)
-const RouterToAdminList = () => {
-  router.push("/admin/list");
-};
-
-// 跳转到权限分配页面
-const RouterToAdminAuth = () => {
-  router.push("/admin/auth")
-}
-// 跳转管理员Algorithm试题管理页面
-const RouterToAlgorithm = () => {
-  router.push("/problem/algorithm/list");
-};
-
-// 跳转管理员Algorithm创建试题页面
-const RouterToAlgorithmAdd = () => {
-  router.push("/problem/algorithm/add");
-};
-
-// 跳转管理员Math408试题管理页面
-const RouterToMath408 = () => {
-  router.push("/problem/math408/list");
-};
-
-// 跳转管理员Math408创建试题页面
-const RouterToMath408Add = () => {
-  router.push("/problem/math408/add");
-};
-
-// 跳转导竞赛页面
-const RouterToCompetition = () => {
-  router.push("/competition/list");
-}
-
-// 跳转至日志管理页面
-const RouterToLogAdmin = () => {
-  router.push("/log");
+const RouterToView = (path: string) => {
+  router.push(path)
 }
 </script>
 

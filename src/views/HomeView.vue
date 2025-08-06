@@ -65,8 +65,8 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 2048 2048" class="module-icon">
                 <path fill="currentColor" d="M1920 128v1792H0V128h384V0h128v128h896V0h128v128zM128 256v256h1664V256h-256v128h-128V256H512v128H384V256zm1664 1536V640H128v1152zm-440-768l-241 189l101 315l-252-197l-252 197l101-315l-241-189h302l90-280l90 280z"/>
               </svg>
-              <h3 class="module-title">专题管理</h3>
-              <p class="module-description">创建和管理专题及帖子</p>
+              <h3 class="module-title">课程管理</h3>
+              <p class="module-description">创建和管理课程及帖子</p>
             </div>
           </el-card>
         </el-col>
@@ -138,6 +138,8 @@
 <script lang="ts" setup>
 import { useRouter } from 'vue-router'
 import { User, ChatDotRound } from '@element-plus/icons-vue'
+import {onMounted} from "vue";
+import {CourseControllerService} from "../../generated";
 
 const router = useRouter()
 
@@ -156,6 +158,10 @@ const RouterToCompetition = () => {
 const RouterToLogAdmin = () => {
   router.push('/log')
 }
+
+onMounted(async () => {
+  const res = await CourseControllerService.courseSearchByPageNumUsingPost(1);
+})
 </script>
 
 <style scoped>
