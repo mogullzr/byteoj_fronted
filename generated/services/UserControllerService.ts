@@ -527,4 +527,20 @@ export class UserControllerService {
       },
     });
   }
+  /**
+   * userQQAutoLogin
+   * @returns BaseResponse_string_ OK
+   * @throws ApiError
+   */
+  public static userQqAutoLoginUsingGet(): CancelablePromise<BaseResponse_string_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/user/QQ/login',
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
 }

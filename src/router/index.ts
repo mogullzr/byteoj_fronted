@@ -25,6 +25,15 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/IntroductionView.vue"),
   },
   {
+    path: "/code-replay",
+    name: "代码回放",
+    meta: {
+      access: "0",
+      title: "ByteOJ - 代码记录回放",
+    },
+    component: () => import("@/view/CodeReplayView.vue"),
+  },
+  {
     path: "/home",
     name: "主页",
     meta: {

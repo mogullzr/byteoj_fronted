@@ -644,7 +644,7 @@ const deletePost = async (post_id: number) => {
                 <h2 class="text-xl font-bold mb-6">
                   评论 ({{ comment_list[post.post_id] ? comment_list[post.post_id].flat().length : 0 }})
                 </h2>
-                
+
                 <!-- New Comment Form -->
                 <div class="flex items-start gap-4">
                   <div class="avatar">
@@ -1044,7 +1044,7 @@ const deletePost = async (post_id: number) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div
                   v-if="
                     !comment_list[post.post_id] ||

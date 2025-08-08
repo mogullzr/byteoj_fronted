@@ -873,7 +873,8 @@
       if (this.gameStarted) {
         // 添加检测Ctrl+数字键的逻辑，用于切换飞机类型
         if (this.keyMap["ctrl"] && !isNaN(parseInt(c))) {
-          var shipIndex = c === "0" ? 10 : parseInt(c);
+          var shipTypes = Object.keys(Ships);
+          var shipIndex = c === "0" ? shipTypes.length : parseInt(c); // Ctrl+0映射到最后一个飞机
           this.switchShipByIndex(shipIndex);
           stopEvent(e);
           return;
@@ -1309,9 +1310,10 @@
         this.clearAllPlayers();
         this.addPlayer();
 
+        var displayKey = index === shipTypes.length ? "0" : index.toString();
         this.ui.showMessage(
           "通过 Ctrl+" +
-            index +
+            displayKey +
             " 切换为 <strong>" +
             Ships[shipType].name +
             "</strong> 飞船！"

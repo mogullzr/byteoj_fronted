@@ -6,79 +6,79 @@
     <div class="flex">
       <div class="flex-1"></div>
       <select
-        id="language"
-        class="select select-bordered max-w-xs w-1/6 mb-2 my-1"
-        v-model="current_language"
-        @change="getCurrentSelected('language')"
+          id="language"
+          class="select select-bordered max-w-xs w-1/6 mb-2 my-1"
+          v-model="current_language"
+          @change="getCurrentSelected('language')"
       >
         <option v-for="language in languages_options" :key="language">
           {{ language }}
         </option>
       </select>
       <button
-        class="EditorSizeControl ml-5"
-        @click="EditorSizeControl"
-        v-if="isShow === '1'"
+          class="EditorSizeControl ml-5"
+          @click="EditorSizeControl"
+          v-if="isShow === '1'"
       >
         <svg
-          v-if="!flag"
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 16 16"
+            v-if="!flag"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 16 16"
         >
           <path
-            fill="#999999"
-            d="M16 0H9.5L12 2.5l-3 3L10.5 7l3-3L16 6.5zm0 16V9.5L13.5 12l-3-3L9 10.5l3 3L9.5 16zM0 16h6.5L4 13.5l3-3L5.5 9l-3 3L0 9.5zM0 0v6.5L2.5 4l3 3L7 5.5l-3-3L6.5 0z"
+              fill="#999999"
+              d="M16 0H9.5L12 2.5l-3 3L10.5 7l3-3L16 6.5zm0 16V9.5L13.5 12l-3-3L9 10.5l3 3L9.5 16zM0 16h6.5L4 13.5l3-3L5.5 9l-3 3L0 9.5zM0 0v6.5L2.5 4l3 3L7 5.5l-3-3L6.5 0z"
           />
         </svg>
         <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 16 16"
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 16 16"
         >
           <path
-            fill="#2aabd2"
-            d="M16 0H9.5L12 2.5l-3 3L10.5 7l3-3L16 6.5zm0 16V9.5L13.5 12l-3-3L9 10.5l3 3L9.5 16zM0 16h6.5L4 13.5l3-3L5.5 9l-3 3L0 9.5zM0 0v6.5L2.5 4l3 3L7 5.5l-3-3L6.5 0z"
+              fill="#2aabd2"
+              d="M16 0H9.5L12 2.5l-3 3L10.5 7l3-3L16 6.5zm0 16V9.5L13.5 12l-3-3L9 10.5l3 3L9.5 16zM0 16h6.5L4 13.5l3-3L5.5 9l-3 3L0 9.5zM0 0v6.5L2.5 4l3 3L7 5.5l-3-3L6.5 0z"
           />
         </svg>
       </button>
       <button class="reverseEditorHover ml-4" @click="transformEditor">
         <svg
-          v-if="isShow === '0' || isShow == null"
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
+            v-if="isShow === '0' || isShow == null"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
         >
           <path fill="#999999" d="M1 20V4h6v16zm8 0V4h14v16z" />
         </svg>
         <svg
-          v-else
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
+            v-else
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
         >
           <path fill="#2aabd2" d="M1 20V4h6v16zm8 0V4h14v16z" />
         </svg>
       </button>
       <button class="rebootHover mx-6" @click="clearContent">
         <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
         >
           <path
-            fill="none"
-            stroke="#999999"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M20 20v-5h-5M4 4v5h5m10.938 2A8.001 8.001 0 0 0 5.07 8m-1.008 5a8.001 8.001 0 0 0 14.868 3"
+              fill="none"
+              stroke="#999999"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M20 20v-5h-5M4 4v5h5m10.938 2A8.001 8.001 0 0 0 5.07 8m-1.008 5a8.001 8.001 0 0 0 14.868 3"
           />
         </svg>
       </button>
@@ -103,24 +103,26 @@
       </DraggableWindowView>
       <button class="settingHover mr-6" @click="showModal">
         <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="30"
-          height="30"
-          viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
         >
           <path
-            fill="#999999"
-            d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"
+              fill="#999999"
+              d="m9.25 22l-.4-3.2q-.325-.125-.612-.3t-.563-.375L4.7 19.375l-2.75-4.75l2.575-1.95Q4.5 12.5 4.5 12.338v-.675q0-.163.025-.338L1.95 9.375l2.75-4.75l2.975 1.25q.275-.2.575-.375t.6-.3l.4-3.2h5.5l.4 3.2q.325.125.613.3t.562.375l2.975-1.25l2.75 4.75l-2.575 1.95q.025.175.025.338v.674q0 .163-.05.338l2.575 1.95l-2.75 4.75l-2.95-1.25q-.275.2-.575.375t-.6.3l-.4 3.2zm2.8-6.5q1.45 0 2.475-1.025T15.55 12t-1.025-2.475T12.05 8.5q-1.475 0-2.488 1.025T8.55 12t1.013 2.475T12.05 15.5"
           />
         </svg>
       </button>
       <dialog id="my_modal" class="modal">
-        <div class="modal-box max-w-3xl">
+        <div class="modal-box max-w-4xl">
           <div class="text-lg font-bold" style="font-size: 30px">
             代码编辑器设置
           </div>
           <div class="divider"></div>
-          <div class="flex">
+          
+          <!-- Theme Settings -->
+          <div class="flex mb-6">
             <div>
               <div class="font-bold">界面风格</div>
               <div class="text-gray-400">
@@ -129,10 +131,10 @@
             </div>
             <div class="mx-6 my-2">
               <select
-                id="theme"
-                class="select select-bordered max-w-xs w-48"
-                v-model="current_theme"
-                @click="getCurrentSelected('theme')"
+                  id="theme"
+                  class="select select-bordered max-w-xs w-48"
+                  v-model="current_theme"
+                  @click="getCurrentSelected('theme')"
               >
                 <option v-for="theme in themes_options" :key="theme">
                   {{ theme }}
@@ -140,6 +142,40 @@
               </select>
             </div>
           </div>
+          
+          <div class="divider"></div>
+          
+          <!-- Code Recording Settings -->
+          <div class="mb-6">
+            <div class="font-bold mb-3">代码记录功能</div>
+            <div class="text-gray-400 mb-4">
+              自动记录你的每一次编辑操作，支持代码回放
+            </div>
+            
+            <div class="flex flex-wrap gap-3 mb-4">
+              <button 
+                class="btn btn-sm bg-yellow-500 text-white hover:bg-yellow-600"
+                @click="clearRecords"
+              >
+                清空记录
+              </button>
+              <button 
+                class="btn btn-sm bg-orange-500 text-white hover:bg-orange-600"
+                @click="openReplayPage"
+              >
+                🎬 查看代码回放
+              </button>
+            </div>
+            
+            <div class="text-sm text-gray-600 mb-2">
+              📝 已记录操作数量: {{ codeRecords.length }}
+            </div>
+            <div class="text-xs text-blue-600 mb-2">
+              💾 操作记录实时保存，点击"查看代码回放"即可观看编程过程
+            </div>
+
+          </div>
+          
           <div class="divider"></div>
           <div class="modal-action">
             <form method="dialog">
@@ -151,50 +187,50 @@
     </div>
   </div>
   <v-ace-editor
-    id="editor"
-    dragEnabled="true"
-    @init="editorInit"
-    v-model:value="content"
-    :lang="
+      id="editor"
+      dragEnabled="true"
+      @init="editorInit"
+      v-model:value="content"
+      :lang="
       current_language == 'C' || current_language == 'C++'
         ? 'c_cpp'
         : current_language == 'Python3'
         ? 'python'
         : 'c_cpp'
     "
-    :theme="current_theme"
-    :options="options"
-    class="vue-ace-editor"
-    :style="{
+      :theme="current_theme"
+      :options="options"
+      class="vue-ace-editor"
+      :style="{
       fontSize: font_size + 'px',
       lineHeight: lineHeight + 'px',
       transition: 'all 0.2s ease',
     }"
-    @wheel.prevent="handleWheel"
+      @wheel.prevent="handleWheel"
   />
   <button
-    @click="submitJudge"
-    class="text-lg btn float-right text-white m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400"
-    :disabled="isShow_2"
+      @click="submitJudge"
+      class="text-lg btn float-right text-white m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400"
+      :disabled="isShow_2"
   >
     提交代码
   </button>
   <button
-    class="text-lg btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
-    @click="judgeTest"
-    :disabled="isShow_1"
+      class="text-lg btn bg-white float-right m-4 w-28 hover:bg-gray-100 active:bg-gray-300 border-b-gray-400"
+      @click="judgeTest"
+      :disabled="isShow_1"
   >
     调试代码
   </button>
   <div
-    v-show="isLoading !== undefined"
-    tabindex="0"
-    class="collapse collapse-open border-base-300 border"
-    style=""
+      v-show="isLoading !== undefined"
+      tabindex="0"
+      class="collapse collapse-open border-base-300 border"
+      style=""
   >
     <div
-      class="collapse-title text-xl font-medium flex"
-      style="background-color: #f5f5f5"
+        class="collapse-title text-xl font-medium flex"
+        style="background-color: #f5f5f5"
     >
       <div>代码运行状态：</div>
       <div class="text-2xl text-sky-600" v-if="isLoading">
@@ -202,15 +238,15 @@
         <span class="loading loading-spinner ml-3"></span>
       </div>
       <span
-        class="text-2xl ml-2"
-        v-else-if="code_status == 'Accepted' || code_status == 'Finished'"
-        style="color: #449d44"
-        >{{ code_status }}</span
+          class="text-2xl ml-2"
+          v-else-if="code_status == 'Accepted' || code_status == 'Finished'"
+          style="color: #449d44"
+      >{{ code_status }}</span
       >
       <span
-        class="text-2xl text-red-500"
-        v-else-if="code_status != 'Nonzero Exit Status'"
-        >{{ code_status }}</span
+          class="text-2xl text-red-500"
+          v-else-if="code_status != 'Nonzero Exit Status'"
+      >{{ code_status }}</span
       >
       <span class="text-2xl text-red-500" v-else>Compile Error</span>
     </div>
@@ -218,30 +254,30 @@
       <div class="m-5" v-show="!isLoading">
         <span class="text-gray-700">输入</span>
         <textarea
-          id="auto-expand-textarea_1"
-          class="auto-expand-textarea my-2"
-          v-model="input"
-          style="font-size: 16px; letter-spacing: 2px"
+            id="auto-expand-textarea_1"
+            class="auto-expand-textarea my-2"
+            v-model="input"
+            style="font-size: 16px; letter-spacing: 2px"
         ></textarea>
         <span class="text-gray-700">输出</span>
         <textarea
-          id="auto-expand-textarea_2"
-          class="auto-expand-textarea my-2"
-          :style="code_status == 'Nonzero Exit Status' ? 'color: #d05451' : ''"
-          v-model="code_message"
-          style="font-size: 16px; letter-spacing: 2px"
+            id="auto-expand-textarea_2"
+            class="auto-expand-textarea my-2"
+            :style="code_status == 'Nonzero Exit Status' ? 'color: #d05451' : ''"
+            v-model="code_message"
+            style="font-size: 16px; letter-spacing: 2px"
         ></textarea>
         <span
-          class="text-gray-700"
-          v-show="correctOutput && correctOutput != ''"
-          >标准答案</span
+            class="text-gray-700"
+            v-show="correctOutput && correctOutput != ''"
+        >标准答案</span
         >
         <textarea
-          v-if="correctOutput && correctOutput != ''"
-          id="auto-expand-textarea_3"
-          class="auto-expand-textarea my-2"
-          v-model="correctOutput"
-          style="font-size: 16px; letter-spacing: 2px"
+            v-if="correctOutput && correctOutput != ''"
+            id="auto-expand-textarea_3"
+            class="auto-expand-textarea my-2"
+            v-model="correctOutput"
+            style="font-size: 16px; letter-spacing: 2px"
         ></textarea>
         <div v-if="code_time != 0" style="font-size: 18px">
           时间：{{ code_time }} ms
@@ -253,7 +289,7 @@
 
 <script lang="ts" setup>
 import { nextTick, onBeforeUpdate, onMounted, ref, Ref, watch } from "vue";
-
+import { debounce } from "lodash";
 import { VAceEditor } from "vue3-ace-editor";
 import "@/plugins/aceConfig.js";
 import UserStore from "@/store/user";
@@ -266,84 +302,232 @@ import DraggableWindowView from "@/components/Card/DraggableWindowView.vue";
 const props = defineProps<{
   status: number
 }>();
+
 const audioClick: Ref<any> = ref(null);
 const useStore = UserStore();
 const isShow: Ref<string | null> = ref(localStorage.getItem("EditorStatus"));
 const flag: Ref<boolean> = ref(localStorage.getItem("ControlBlock") != null);
-// 是否展示 AI 问答页面
 const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == 'true');
-
 const font_size: Ref<any> = ref(
-  localStorage.getItem("fontSize") == null
-    ? 18
-    : parseInt(localStorage.getItem("fontSize") ?? "22")
+    localStorage.getItem("fontSize") == null
+        ? 18
+        : parseInt(localStorage.getItem("fontSize") ?? "22")
 );
-const line_height: Ref<any> = ref(24);
-
+const lineHeight: Ref<any> = ref(24);
 const correctOutput: Ref<string | undefined> = ref(undefined);
+
 const options: any = ref({
-  useWorker: true, // 启用语法检查,必须为true
-  enableBasicAutocompletion: true, // 自动补全
-  enableLiveAutocompletion: true, // 智能补全
-  enableSnippets: true, // 启用代码段
-  showPrintMargin: false, // 去掉灰色的线，printMarginColumn
-  highlightActiveLine: true, // 高亮行
-  highlightSelectedWord: true, // 高亮选中的字符
-  tabSize: 4, // tab锁进字符
-  wrap: false, // 是否换行
-  readonly: false, // 是否可编辑
-  minLines: 15, // 最小行数，minLines和maxLines同时设置之后，可以不用给editor再设置高度
-  maxLines: 1000, // 最大行数
+  useWorker: true,
+  enableBasicAutocompletion: true,
+  enableLiveAutocompletion: true,
+  enableSnippets: true,
+  showPrintMargin: false,
+  highlightActiveLine: true,
+  highlightSelectedWord: true,
+  tabSize: 4,
+  wrap: false,
+  readonly: false,
+  minLines: 15,
+  maxLines: 1000,
   fontSize: font_size.value,
 });
+
 const path = router.currentRoute.value.fullPath;
 const problem_id = ref(
-  path.toString().split("/")[1] == "competition"
-    ? parseInt(path.toString().split("/")[2]) +
+    path.toString().split("/")[1] == "competition"
+        ? parseInt(path.toString().split("/")[2]) +
         "-" +
         path.toString().split("/")[4]
-    : parseInt(path.toString().split("/")[3])
+        : parseInt(path.toString().split("/")[3])
 );
 
 const languages_options = useStore.languages_options;
 const themes_options = useStore.themes_options;
 const languages_content = useStore.languages_content;
 const current_language = ref(localStorage.getItem("current_language") == null ? languages_options[1] : localStorage.getItem("current_language"));
-
 const current_theme: Ref<any> = ref(
-  localStorage.getItem("theme-" + useStore.loginUser.uuid) == null
-    ? themes_options[0] ?? "github"
-    : localStorage.getItem("theme-" + useStore.loginUser.uuid) != undefined
-    ? localStorage.getItem("theme-" + useStore.loginUser.uuid)
-    : "github"
+    localStorage.getItem("theme-" + useStore.loginUser.uuid) == null
+        ? themes_options[0] ?? "github"
+        : localStorage.getItem("theme-" + useStore.loginUser.uuid) != undefined
+            ? localStorage.getItem("theme-" + useStore.loginUser.uuid)
+            : "github"
 );
-
 const content: Ref<any> = ref(
-  localStorage.getItem(
-    problem_id.value +
-      "-" +
-      useStore.loginUser.uuid +
-      "-" +
-      current_language.value
-  ) == null
-    ? languages_content[1]
-    : localStorage.getItem(
+    localStorage.getItem(
         problem_id.value +
-          "-" +
-          useStore.loginUser.uuid +
-          "-" +
-          current_language.value
-      )
-); // 显示的内容
+        "-" +
+        useStore.loginUser.uuid +
+        "-" +
+        current_language.value
+    ) == null
+        ? languages_content[1]
+        : localStorage.getItem(
+            problem_id.value +
+            "-" +
+            useStore.loginUser.uuid +
+            "-" +
+            current_language.value
+        )
+);
 
 const input = ref("");
 const code_status = ref("");
 const code_message = ref("");
 const code_time = ref(0);
 const isLoading: Ref<boolean | undefined> = ref(undefined);
-
 const isShow_1: Ref<Boolean> = ref(false);
 const isShow_2: Ref<Boolean> = ref(false);
+
+// Define operation types for recording (following ACWing format)
+const OperationType = {
+  INSERT: 0,      // Character insertion - [0, row, col, character, timestamp]
+  DELETE: 1,      // Character deletion - [1, startRow, startCol, endRow, endCol, timestamp]
+  CURSOR_MOVE: 2, // Cursor movement - [2, fromRow, fromCol, toRow, toCol, timestamp]
+  PASTE: 3,       // Paste operation
+  UNDO: 4,        // Undo operation
+  REDO: 5,        // Redo operation
+  CLEAR: 6,       // Clear all content
+} as const;
+
+// Record array to store all operations (for local preview and ACWing export)
+const codeRecords: Ref<Array<any>> = ref([]);
+const startTimestamp = ref(Date.now());
+
+// Database record interface matching your table structure
+interface ProblemRecord {
+  type: number;          // 操作类型
+  old_row: number | null; // 旧行
+  old_col: number | null; // 旧列  
+  new_row: number | null; // 新行
+  new_col: number | null; // 新列
+  content: string | null; // 内容
+  timestamp: number;      // 距离开始操作的时间
+}
+
+// Save operation to backend (single record)
+const saveOperation = async (record: ProblemRecord) => {
+  try {
+    // Prepare data for backend API
+    const requestData = {
+      problem_id: problem_id.value,
+      user_id: useStore.loginUser.uuid,
+      type: record.type,
+      old_row: record.old_row,
+      old_col: record.old_col, 
+      new_row: record.new_row,
+      new_col: record.new_col,
+      content: record.content,
+      timestamp: record.timestamp,
+    };
+
+    console.log('Saving record to backend:', requestData);
+    
+    // TODO: Uncomment when backend API is ready
+    // const response = await ProblemAlgorithmControllerService.saveProblemRecordUsingPost(requestData);
+    // if (response.code !== 0) {
+    //   console.error("Failed to save operation:", response.message);
+    // }
+    
+    // Also add to local array for ACWing format export
+    addToLocalRecords(record);
+    
+  } catch (error) {
+    console.error("Error saving operation:", error);
+  }
+};
+
+// Add operation to local records array (for ACWing format export)
+const addToLocalRecords = (record: ProblemRecord) => {
+  // Convert to ACWing format for local storage
+  let acwingRecord: any[];
+  
+  if (record.type === OperationType.INSERT) {
+    // [0, row, col, character, timestamp]
+    acwingRecord = [
+      record.type,
+      record.new_row,
+      record.new_col,
+      record.content,
+      record.timestamp
+    ];
+  } else if (record.type === OperationType.DELETE) {
+    // [1, startRow, startCol, endRow, endCol, timestamp]
+    acwingRecord = [
+      record.type,
+      record.old_row,
+      record.old_col,
+      record.new_row,
+      record.new_col,
+      record.timestamp
+    ];
+  } else {
+    // Other operations
+    acwingRecord = [
+      record.type,
+      record.old_row,
+      record.old_col,
+      record.new_row,
+      record.new_col,
+      record.timestamp
+    ];
+  }
+  
+  codeRecords.value.push(acwingRecord);
+  
+  // Debug logging
+  const DEBUG_RECORDING = true;
+  if (DEBUG_RECORDING) {
+    console.log('New record added:', acwingRecord);
+    console.log('Total records:', codeRecords.value.length);
+    
+    if (codeRecords.value.length === 1) {
+      console.log('🎯 代码记录已开始！');
+    }
+  }
+};
+
+// Get records in ACWing format
+const getRecordsString = () => {
+  return JSON.stringify(codeRecords.value);
+};
+
+
+
+// Clear all records
+const clearRecords = () => {
+  codeRecords.value = [];
+  startTimestamp.value = Date.now();
+  console.log('All records cleared');
+  alert('所有记录已清空！');
+};
+
+
+
+// Open replay page
+const openReplayPage = () => {
+  // Check if there are records to replay
+  if (codeRecords.value.length === 0) {
+    alert('没有可回放的记录！请先编写一些代码。');
+    return;
+  }
+
+  // Store current records in localStorage for the replay page
+  try {
+    const recordsData = JSON.stringify(codeRecords.value);
+    localStorage.setItem('codeReplayData', recordsData);
+    console.log(`已保存 ${codeRecords.value.length} 条记录到回放页面`);
+    
+    // Open in new tab/window
+    const url = router.resolve({ path: '/code-replay' }).href;
+    window.open(url, '_blank');
+    
+    // Optional: Show success message
+    // alert(`已自动导入 ${codeRecords.value.length} 条记录到回放页面！`);
+  } catch (error) {
+    console.error('保存记录到回放页面失败:', error);
+    alert('保存记录失败，请手动导出记录！');
+  }
+};
 
 const editorInit = () => {
   require("ace-builds/src-noconflict/ext-language_tools");
@@ -364,44 +548,192 @@ const editorInit = () => {
   require("ace-builds/src-noconflict/snippets/less");
   require("ace-builds/src-noconflict/ext-static_highlight");
   require("ace-builds/src-noconflict/ext-beautify");
+
   let langTools = ace.require("ace/ext/language_tools");
-  // Custom code completion
   const customCompleter = {
     getCompletions: function (
-      editor: any,
-      session: any,
-      pos: any,
-      prefix: any,
-      callback: any
+        editor: any,
+        session: any,
+        pos: any,
+        prefix: any,
+        callback: any
     ) {
       const completions = useStore.auto_code;
       callback(null, completions);
     },
   };
-
   langTools.addCompleter(customCompleter);
+
+  // Get the Ace Editor instance
+  const editor = ace.edit("editor");
+
+  // Initialize recording start time
+  startTimestamp.value = Date.now();
+
+  // Previous cursor position for tracking movement
+  let previousCursorPosition = { row: 0, column: 0 };
+
+  // Record changes (insertions/deletions) - Character level recording
+  editor.session.on("change", (delta: any) => {
+    const timestamp = Date.now() - startTimestamp.value;
+    
+    if (delta.action === "insert") {
+      // Handle character-by-character insertion
+      const text = delta.lines.join("\n");
+      const startRow = delta.start.row;
+      const startCol = delta.start.column;
+      
+      // Record each character separately for single character inputs
+      if (text.length === 1 && !text.includes("\n")) {
+        // Single character insertion
+        const record: ProblemRecord = {
+          type: OperationType.INSERT,
+          old_row: null,
+          old_col: null,
+          new_row: startRow,
+          new_col: startCol,
+          content: text,
+          timestamp: timestamp
+        };
+        saveOperation(record);
+      } else {
+        // Multi-character insertion (paste, newline, etc.)
+        let currentRow = startRow;
+        let currentCol = startCol;
+        
+        for (let i = 0; i < text.length; i++) {
+          const char = text[i];
+          const record: ProblemRecord = {
+            type: OperationType.INSERT,
+            old_row: null,
+            old_col: null,
+            new_row: currentRow,
+            new_col: currentCol,
+            content: char,
+            timestamp: timestamp + i // Slightly offset timestamp for each character
+          };
+          saveOperation(record);
+          
+          if (char === "\n") {
+            currentRow++;
+            currentCol = 0;
+          } else {
+            currentCol++;
+          }
+        }
+      }
+    } else if (delta.action === "remove") {
+      // Handle character deletion
+      const deletedText = delta.lines.join("\n");
+      const record: ProblemRecord = {
+        type: OperationType.DELETE,
+        old_row: delta.start.row,
+        old_col: delta.start.column,
+        new_row: delta.end.row,
+        new_col: delta.end.column,
+        content: deletedText,
+        timestamp: timestamp
+      };
+      saveOperation(record);
+    }
+  });
+
+  // Record cursor movements with debouncing
+  const debouncedCursorMove = debounce((fromPos: any, toPos: any, timestamp: number) => {
+    // Only record if position actually changed
+    if (fromPos.row !== toPos.row || fromPos.column !== toPos.column) {
+      const record: ProblemRecord = {
+        type: OperationType.CURSOR_MOVE,
+        old_row: fromPos.row,
+        old_col: fromPos.column,
+        new_row: toPos.row,
+        new_col: toPos.column,
+        content: null,
+        timestamp: timestamp
+      };
+      saveOperation(record);
+    }
+  }, 300);
+
+  // Track cursor movements
+  editor.selection.on("changeCursor", () => {
+    const currentPosition = editor.getCursorPosition();
+    const timestamp = Date.now() - startTimestamp.value;
+    
+    debouncedCursorMove(previousCursorPosition, currentPosition, timestamp);
+    previousCursorPosition = { row: currentPosition.row, column: currentPosition.column };
+  });
+
+  // Record paste operations
+  editor.on("paste", (e: any) => {
+    const position = editor.getCursorPosition();
+    const timestamp = Date.now() - startTimestamp.value;
+    
+    // Record paste operation
+    const record: ProblemRecord = {
+      type: OperationType.PASTE,
+      old_row: position.row,
+      old_col: position.column,
+      new_row: position.row,
+      new_col: position.column,
+      content: e.text,
+      timestamp: timestamp
+    };
+    saveOperation(record);
+  });
+
+  // Record undo/redo operations
+  editor.commands.on("afterExec", (e: any) => {
+    const timestamp = Date.now() - startTimestamp.value;
+    const position = editor.getCursorPosition();
+    
+    if (e.command.name === "undo") {
+      const record: ProblemRecord = {
+        type: OperationType.UNDO,
+        old_row: position.row,
+        old_col: position.column,
+        new_row: position.row,
+        new_col: position.column,
+        content: null,
+        timestamp: timestamp
+      };
+      saveOperation(record);
+    } else if (e.command.name === "redo") {
+      const record: ProblemRecord = {
+        type: OperationType.REDO,
+        old_row: position.row,
+        old_col: position.column,
+        new_row: position.row,
+        new_col: position.column,
+        content: null,
+        timestamp: timestamp
+      };
+      saveOperation(record);
+    }
+  });
 };
 
 const modify = async () => {
   const textarea1 = document.getElementById(
-    "auto-expand-textarea_1"
+      "auto-expand-textarea_1"
   ) as HTMLTextAreaElement;
   if (textarea1) {
     await adjustHeight(textarea1);
   }
   const textarea2 = document.getElementById(
-    "auto-expand-textarea_2"
+      "auto-expand-textarea_2"
   ) as HTMLTextAreaElement;
   if (textarea2) {
     await adjustHeight(textarea2);
   }
   const textarea3 = document.getElementById(
-    "auto-expand-textarea_3"
+      "auto-expand-textarea_3"
   ) as HTMLTextAreaElement;
   if (textarea3) {
     await adjustHeight(textarea3);
   }
 };
+
 const judgeTest = async () => {
   let competition_id = ref(parseInt(path.toString().split("/")[2]));
   let problem_index = path.toString().split("/")[4] ?? "";
@@ -425,12 +757,12 @@ const judgeTest = async () => {
   isLoading.value = true;
   if (problem_index == "") {
     const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
-        problem_id: problem_id.value,
-        language: temp_language,
-        source_code: content.value,
-        input_list: [input.value],
-      });
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
+          problem_id: problem_id.value,
+          language: temp_language,
+          source_code: content.value,
+          input_list: [input.value],
+        });
 
     if (res.code === 0) {
       code_status.value = res.data[0].status;
@@ -447,13 +779,13 @@ const judgeTest = async () => {
     }
   } else {
     const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
-        index: problem_index,
-        competition_id: competition_id.value,
-        language: temp_language,
-        source_code: content.value,
-        input_list: [input.value],
-      });
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
+          index: problem_index,
+          competition_id: competition_id.value,
+          language: temp_language,
+          source_code: content.value,
+          input_list: [input.value],
+        });
 
     if (res.code === 0) {
       code_status.value = res.data[0].status;
@@ -471,9 +803,6 @@ const judgeTest = async () => {
   }
 };
 
-onBeforeUpdate(async () => {
-  await modify();
-});
 const submitJudge = async () => {
   let competition_id = ref(parseInt(path.toString().split("/")[2]));
   let problem_index = path.toString().split("/")[4] ?? "";
@@ -498,13 +827,13 @@ const submitJudge = async () => {
   isLoading.value = true;
   if (problem_index == "") {
     const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-        {
-          problem_id: problem_id.value,
-          language: temp_language,
-          source_code: content.value,
-        }
-      );
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
+            {
+              problem_id: problem_id.value,
+              language: temp_language,
+              source_code: content.value,
+            }
+        );
     if (res.code === 0) {
       code_status.value = res.data.status;
       if (code_status.value == "Wrong Answer") {
@@ -525,14 +854,14 @@ const submitJudge = async () => {
     }
   } else {
     const res =
-      await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-        {
-          competition_id: competition_id.value,
-          index: problem_index,
-          language: temp_language,
-          source_code: content.value,
-        }
-      );
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
+            {
+              competition_id: competition_id.value,
+              index: problem_index,
+              language: temp_language,
+              source_code: content.value,
+            }
+        );
     if (res.code === 0) {
       code_status.value = res.data.status;
       if (code_status.value == "Wrong Answer") {
@@ -553,42 +882,42 @@ const submitJudge = async () => {
     }
   }
 };
+
 const getCurrentSelected = (keyId: string) => {
   let selectDiv: any = document.getElementById(keyId);
   if (keyId === "language") {
     current_language.value = languages_options[selectDiv.selectedIndex];
     localStorage.setItem("current_language", current_language.value)
     content.value =
-      localStorage.getItem(
-        problem_id.value +
-          "-" +
-          useStore.loginUser.uuid +
-          "-" +
-          current_language.value
-      ) == null
-        ? languages_content[selectDiv.selectedIndex]
-        : localStorage.getItem(
+        localStorage.getItem(
             problem_id.value +
-              "-" +
-              useStore.loginUser.uuid +
-              "-" +
-              current_language.value
-          );
+            "-" +
+            useStore.loginUser.uuid +
+            "-" +
+            current_language.value
+        ) == null
+            ? languages_content[selectDiv.selectedIndex]
+            : localStorage.getItem(
+                problem_id.value +
+                "-" +
+                useStore.loginUser.uuid +
+                "-" +
+                current_language.value
+            );
   } else {
     current_theme.value = themes_options[selectDiv.selectedIndex];
     localStorage.setItem(
-      "theme-" + useStore.loginUser.uuid,
-      current_theme.value
+        "theme-" + useStore.loginUser.uuid,
+        current_theme.value
     );
   }
 };
 
-// 将当前语言对应的内容删除的同时还需要将本地缓存给删除
 const clearContent = () => {
   let selectDiv: any = document.getElementById("language");
   content.value = languages_content[selectDiv.selectedIndex];
   localStorage.removeItem(
-    problem_id.value +
+      problem_id.value +
       "-" +
       useStore.loginUser.uuid +
       "-" +
@@ -596,9 +925,21 @@ const clearContent = () => {
   );
   localStorage.removeItem("fontSize");
   font_size.value = 22;
+
+  // Record clear operation
+  const timestamp = Date.now() - startTimestamp.value;
+  const record: ProblemRecord = {
+    type: OperationType.CLEAR,
+    old_row: null,
+    old_col: null,
+    new_row: null,
+    new_col: null,
+    content: "Editor cleared",
+    timestamp: timestamp
+  };
+  saveOperation(record);
 };
 
-// 转换编辑器的位置
 const transformEditor = () => {
   if (isShow.value == null || isShow.value == "0") {
     localStorage.setItem("EditorStatus", "1");
@@ -614,57 +955,37 @@ const transformEditor = () => {
 
 watch(content, (NewValue, OldValue) => {
   localStorage.setItem(
-    problem_id.value +
+      problem_id.value +
       "-" +
       useStore.loginUser.uuid +
       "-" +
       current_language.value,
-    content.value
+      content.value
   );
 });
 
-// 滑轮实现字体大小缩放效果
-// const handleWheel = (event: any) => {
-//   if (event.ctrlKey) {
-//     if (event.deltaY > 0 && font_size.value > 7) {
-//       font_size.value -= 1;
-//     } else if (font_size.value < 33) {
-//       console.log(font_size.value);
-//       font_size.value += 1;
-//       console.log(font_size.value);
-//     }
-//   } else {
-//     window.scrollTo(
-//       document.documentElement.scrollLeft + event.deltaX,
-//       document.documentElement.scrollTop + event.deltaY
-//     );
-//   }
-// };
 const handleWheel = (event: WheelEvent) => {
   event.preventDefault();
-
   if (event.ctrlKey) {
     const increment = event.deltaY > 0 ? -1 : 1;
     const newFontSize = font_size.value + increment;
-
     if (newFontSize >= 7 && newFontSize <= 33) {
       requestAnimationFrame(() => {
         font_size.value = newFontSize;
         document.documentElement.style.setProperty(
-          "--font-size",
-          `${newFontSize}px`
+            "--font-size",
+            `${newFontSize}px`
         );
       });
     }
   } else {
     window.scrollTo(
-      document.documentElement.scrollLeft + event.deltaX,
-      document.documentElement.scrollTop + event.deltaY
+        document.documentElement.scrollLeft + event.deltaX,
+        document.documentElement.scrollTop + event.deltaY
     );
   }
 };
 
-// 控制编辑器的大小
 const EditorSizeControl = () => {
   if (!flag.value) {
     flag.value = true;
@@ -676,7 +997,6 @@ const EditorSizeControl = () => {
   window.location.reload();
 };
 
-// 展示指定窗口
 const showModal = () => {
   let el: any = document.getElementById("my_modal");
   el?.showModal();
@@ -689,27 +1009,8 @@ const adjustHeight = async (element: HTMLTextAreaElement) => {
     element.style.height = `${Math.min(element.scrollHeight, 2000)}px`;
   }, 0);
 };
-//
-// watch(
-//   [code_status],
-//   (newValue) => {
-//     const textarea = document.getElementById(
-//       "auto-expand-textarea_2"
-//     ) as HTMLTextAreaElement;
-//     if (textarea) {
-//       adjustHeight(textarea);
-//     }
-//     const textarea0 = document.getElementById(
-//       "auto-expand-textarea_3"
-//     ) as HTMLTextAreaElement;
-//     if (textarea0) {
-//       adjustHeight(textarea0);
-//     }
-//   },
-//   { immediate: true }
-// ); // immediate: true 确保初始渲染时也会调整
+
 const preventInput = (event: KeyboardEvent) => {
-  // 禁用大键盘输入
   if (event.key.length === 1) {
     event.preventDefault();
   }
@@ -723,52 +1024,47 @@ const triggerEnterEvent = (element: HTMLTextAreaElement) => {
   });
   element.dispatchEvent(event);
 };
+
 onMounted(() => {
   const textarea1 = document.getElementById(
-    "auto-expand-textarea_1"
+      "auto-expand-textarea_1"
   ) as HTMLTextAreaElement;
   const textarea2 = document.getElementById(
-    "auto-expand-textarea_2"
+      "auto-expand-textarea_2"
   ) as HTMLTextAreaElement;
   const textarea3 = document.getElementById(
-    "auto-expand-textarea_3"
+      "auto-expand-textarea_3"
   ) as HTMLTextAreaElement;
   if (textarea1) {
-    adjustHeight(textarea1); // 初始调整
-    // textarea1.addEventListener("input", () => adjustHeight(textarea1)); // 监听输入事件
+    adjustHeight(textarea1);
   }
-
   if (textarea2) {
-    adjustHeight(textarea2); // 初始调整
+    adjustHeight(textarea2);
     textarea2.addEventListener("keydown", preventInput);
-    // textarea2.addEventListener("input", () => adjustHeight(textarea2)); // 监听输入事件
   }
-
   if (textarea3) {
-    adjustHeight(textarea3); // 初始调整
+    adjustHeight(textarea3);
     textarea3.addEventListener("keydown", preventInput);
-    // textarea3.addEventListener("input", () => adjustHeight(textarea3)); // 监听输入事件
   }
 });
-// watch监视当前字体大小
+
 watch(font_size, (NewValue, OldValue) => {
   localStorage.setItem("fontSize", font_size.value.toString());
 });
 
 onBeforeUpdate(async () => {
   const textarea2 = document.getElementById(
-    "auto-expand-textarea_2"
+      "auto-expand-textarea_2"
   ) as HTMLTextAreaElement;
   await adjustHeight(textarea2);
   const textarea3 = document.getElementById(
-    "auto-expand-textarea_3"
+      "auto-expand-textarea_3"
   ) as HTMLTextAreaElement;
   await adjustHeight(textarea3);
 });
 
-// 展开/关闭bot
-const emit = defineEmits(['toggle-bot'])
-const showBot = (type: string) =>{
+const emit = defineEmits(['toggle-bot']);
+const showBot = (type: string) => {
   isBot.value = !isBot.value;
   windoww.value = {
     id: 1,
@@ -778,9 +1074,8 @@ const showBot = (type: string) =>{
     size: { width: 500, height: 200 },
     minimized: true,
   };
-
-  emit('toggle-bot'); // 向父组件发送事件
-}
+  emit('toggle-bot');
+};
 
 const isFixed = ref(false);
 const windoww = ref<{ id: number; title: string; content: string; position: { x: number; y: number }; size: { width: number; height: number }; minimized: boolean }>({} as any);
@@ -791,11 +1086,12 @@ const removeWindow = () => {
   isBot.value = !isBot.value;
   emit("toggle-bot");
 };
+
+// Recording functionality - simplified UI
 </script>
 
 <style scoped>
 .vue-ace-editor {
-  /* ace-editor默认没有高度，所以必须设置高度，或者同时设置最小行和最大行使编辑器的高度自动增高 */
   overflow: auto;
   height: 2150px;
   width: 100%;
@@ -836,21 +1132,21 @@ const removeWindow = () => {
 .auto-expand-textarea {
   height: auto;
   width: 100%;
-  box-sizing: border-box; /* 包括内边距和边框 */
-  overflow: hidden; /* 隐藏滚动条 */
-  resize: none; /* 禁用用户调整大小 */
-  border: 1px solid #ddd; /* 边框颜色 */
-  border-radius: 4px; /* 圆角边框 */
-  padding: 10px; /* 内边距 */
-  font-size: 16px; /* 字体大小 */
-  line-height: 1.5; /* 行高 */
-  color: #333; /* 文字颜色 */
-  background-color: #fafafa; /* 背景颜色 */
-  transition: border-color 0.2s, box-shadow 0.2s; /* 动画效果 */
+  box-sizing: border-box;
+  overflow: hidden;
+  resize: none;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  background-color: #fafafa;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .auto-expand-textarea:focus {
-  border-color: #2aabd2; /* 聚焦时边框颜色 */
-  box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.25); /* 聚焦时阴影效果 */
-  outline: none; /* 移除默认的焦点轮廓 */
+  border-color: #2aabd2;
+  box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.25);
+  outline: none;
 }
 </style>
