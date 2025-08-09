@@ -383,15 +383,21 @@ const OperationType = {
   INSERT: 0,      // Character insertion - [0, row, col, character, timestamp]
   DELETE: 1,      // Character deletion - [1, startRow, startCol, endRow, endCol, timestamp]
   CURSOR_MOVE: 2, // Cursor movement - [2, fromRow, fromCol, toRow, toCol, timestamp]
-  PASTE: 3,       // Paste operation
+  PASTE: 3,       // Paste operation - [3, row, col, text, timestamp]
   UNDO: 4,        // Undo operation
   REDO: 5,        // Redo operation
   CLEAR: 6,       // Clear all content
+  BATCH_INSERT: 7, // Batch insertion (autocomplete, paste) - [7, row, col, text, timestamp]
 } as const;
 
 // Record array to store all operations (for local preview and ACWing export)
 const codeRecords: Ref<Array<any>> = ref([]);
 const startTimestamp = ref(Date.now());
+
+// Batch operation detection
+let lastInsertTime = 0;
+let isInPasteMode = false;
+const BATCH_THRESHOLD = 50; // If multiple characters inserted within 50ms, treat as batch
 
 // Database record interface matching your table structure
 interface ProblemRecord {
@@ -409,8 +415,6 @@ const saveOperation = async (record: ProblemRecord) => {
   try {
     // Prepare data for backend API
     const requestData = {
-      problem_id: problem_id.value,
-      user_id: useStore.loginUser.uuid,
       type: record.type,
       old_row: record.old_row,
       old_col: record.old_col, 
@@ -460,8 +464,17 @@ const addToLocalRecords = (record: ProblemRecord) => {
       record.new_col,
       record.timestamp
     ];
+  } else if (record.type === OperationType.BATCH_INSERT) {
+    // [7, row, col, text, timestamp] - Store as batch operation
+    acwingRecord = [
+      record.type,
+      record.new_row,
+      record.new_col,
+      record.content,
+      record.timestamp
+    ];
   } else {
-    // Other operations
+    // Other operations (CURSOR_MOVE, PASTE, UNDO, REDO, CLEAR)
     acwingRecord = [
       record.type,
       record.old_row,
@@ -477,8 +490,18 @@ const addToLocalRecords = (record: ProblemRecord) => {
   // Debug logging
   const DEBUG_RECORDING = true;
   if (DEBUG_RECORDING) {
-    console.log('New record added:', acwingRecord);
-    console.log('Total records:', codeRecords.value.length);
+    console.log('✅ New record added:', acwingRecord);
+    console.log('📊 Total records:', codeRecords.value.length);
+    
+    // 特别调试批量插入操作
+    if (record.type === OperationType.BATCH_INSERT) {
+      console.log('🔍 BATCH_INSERT record details:', {
+        original: record,
+        acwingFormat: acwingRecord,
+        contentLength: (record.content || '').length,
+        contentPreview: (record.content || '').substring(0, 100) + '...'
+      });
+    }
     
     if (codeRecords.value.length === 1) {
       console.log('🎯 代码记录已开始！');
@@ -491,8 +514,6 @@ const getRecordsString = () => {
   return JSON.stringify(codeRecords.value);
 };
 
-
-
 // Clear all records
 const clearRecords = () => {
   codeRecords.value = [];
@@ -500,8 +521,6 @@ const clearRecords = () => {
   console.log('All records cleared');
   alert('所有记录已清空！');
 };
-
-
 
 // Open replay page
 const openReplayPage = () => {
@@ -573,19 +592,70 @@ const editorInit = () => {
   // Previous cursor position for tracking movement
   let previousCursorPosition = { row: 0, column: 0 };
 
-  // Record changes (insertions/deletions) - Character level recording
+  // Record changes (insertions/deletions) - Optimized for batch operations
   editor.session.on("change", (delta: any) => {
     const timestamp = Date.now() - startTimestamp.value;
     
     if (delta.action === "insert") {
-      // Handle character-by-character insertion
       const text = delta.lines.join("\n");
       const startRow = delta.start.row;
       const startCol = delta.start.column;
       
-      // Record each character separately for single character inputs
-      if (text.length === 1 && !text.includes("\n")) {
-        // Single character insertion
+      // Debug logging for content detection
+      console.log('Change event - Insert detected:', {
+        delta: delta,
+        text: text,
+        textLength: text.length,
+        lines: delta.lines,
+        isInPasteMode: isInPasteMode,
+        startRow: startRow,
+        startCol: startCol,
+        timestamp: timestamp,
+        lastInsertTime: lastInsertTime
+      });
+      
+      // Detect if this is a batch operation
+      const isBatchOperation = text.length > 1 || 
+                              (timestamp - lastInsertTime < BATCH_THRESHOLD && lastInsertTime > 0) ||
+                              isInPasteMode;
+      
+      console.log('Batch operation detection:', {
+        isBatchOperation: isBatchOperation,
+        textLength: text.length,
+        timeDiff: timestamp - lastInsertTime,
+        isInPasteMode: isInPasteMode,
+        threshold: BATCH_THRESHOLD
+      });
+      
+      if (isBatchOperation) {
+        // This is a batch operation (paste, autocomplete, etc.)
+        console.log('🟠 Recording as BATCH_INSERT:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
+        
+        // Check if this is a rapid repeat - if so, ignore it
+        if (isInPasteMode && timestamp - lastInsertTime < 10) {
+          console.log('⚠️ Ignoring rapid duplicate paste event (within 10ms)');
+          return;
+        }
+        
+        const record: ProblemRecord = {
+          type: OperationType.BATCH_INSERT,
+          old_row: null,
+          old_col: null,
+          new_row: startRow,
+          new_col: startCol,
+          content: text,
+          timestamp: timestamp
+        };
+        saveOperation(record);
+        
+        // Immediately reset paste mode to prevent duplicates
+        if (isInPasteMode) {
+          isInPasteMode = false;
+          console.log('🔄 Reset isInPasteMode to false after batch insert');
+        }
+      } else {
+        // Single character insertion (normal typing)
+        console.log('🟢 Recording as single INSERT:', text);
         const record: ProblemRecord = {
           type: OperationType.INSERT,
           old_row: null,
@@ -596,32 +666,9 @@ const editorInit = () => {
           timestamp: timestamp
         };
         saveOperation(record);
-      } else {
-        // Multi-character insertion (paste, newline, etc.)
-        let currentRow = startRow;
-        let currentCol = startCol;
-        
-        for (let i = 0; i < text.length; i++) {
-          const char = text[i];
-          const record: ProblemRecord = {
-            type: OperationType.INSERT,
-            old_row: null,
-            old_col: null,
-            new_row: currentRow,
-            new_col: currentCol,
-            content: char,
-            timestamp: timestamp + i // Slightly offset timestamp for each character
-          };
-          saveOperation(record);
-          
-          if (char === "\n") {
-            currentRow++;
-            currentCol = 0;
-          } else {
-            currentCol++;
-          }
-        }
       }
+      
+      lastInsertTime = timestamp;
     } else if (delta.action === "remove") {
       // Handle character deletion
       const deletedText = delta.lines.join("\n");
@@ -666,20 +713,16 @@ const editorInit = () => {
 
   // Record paste operations
   editor.on("paste", (e: any) => {
-    const position = editor.getCursorPosition();
-    const timestamp = Date.now() - startTimestamp.value;
+    console.log('📋 Paste event triggered:', e);
     
-    // Record paste operation
-    const record: ProblemRecord = {
-      type: OperationType.PASTE,
-      old_row: position.row,
-      old_col: position.column,
-      new_row: position.row,
-      new_col: position.column,
-      content: e.text,
-      timestamp: timestamp
-    };
-    saveOperation(record);
+    // Set paste mode flag to help change detection identify batch operations
+    isInPasteMode = true;
+    console.log('🚩 Set isInPasteMode to true');
+    
+    // Note: We don't record the PASTE operation here anymore because:
+    // 1. The actual content will be captured by the change event 
+    // 2. The change event will mark it as BATCH_INSERT due to isInPasteMode
+    // 3. isInPasteMode will be reset immediately in the change event to prevent duplicates
   });
 
   // Record undo/redo operations

@@ -214,8 +214,9 @@
             >
               <div class="flex items-center space-x-3">
                 <span class="text-sm font-mono text-gray-500 w-8">{{ index + 1 }}</span>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                  {{ record.type === 0 ? '插入' : record.type === 1 ? '删除' : '其他' }}
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                      :class="getOperationTypeClass(record.type)">
+                  {{ getOperationTypeText(record.type) }}
                 </span>
                 <span class="text-sm text-gray-600">
                   {{ record.content || '无内容' }}
@@ -318,7 +319,7 @@ const parseACWingFormat = (data: any[][]) => {
   return data.map(item => {
     const [type, ...rest] = item;
     if (type === 0) {
-      // 插入操作 [0, row, col, char, timestamp]
+      // 单字符插入操作 [0, row, col, char, timestamp]
       return {
         type,
         new_row: rest[0],
@@ -336,14 +337,25 @@ const parseACWingFormat = (data: any[][]) => {
         new_col: rest[3],
         timestamp: rest[4]
       };
+    } else if (type === 7) {
+      // 批量插入操作 [7, row, col, text, timestamp]
+      return {
+        type,
+        new_row: rest[0],
+        new_col: rest[1],
+        content: rest[2],
+        timestamp: rest[3]
+      };
     } else {
+      // 其他操作 (光标移动、撤销、重做等)
       return {
         type,
         old_row: rest[0],
         old_col: rest[1],
         new_row: rest[2],
         new_col: rest[3],
-        timestamp: rest[4]
+        timestamp: rest[4],
+        content: rest[5] || null // 某些操作可能有内容
       };
     }
   });
@@ -489,7 +501,7 @@ const executeStep = (index: number) => {
   let newContent = '';
   
   if (record.type === 0) {
-    // 插入字符
+    // 单字符插入
     const row = record.new_row || 0;
     const col = record.new_col || 0;
     const char = record.content || '';
@@ -529,6 +541,63 @@ const executeStep = (index: number) => {
     }
     
     console.log('New content length:', newContent.length);
+  } else if (record.type === 7) {
+    // 批量插入（粘贴、代码补全等）
+    const row = record.new_row || 0;
+    const col = record.new_col || 0;
+    const text = record.content || '';
+    
+    console.log('Batch inserting text:', text, 'at', row, col);
+    
+    // 确保有足够的行
+    while (lines.length <= row) {
+      lines.push('');
+    }
+    
+    const line = lines[row] || '';
+    const beforeText = line.substring(0, col);
+    const afterText = line.substring(col);
+    
+    // 处理多行文本插入
+    const insertLines = text.split('\n');
+    if (insertLines.length === 1) {
+      // 单行文本
+      lines[row] = beforeText + text + afterText;
+    } else {
+      // 多行文本
+      lines[row] = beforeText + insertLines[0];
+      // 插入中间的行
+      for (let i = 1; i < insertLines.length - 1; i++) {
+        lines.splice(row + i, 0, insertLines[i]);
+      }
+      // 最后一行
+      if (insertLines.length > 1) {
+        lines.splice(row + insertLines.length - 1, 0, insertLines[insertLines.length - 1] + afterText);
+      }
+    }
+    
+    newContent = lines.join('\n');
+    editorContent.value = newContent;
+    
+    // 自动滚动到插入位置
+    setTimeout(() => {
+      if (editorRef.value && editorRef.value.aceEditor) {
+        const editor = editorRef.value.aceEditor;
+        const finalRow = row + insertLines.length - 1;
+        const finalCol = insertLines.length === 1 ? col + text.length : insertLines[insertLines.length - 1].length;
+        editor.gotoLine(finalRow + 1, finalCol, false);
+        editor.scrollToLine(finalRow, true, true, () => {});
+      }
+    }, 10);
+    
+    // 语言检测
+    const detectedLang = detectLanguage(newContent);
+    if (detectedLang !== currentLanguage.value) {
+      currentLanguage.value = detectedLang;
+      console.log('Language auto-detected after batch insert:', detectedLang);
+    }
+    
+    console.log('Batch insert completed, new content length:', newContent.length);
   } else if (record.type === 1) {
     // 删除操作
     const startRow = record.old_row || 0;
@@ -621,6 +690,35 @@ onMounted(() => {
     console.log('已自动加载编辑器中的记录数据');
   }
 });
+
+// Helper functions for operation type display
+const getOperationTypeText = (type: number) => {
+  switch (type) {
+    case 0: return '插入';
+    case 1: return '删除';
+    case 2: return '光标';
+    case 3: return '粘贴';
+    case 4: return '撤销';
+    case 5: return '重做';
+    case 6: return '清空';
+    case 7: return '批量插入';
+    default: return '其他';
+  }
+};
+
+const getOperationTypeClass = (type: number) => {
+  switch (type) {
+    case 0: return 'bg-green-100 text-green-800'; // 插入
+    case 1: return 'bg-red-100 text-red-800';     // 删除
+    case 2: return 'bg-blue-100 text-blue-800';   // 光标
+    case 3: return 'bg-purple-100 text-purple-800'; // 粘贴
+    case 4: return 'bg-yellow-100 text-yellow-800'; // 撤销
+    case 5: return 'bg-indigo-100 text-indigo-800'; // 重做
+    case 6: return 'bg-gray-100 text-gray-800';     // 清空
+    case 7: return 'bg-orange-100 text-orange-800'; // 批量插入
+    default: return 'bg-gray-100 text-gray-800';
+  }
+};
 
 onUnmounted(() => {
   stopPlay();
