@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, Ref, UnwrapRef } from "vue";
+import {nextTick, onMounted, ref, Ref, UnwrapRef} from "vue";
 import {
   CompetitionControllerService,
   CompetitionInfoVo,
@@ -172,6 +172,14 @@ const Join = async () => {
   );
 
   if (res.code === 0) {
+    // 关闭模态框
+    // let el: any = document.getElementById("my_modal");
+    // el?.close();
+    // 清理输入状态
+    password.value = "";
+    message.value = "";
+    // 延迟刷新页面，让用户看到成功提示
+    window.location.reload();
   } else {
     message.value = res.message;
     return;
@@ -210,6 +218,7 @@ const changeShow = (key: number) => {
     element.checked = true;
   }
 };
+
 </script>
 
 <template>

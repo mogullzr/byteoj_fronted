@@ -90,6 +90,19 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" stroke="#2AABD2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2m16 0h2m-7-1v2m-6-2v2"/></g></svg>
         </div>
       </button>
+      <button class="exportRecordsHover mr-6" @click="exportRecords" title="导出代码编辑记录">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+        >
+          <path
+              fill="#999999"
+              d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8zm4 18H6V4h7v5h5zM8 15.01l1.41 1.41L11 14.84V19h2v-4.16l1.59 1.58L16 15.01L12.01 11z"
+          />
+        </svg>
+      </button>
       <DraggableWindowView
           :title="windoww.title ?? 'ByteOJ AI 问答'"
           :position="windoww.position"
@@ -520,6 +533,51 @@ const clearRecords = () => {
   startTimestamp.value = Date.now();
   console.log('All records cleared');
   alert('所有记录已清空！');
+};
+
+// Export records to clipboard
+const exportRecords = async () => {
+  try {
+    if (codeRecords.value.length === 0) {
+      alert('没有可导出的记录！请先编写一些代码。');
+      return;
+    }
+
+    const recordsString = getRecordsString();
+    
+    // Try to use the modern Clipboard API
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(recordsString);
+      alert(`已成功复制 ${codeRecords.value.length} 条编辑记录到剪贴板！`);
+    } else {
+      // Fallback for older browsers or non-secure contexts
+      const textArea = document.createElement('textarea');
+      textArea.value = recordsString;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-999999px';
+      textArea.style.top = '-999999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      try {
+        document.execCommand('copy');
+        textArea.remove();
+        alert(`已成功复制 ${codeRecords.value.length} 条编辑记录到剪贴板！`);
+      } catch (err) {
+        textArea.remove();
+        console.error('复制失败:', err);
+        // Show records in a dialog as a fallback
+        prompt('无法自动复制，请手动复制以下内容:', recordsString);
+      }
+    }
+    
+    console.log(`已导出 ${codeRecords.value.length} 条记录`);
+    
+  } catch (error) {
+    console.error('导出记录失败:', error);
+    alert('导出记录失败，请重试。');
+  }
 };
 
 // Open replay page
@@ -1096,6 +1154,10 @@ watch(font_size, (NewValue, OldValue) => {
 });
 
 onBeforeUpdate(async () => {
+  const textarea1 = document.getElementById(
+      "auto-expand-textarea_1"
+  ) as HTMLTextAreaElement;
+  await adjustHeight(textarea1);
   const textarea2 = document.getElementById(
       "auto-expand-textarea_2"
   ) as HTMLTextAreaElement;
@@ -1156,6 +1218,12 @@ const removeWindow = () => {
   }
 }
 .bothover:hover{
+  path {
+    fill: #2aabd2;
+  }
+}
+
+.exportRecordsHover:hover {
   path {
     fill: #2aabd2;
   }
