@@ -28,7 +28,7 @@
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-              粘贴ACWing格式或数据库格式的记录数据：
+              粘贴Byteoj格式或数据库格式的记录数据：
             </label>
             <textarea
               v-model="importText"
@@ -300,8 +300,8 @@ const handleImport = () => {
     const data = JSON.parse(importText.value);
     if (Array.isArray(data)) {
       if (Array.isArray(data[0])) {
-        // ACWing格式 [[type, ...], ...]
-        recordList.value = parseACWingFormat(data);
+        // Byteoj格式 [[type, ...], ...]
+        recordList.value = parseByteojFormat(data);
       } else {
         // 数据库格式
         recordList.value = data;
@@ -314,8 +314,8 @@ const handleImport = () => {
   }
 };
 
-// 解析ACWing格式
-const parseACWingFormat = (data: any[][]) => {
+// 解析Byteoj格式
+const parseByteojFormat = (data: any[][]) => {
   return data.map(item => {
     const [type, ...rest] = item;
     if (type === 0) {
@@ -641,8 +641,8 @@ const autoLoadFromStorage = () => {
       if (Array.isArray(data) && data.length > 0) {
         // 检测数据格式
         if (Array.isArray(data[0])) {
-          // ACWing格式
-          recordList.value = parseACWingFormat(data);
+          // Byteoj格式
+          recordList.value = parseByteojFormat(data);
         } else {
           // 数据库格式
           recordList.value = data;

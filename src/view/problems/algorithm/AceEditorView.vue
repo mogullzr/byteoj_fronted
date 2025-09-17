@@ -391,7 +391,7 @@ const isLoading: Ref<boolean | undefined> = ref(undefined);
 const isShow_1: Ref<Boolean> = ref(false);
 const isShow_2: Ref<Boolean> = ref(false);
 
-// Define operation types for recording (following ACWing format)
+// Define operation types for recording (following Byteoj format)
 const OperationType = {
   INSERT: 0,      // Character insertion - [0, row, col, character, timestamp]
   DELETE: 1,      // Character deletion - [1, startRow, startCol, endRow, endCol, timestamp]
@@ -403,7 +403,7 @@ const OperationType = {
   BATCH_INSERT: 7, // Batch insertion (autocomplete, paste) - [7, row, col, text, timestamp]
 } as const;
 
-// Record array to store all operations (for local preview and ACWing export)
+// Record array to store all operations (for local preview and Byteoj export)
 const codeRecords: Ref<Array<any>> = ref([]);
 const startTimestamp = ref(Date.now());
 
@@ -445,7 +445,7 @@ const saveOperation = async (record: ProblemRecord) => {
     //   console.error("Failed to save operation:", response.message);
     // }
     
-    // Also add to local array for ACWing format export
+    // Also add to local array for Byteoj format export
     addToLocalRecords(record);
     
   } catch (error) {
@@ -453,14 +453,14 @@ const saveOperation = async (record: ProblemRecord) => {
   }
 };
 
-// Add operation to local records array (for ACWing format export)
+// Add operation to local records array (for Byteoj format export)
 const addToLocalRecords = (record: ProblemRecord) => {
-  // Convert to ACWing format for local storage
-  let acwingRecord: any[];
+  // Convert to Byteoj format for local storage
+  let ByteojRecord: any[];
   
   if (record.type === OperationType.INSERT) {
     // [0, row, col, character, timestamp]
-    acwingRecord = [
+    ByteojRecord = [
       record.type,
       record.new_row,
       record.new_col,
@@ -469,7 +469,7 @@ const addToLocalRecords = (record: ProblemRecord) => {
     ];
   } else if (record.type === OperationType.DELETE) {
     // [1, startRow, startCol, endRow, endCol, timestamp]
-    acwingRecord = [
+    ByteojRecord = [
       record.type,
       record.old_row,
       record.old_col,
@@ -479,7 +479,7 @@ const addToLocalRecords = (record: ProblemRecord) => {
     ];
   } else if (record.type === OperationType.BATCH_INSERT) {
     // [7, row, col, text, timestamp] - Store as batch operation
-    acwingRecord = [
+    ByteojRecord = [
       record.type,
       record.new_row,
       record.new_col,
@@ -488,7 +488,7 @@ const addToLocalRecords = (record: ProblemRecord) => {
     ];
   } else {
     // Other operations (CURSOR_MOVE, PASTE, UNDO, REDO, CLEAR)
-    acwingRecord = [
+    ByteojRecord = [
       record.type,
       record.old_row,
       record.old_col,
@@ -498,19 +498,19 @@ const addToLocalRecords = (record: ProblemRecord) => {
     ];
   }
   
-  codeRecords.value.push(acwingRecord);
+  codeRecords.value.push(ByteojRecord);
   
   // Debug logging
   const DEBUG_RECORDING = true;
   if (DEBUG_RECORDING) {
-    console.log('✅ New record added:', acwingRecord);
+    console.log('✅ New record added:', ByteojRecord);
     console.log('📊 Total records:', codeRecords.value.length);
     
     // 特别调试批量插入操作
     if (record.type === OperationType.BATCH_INSERT) {
       console.log('🔍 BATCH_INSERT record details:', {
         original: record,
-        acwingFormat: acwingRecord,
+        ByteojFormat: ByteojRecord,
         contentLength: (record.content || '').length,
         contentPreview: (record.content || '').substring(0, 100) + '...'
       });
@@ -522,7 +522,7 @@ const addToLocalRecords = (record: ProblemRecord) => {
   }
 };
 
-// Get records in ACWing format
+// Get records in Byteoj format
 const getRecordsString = () => {
   return JSON.stringify(codeRecords.value);
 };

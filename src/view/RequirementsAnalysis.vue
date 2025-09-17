@@ -205,7 +205,7 @@ const modules = ref([
     requirements: [
       { content: '用户可以在学习专栏进行分页查找所有的课程信息', completed: true },
       { content: '用户可以在特定的课程当中查看前言、题目、提交记录、排名、学习宝典等多种课程信息', completed: false },
-      { content: '用户可以提交每道题目的提交记录', completed: true, note: '（和acwing一样）' },
+      { content: '用户可以提交每道题目的提交记录', completed: true, note: '（和Byteoj一样）' },
       { content: '仅仅管理员可以在后台进行课程的创建以及题目的设置、删除、修改功能', completed: true },
       {
         content: '用户可以联系管理员将自己添加到某课程当中去，但是用户绝对是不允许自己参加课程当中的',

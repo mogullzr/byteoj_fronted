@@ -158,9 +158,9 @@ onMounted(() => {
           <li>
             <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
           </li>
-          <li>
-            <a @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>
-          </li>
+<!--          <li>-->
+<!--            <a @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>-->
+<!--          </li>-->
         </ul>
       </div>
 

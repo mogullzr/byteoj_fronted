@@ -116,7 +116,7 @@ export default defineComponent({
       Codeforces: "#dc3545",
       LeetCode: "#007bff",
       牛客: "#ffc107",
-      acwing: "#28a745",
+      Byteoj: "#28a745",
       jisaunke: "#17a2b8",
       CodeChef: "#6610f2",
     };

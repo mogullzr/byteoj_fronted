@@ -219,6 +219,40 @@ const changeShow = (key: number) => {
   }
 };
 
+const shareCompetition = () => {
+  // 创建一个临时的文本区域来执行复制操作
+  const textArea = document.createElement("textarea");
+
+  // 构建要复制的文本内容
+  const customText =
+    "🎉【编程竞赛】《" + competition_info.value.competition_name + "》火热报名中！\n\n" +
+    "📅 比赛时间：" + dayjs(competition_info.value.start_time).format("YYYY-MM-DD HH:mm") + " - " + dayjs(competition_info.value.end_time).format("YYYY-MM-DD HH:mm") + "\n" +
+    "💻 参赛方式：ByteOJ校内编程平台\n" +
+    "🔗 报名链接：" + "https://www.byteoj.com/competition/" + competition_id.value + "\n\n" +
+    "🚀 快来挑战，锻炼编程能力，认识更多编程高手！";
+
+  // 将文本内容设置到文本区域
+  textArea.value = customText;
+
+  // 将文本区域添加到文档中
+  document.body.appendChild(textArea);
+
+  // 选择文本区域中的内容
+  textArea.select();
+
+  // 执行复制命令
+  try {
+    document.execCommand("copy");
+    success("分享内容已复制到剪贴板！");
+  } catch (err) {
+    console.error("复制失败:", err);
+    error("复制失败，请手动复制分享内容");
+  }
+
+  // 移除文本区域
+  document.body.removeChild(textArea);
+};
+
 </script>
 
 <template>
@@ -273,7 +307,29 @@ const changeShow = (key: number) => {
 
   <div class="container mx-auto px-4 py-8 max-w-7xl">
     <!-- 主标题 -->
-    <div class="mb-8">
+    <div class="mb-8 relative">
+      <!-- 分享按钮 - 右上角 -->
+      <button
+        @click="shareCompetition"
+        class="absolute -top-2 -right-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg shadow-lg transition duration-300 flex items-center space-x-2 z-10"
+        title="分享竞赛"
+      >
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
+          />
+        </svg>
+        <span class="text-sm font-medium">分享</span>
+      </button>
+
       <h1 class="text-3xl md:text-4xl font-bold text-gray-900">
         {{ competition_info.competition_name }}
       </h1>

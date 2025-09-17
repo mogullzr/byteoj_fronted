@@ -23,7 +23,7 @@
         <option value="蓝桥杯">蓝桥杯</option>
         <option value="CodeChef">CodeChef</option>
         <option value="jisuanke">jisuanke</option>
-        <option value="Acwing">Acwing</option>
+        <option value="Byteoj">Byteoj</option>
       </select>
     </div>
   </div>

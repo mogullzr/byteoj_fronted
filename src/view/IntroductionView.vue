@@ -497,7 +497,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span><strong>温馨提示：</strong>该部分是用于快速实时获取<strong>CodeForces、LeetCode、牛客、蓝桥杯、CodeChef、jisuanke、Acwing</strong>等各大知名OJ网站的竞赛信息的。</span>
+                <span><strong>温馨提示：</strong>该部分是用于快速实时获取<strong>CodeForces、LeetCode、牛客、蓝桥杯、CodeChef、jisuanke、Byteoj</strong>等各大知名OJ网站的竞赛信息的。</span>
               </div>
               <img
                   data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250707235555192.png"

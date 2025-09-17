@@ -404,15 +404,15 @@ const routes: Array<RouteRecordRaw> = [
     },
     component: () => import("@/view/RequirementsAnalysis.vue"),
   },
-  {
-    path: "/data-structure-animation",
-    name: "数据结构动画",
-    meta: {
-      access: "0",
-      title: "ByteOJ - 数据结构可视化动画",
-    },
-    component: () => import("@/view/DataStructureAnimation/DataStructureAnimationView.vue"),
-  },
+  // {
+  //   path: "/data-structure-animation",
+  //   name: "数据结构动画",
+  //   meta: {
+  //     access: "0",
+  //     title: "ByteOJ - 数据结构可视化动画",
+  //   },
+  //   component: () => import("@/view/DataStructureAnimation/DataStructureAnimationView.vue"),
+  // },
   {
     path: "/404",
     name: "404",

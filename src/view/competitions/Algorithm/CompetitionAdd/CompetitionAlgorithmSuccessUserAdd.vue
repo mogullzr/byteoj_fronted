@@ -12,19 +12,13 @@ const copyCustomText = () => {
   // 创建一个临时的文本区域来执行复制操作
   const textArea = document.createElement("textarea");
 
-  // 构建要复制的文本内容
+// 构建要复制的文本内容
   const customText =
-    "来参加我创办的比赛" +
-    '"' +
-    competition_info.value.competition_name +
-    '"' +
-    " ~ 比赛时间是：" +
-    competition_info.value.start_time +
-    " ~ " +
-    competition_info.value.end_time +
-    "，比赛地址为：" +
-    "https://www.byteoj.com/competition/" +
-    competition_info.value.competition_id;
+      "🎉【新生专属】校内编程竞赛《" + competition_info.value.competition_name + "》火热报名中！\n\n" +
+      "📅 比赛时间：" + competition_info.value.start_time + " - " + competition_info.value.end_time + "\n" +
+      "💻 参赛方式：ByteOJ校内编程平台\n" +
+      "🔗 报名链接：" + "https://www.byteoj.com/competition/" + competition_info.value.competition_id + "\n\n" +
+      "🚀 大一同学速来挑战，锻炼编程能力，认识更多同届高手！";
 
   // 将文本内容设置到文本区域
   textArea.value = customText;
