@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, Ref, ref } from "vue";
+import { onMounted, onUnmounted, Ref, ref } from "vue";
 import { SearchRequest, UserControllerService } from "../../../generated";
 import { useRoute, useRouter } from "vue-router";
 import UserStore from "@/store/user";
@@ -10,6 +10,7 @@ const router = useRouter();
 const route = useRoute();
 const useStore = UserStore();
 const isMobileMenuOpen = ref(false);
+const isMoreMenuOpen = ref(false);
 const searchRequest: Ref<SearchRequest> = ref({
   category: route.query.category ?? "post",
   difficulty: route.query.difficulty ?? "",
@@ -26,6 +27,11 @@ const isInIframe = ref(window !== window.parent);
 // Toggle mobile menu
 const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value;
+};
+
+// Toggle more menu
+const toggleMoreMenu = () => {
+  isMoreMenuOpen.value = !isMoreMenuOpen.value;
 };
 
 // Handle page navigation
@@ -45,6 +51,7 @@ const handleNavigation = (path: string) => {
     }
   }
   isMobileMenuOpen.value = false; // Close mobile menu after navigation
+  isMoreMenuOpen.value = false; // Close more menu after navigation
 };
 
 // Theme switching
@@ -81,7 +88,21 @@ const searchInfo = () => {
 
 onMounted(() => {
   darkTheme.value = "ByteOJLight";
+  // 添加全局点击监听器来关闭更多菜单
+  document.addEventListener('click', closeMoreMenuOnClickOutside);
 });
+
+// 组件卸载时移除监听器
+onUnmounted(() => {
+  document.removeEventListener('click', closeMoreMenuOnClickOutside);
+});
+
+// 点击外部关闭更多菜单
+const closeMoreMenuOnClickOutside = () => {
+  if (isMoreMenuOpen.value) {
+    isMoreMenuOpen.value = false;
+  }
+};
 </script>
 
 <template>
@@ -152,15 +173,26 @@ onMounted(() => {
           <li>
             <a @click.prevent="handleNavigation('/special')" href="/special">Byte专栏</a>
           </li>
-          <li>
-            <a @click.prevent="handleNavigation('/introduction')" href="/introduction">网站介绍</a>
+          <!-- More dropdown menu -->
+          <li class="dropdown" :class="{ 'dropdown-open': isMoreMenuOpen }">
+            <div tabindex="0" role="button" class="flex items-center" @click.stop="toggleMoreMenu">
+              更多
+              <svg class="fill-current ml-1 transition-transform duration-200" :class="{ 'rotate-180': isMoreMenuOpen }" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path d="m7,10l5,5l5-5z"/>
+              </svg>
+            </div>
+            <ul v-show="isMoreMenuOpen" tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50" @click.stop>
+              <li>
+                <a @click.prevent="handleNavigation('/introduction')" href="/introduction">网站介绍</a>
+              </li>
+              <li>
+                <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
+              </li>
+              <li>
+                <a class="disabled" @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画(努力制作中...)</a>
+              </li>
+            </ul>
           </li>
-          <li>
-            <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
-          </li>
-<!--          <li>-->
-<!--            <a @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>-->
-<!--          </li>-->
         </ul>
       </div>
 
@@ -193,7 +225,7 @@ onMounted(() => {
             <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
           </li>
           <li>
-            <a @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>
+            <a class="disabled" @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>
           </li>
         </ul>
       </div>
@@ -353,5 +385,50 @@ onMounted(() => {
 }
 .menu-vertical {
   padding: 1rem;
+}
+
+/* Dropdown menu styles */
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 50;
+  min-width: 200px;
+  margin-top: 0.5rem;
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Ensure dropdown menu appears above other elements */
+.dropdown {
+  position: relative;
+}
+
+/* 更多按钮和箭头的过渡效果 */
+.dropdown svg {
+  transition: transform 0.2s ease-in-out;
+}
+
+/* 添加点击状态样式 */
+.dropdown-open > div {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+  /* 其他你想要的禁用样式 */
 }
 </style>

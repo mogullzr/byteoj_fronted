@@ -223,7 +223,7 @@
   />
   <button
       @click="submitJudge"
-      class="text-lg btn float-right text-white m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400"
+      class="text-lg btn float-right text-white hover:text-slate-700 m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400 submit-button"
       :disabled="isShow_2"
   >
     提交代码
@@ -1259,5 +1259,18 @@ const removeWindow = () => {
   border-color: #2aabd2;
   box-shadow: 0 0 0 3px rgba(38, 143, 255, 0.25);
   outline: none;
+}
+
+/* Submit button hover gif background effect */
+.submit-button {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+  background-image: url('/public/C7422125F210F0DEBB2BDE23EB8041DA.gif');
+  background-color: rgba(74, 222, 128, 0.8) !important; /* Keep some green tint */
 }
 </style>
