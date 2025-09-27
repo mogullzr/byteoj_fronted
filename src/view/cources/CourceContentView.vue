@@ -517,7 +517,11 @@ const changeShow = (key: number) => {
           </div>
         </div>
         <div class="wechat-tip">
-          <span class="wechat-icon">💬</span>
+          <img 
+            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250927230025890.png" 
+            alt="微信支付" 
+            class="wechat-pay-logo"
+          />
           <span>使用微信扫码支付</span>
         </div>
         <div v-if="paymentData.fund" class="payment-amount">
@@ -1024,6 +1028,14 @@ const changeShow = (key: number) => {
 .wechat-icon {
   font-size: 16px;
   color: #07c160;
+}
+
+.wechat-pay-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  margin-right: 8px;
 }
 
 .payment-amount {
