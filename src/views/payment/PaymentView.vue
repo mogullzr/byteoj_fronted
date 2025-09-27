@@ -502,7 +502,7 @@ const confirmBatchRefund = async () => {
 
     const res = await LantuPayControllerService.lantuPayBackUsingPost(refundRequests)
     
-    if (res.code && res.data.length > 0) {
+    if (res.code === 0 && res.data.length > 0) {
       const successCount = res.data.filter(result => result === 'true').length
       const failCount = res.data.length - successCount
       
