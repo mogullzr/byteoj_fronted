@@ -1,14 +1,20 @@
 <template>
-  <div class="course-edit-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-6 overflow-auto">
-    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-lg p-8">
+  <div class="course-create-container bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-6 overflow-auto">
+    <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-8">
       <h1 class="text-3xl font-bold text-gray-900 mb-8 flex items-center">
-        <i class="el-icon-edit mr-3 text-blue-600"></i> 编辑课程
+        <i class="el-icon-plus mr-3 text-green-600"></i> 创建课程
       </h1>
+      
       <el-form :model="form" label-width="140px" :rules="rules" ref="courseForm" class="mb-8">
         <!-- Basic Course Info -->
+        <el-form-item label="课程ID" prop="course_id">
+          <el-input v-model="form.course_id" placeholder="请输入课程ID（数字）" type="number" class="rounded-md"></el-input>
+        </el-form-item>
+        
         <el-form-item label="课程标题" prop="course_title">
           <el-input v-model="form.course_title" placeholder="请输入课程标题" class="rounded-md"></el-input>
         </el-form-item>
+        
         <el-form-item label="标题描述" prop="course_title_description">
           <el-input
               type="textarea"
@@ -18,8 +24,9 @@
               class="rounded-md"
           ></el-input>
         </el-form-item>
+        
         <el-form-item label="创建者" prop="create_name">
-          <el-input v-model="form.create_name" placeholder="请输入创建者" disabled class="rounded-md"></el-input>
+          <el-input v-model="form.create_name" placeholder="请输入创建者" class="rounded-md"></el-input>
         </el-form-item>
         
         <el-form-item label="课程价格" prop="pay">
@@ -35,6 +42,7 @@
           </el-input-number>
           <div class="text-xs text-gray-500 mt-1">设置为0表示免费课程</div>
         </el-form-item>
+        
         <el-form-item label="头像" prop="avatar">
           <el-upload
               class="avatar-uploader"
@@ -51,6 +59,7 @@
             </div>
           </el-upload>
         </el-form-item>
+        
         <el-form-item label="开始时间" prop="start_time">
           <el-date-picker
               v-model="form.start_time"
@@ -61,6 +70,7 @@
               class="rounded-md"
           ></el-date-picker>
         </el-form-item>
+        
         <el-form-item label="结束时间" prop="end_time">
           <el-date-picker
               v-model="form.end_time"
@@ -75,74 +85,6 @@
 
       <!-- Split Layout: Left (Problem Selection) and Right (Chapters/Categories/Problems/Users) -->
       <div class="flex gap-6">
-        <!-- Left: Problem Selection -->
-<!--        <div class="w-1/2">-->
-<!--          <h2 class="text-xl font-semibold text-gray-800 mb-4">题目库</h2>-->
-<!--          <el-form :model="searchRequest" inline class="mb-4">-->
-<!--            <el-form-item label="分类" class="mr-4">-->
-<!--              <el-select v-model="searchRequest.category" placeholder="选择分类" class="w-32">-->
-<!--                <el-option label="算法" value="algorithm"></el-option>-->
-<!--                &lt;!&ndash; Add more categories as needed &ndash;&gt;-->
-<!--              </el-select>-->
-<!--            </el-form-item>-->
-<!--            <el-form-item label="关键词">-->
-<!--              <el-input v-model="searchRequest.keyword" placeholder="输入关键词" class="w-48"></el-input>-->
-<!--            </el-form-item>-->
-<!--            <el-form-item>-->
-<!--              <el-button type="primary" @click="fetchProblems" class="bg-blue-600 hover:bg-blue-700 shadow-md">搜索-->
-<!--              </el-button>-->
-<!--            </el-form-item>-->
-<!--          </el-form>-->
-<!--          <el-table-->
-<!--              v-if="problemList.length && selectedCategory && selectedCategory.courseProblemList"-->
-<!--              :data="problemList"-->
-<!--              border-->
-<!--              stripe-->
-<!--              class="rounded-lg shadow-sm"-->
-<!--              row-class-name="hover:bg-blue-50 transition-colors duration-150"-->
-<!--          >-->
-<!--            <el-table-column prop="problem_id" label="ID" width="80" align="center"/>-->
-<!--            <el-table-column prop="chinese_name" label="题目名称" min-width="200"/>-->
-<!--            <el-table-column prop="difficulty_name" label="难度" width="100" align="center"/>-->
-<!--            <el-table-column prop="ac_total" label="通过人数" width="120" align="center"/>-->
-<!--            <el-table-column prop="algorithm_tags" label="标签" width="150">-->
-<!--              <template #default="{ row }">-->
-<!--                <el-tag v-for="tag in parseTags(row.tags)" :key="tag" size="small" class="mr-1" type="info">{{-->
-<!--                    tag-->
-<!--                  }}-->
-<!--                </el-tag>-->
-<!--              </template>-->
-<!--            </el-table-column>-->
-<!--            <el-table-column label="状态" width="100" align="center">-->
-<!--              <template #default="{ row }">-->
-<!--                <el-button-->
-<!--                    v-if="selectedCategory && !selectedCategory.courseProblemList.some(p => String(p.problem_id) === String(row.problem_id))"-->
-<!--                    type="primary"-->
-<!--                    size="small"-->
-<!--                    @click.stop="addProblemOnClick(row)"-->
-<!--                    class="bg-blue-600 hover:bg-blue-700 shadow-md"-->
-<!--                >-->
-<!--                  添加-->
-<!--                </el-button>-->
-<!--                <el-tag v-else-if="selectedCategory" type="success">已添加</el-tag>-->
-<!--                <el-tag v-else type="warning">未选择类别</el-tag>-->
-<!--              </template>-->
-<!--            </el-table-column>-->
-<!--          </el-table>-->
-<!--          <div v-else class="text-gray-500 text-center py-4">-->
-<!--            {{ selectedCategory ? '暂无题目，请尝试搜索' : '请先选择一个类别' }}-->
-<!--          </div>-->
-<!--          <el-pagination-->
-<!--              v-if="totalProblems > 0"-->
-<!--              v-model:current-page="searchRequest.pageNum"-->
-<!--              :page-size="searchRequest.pageSize"-->
-<!--              :total="totalProblems"-->
-<!--              layout="prev, pager, next"-->
-<!--              @current-change="fetchProblems"-->
-<!--              class="mt-4 flex justify-center"-->
-<!--          />-->
-<!--        </div>-->
-
         <!-- Right: Chapters, Categories, Problems, and Users -->
         <div class="w-1/2">
           <h2 class="text-xl font-semibold text-gray-800 mb-4">课程题目设置</h2>
@@ -371,23 +313,6 @@
         </div>
       </div>
 
-      <!-- Form Actions -->
-      <div class="mt-8 flex justify-end gap-4">
-        <el-button
-            type="primary"
-            @click="submitForm"
-            class="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 py-2 shadow-md"
-        >
-          保存课程
-        </el-button>
-        <el-button
-            @click="goBack"
-            class="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md px-6 py-2 shadow-md"
-        >
-          返回
-        </el-button>
-      </div>
-
       <!-- Problem Selection Dialog -->
       <el-dialog title="选择题目" v-model="dialogVisible" width="80%" :before-close="resetProblemDialog">
         <el-form :model="searchRequest" inline class="mb-4">
@@ -522,13 +447,31 @@
           </el-button>
         </template>
       </el-dialog>
+
+      <!-- Form Actions -->
+      <div class="mt-8 flex justify-end gap-4">
+        <el-button
+            type="primary"
+            @click="submitForm"
+            :loading="loading"
+            class="bg-green-600 hover:bg-green-700 text-white rounded-md px-6 py-2 shadow-md"
+        >
+          {{ loading ? '创建中...' : '创建课程' }}
+        </el-button>
+        <el-button
+            @click="goBack"
+            class="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md px-6 py-2 shadow-md"
+        >
+          返回
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, reactive } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { debounce } from 'lodash'
 import {
   ElMessage,
@@ -550,13 +493,9 @@ import {
 } from 'element-plus'
 import { CourseControllerService, SearchControllerService, UserControllerService } from '../../../generated/index.ts'
 
-const props = defineProps({
-  courseId: String
-})
-
 const router = useRouter()
-const route = useRoute()
 const courseForm = ref(null)
+const loading = ref(false)
 const dialogVisible = ref(false)
 const userDialogVisible = ref(false)
 const selectedChapterIndex = ref(-1)
@@ -569,11 +508,25 @@ const form = reactive({
   course_title_description: '',
   create_name: '',
   pay: 0,
-  avatar: '',
+  avatar: 'http://mogullzr001.oss-cn-beijing.aliyuncs.com/2025/06/915061c7b1d94e3f8a7bafae0817e042.jpg',
   start_time: '',
   end_time: '',
   courseProblemsList: []
 })
+
+const rules = {
+  course_id: [
+    { required: true, message: '请输入课程ID', trigger: 'blur' },
+    { pattern: /^\d+$/, message: '课程ID必须是数字', trigger: 'blur' }
+  ],
+  course_title: [{ required: true, message: '请输入课程标题', trigger: 'blur' }],
+  course_title_description: [{ required: true, message: '请输入标题描述', trigger: 'blur' }],
+  create_name: [{ required: true, message: '请输入创建者', trigger: 'blur' }],
+  pay: [
+    { required: true, message: '请输入课程价格', trigger: 'blur' },
+    { type: 'number', min: 0, message: '价格不能小于0', trigger: 'blur' }
+  ]
+}
 
 const searchRequest = ref({
   category: 'algorithm',
@@ -594,21 +547,41 @@ const userList = ref([])
 const totalProblems = ref(0)
 const totalUserPages = ref(0)
 
-const rules = {
-  course_title: [{ required: true, message: '请输入课程标题', trigger: 'blur' }],
-  course_title_description: [{ required: true, message: '请输入标题描述', trigger: 'blur' }],
-  pay: [
-    { required: true, message: '请输入课程价格', trigger: 'blur' },
-    { type: 'number', min: 0, message: '价格不能小于0', trigger: 'blur' }
-  ]
+const uploadAction = ref('') // Set your upload URL here
+
+const handleAvatarSuccess = (res, file) => {
+  if (res.code === 0) {
+    form.avatar = res.data.url // Adjust based on your API response
+    ElMessage.success('头像上传成功')
+    console.log('Avatar uploaded:', form.avatar)
+  } else {
+    ElMessage.error(res.message || '头像上传失败')
+    console.error('Avatar upload failed:', res)
+  }
 }
 
-const uploadAction = ref('') // Set your upload URL here
+const beforeAvatarUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+  if (!isImage) {
+    ElMessage.error('请上传图片文件!')
+    return false
+  }
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过2MB!')
+    return false
+  }
+  return true
+}
+
+const errorHandler = () => {
+  console.warn('Avatar image failed to load')
+  return true // Allow fallback rendering
+}
 
 // Computed properties
 const selectedChapter = computed(() => {
   if (selectedChapterIndex.value === -1 || !form.courseProblemsList[selectedChapterIndex.value]) {
-    console.log('selectedChapter: No valid chapter', { selectedChapterIndex: selectedChapterIndex.value, courseProblemsList: form.courseProblemsList })
     return null
   }
   return form.courseProblemsList[selectedChapterIndex.value]
@@ -616,11 +589,6 @@ const selectedChapter = computed(() => {
 
 const selectedCategory = computed(() => {
   if (!selectedChapter.value || selectedCategoryIndex.value === -1 || !selectedChapter.value.courseProblemList?.[selectedCategoryIndex.value]) {
-    console.log('selectedCategory: No valid category', {
-      selectedChapter: selectedChapter.value,
-      selectedCategoryIndex: selectedCategoryIndex.value,
-      courseProblemList: selectedChapter.value?.courseProblemList
-    })
     return null
   }
   return selectedChapter.value.courseProblemList[selectedCategoryIndex.value]
@@ -637,51 +605,6 @@ const parseTags = (tags) => {
   } catch (e) {
     console.error('Error parsing tags:', tags, e)
     return []
-  }
-}
-
-const fetchCourse = async () => {
-  if (!props.courseId) {
-    ElMessage.error('无效的课程ID')
-    console.error('Course ID is missing or invalid:', props.courseId)
-    return
-  }
-  try {
-    console.log('Fetching course data for ID:', props.courseId)
-    const res = await CourseControllerService.courseSearchProblemsByCourseIdUsingPost(props.courseId)
-    if (res.code === 0) {
-      form.courseProblemsList = (res.data || []).map(group => ({
-        ...group,
-        courseProblemList: Array.isArray(group.courseProblemList) ? group.courseProblemList.map(category => ({
-          ...category,
-          courseProblemList: Array.isArray(category.courseProblemList) ? category.courseProblemList : []
-        })) : []
-      }))
-      console.log('Course problems loaded:', JSON.stringify(form.courseProblemsList, null, 2))
-      const courseRes = await CourseControllerService.courseSearchByCourseIdUsingPost(props.courseId)
-      if (courseRes.code === 0) {
-        Object.assign(form, {
-          course_id: courseRes.data.course_id || props.courseId,
-          course_title: courseRes.data.course_title || '',
-          course_title_description: courseRes.data.course_title_description || '',
-          create_name: courseRes.data.create_name || '',
-          pay: courseRes.data.pay || 0,
-          avatar: courseRes.data.avatar || '',
-          start_time: courseRes.data.start_time || '',
-          end_time: courseRes.data.end_time || ''
-        })
-        console.log('Course info loaded:', form)
-      } else {
-        ElMessage.error(courseRes.message || '获取课程信息失败')
-        console.error('Failed to fetch course info:', courseRes)
-      }
-    } else {
-      ElMessage.error(res.message || '获取课程题目信息失败')
-      console.error('Failed to fetch course problems:', res)
-    }
-  } catch (error) {
-    ElMessage.error('网络错误，请稍后重试')
-    console.error('Network error in fetchCourse:', error)
   }
 }
 
@@ -736,36 +659,6 @@ const fetchUserPages = async () => {
   }
 }
 
-const handleAvatarSuccess = (res, file) => {
-  if (res.code === 0) {
-    form.avatar = res.data.url // Adjust based on your API response
-    ElMessage.success('头像上传成功')
-    console.log('Avatar uploaded:', form.avatar)
-  } else {
-    ElMessage.error(res.message || '头像上传失败')
-    console.error('Avatar upload failed:', res)
-  }
-}
-
-const beforeAvatarUpload = (file) => {
-  const isImage = file.type.startsWith('image/')
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isImage) {
-    ElMessage.error('请上传图片文件!')
-    return false
-  }
-  if (!isLt2M) {
-    ElMessage.error('图片大小不能超过2MB!')
-    return false
-  }
-  return true
-}
-
-const errorHandler = () => {
-  console.warn('Avatar image failed to load')
-  return true // Allow fallback rendering
-}
-
 const addProblemGroup = () => {
   form.courseProblemsList.push({
     problems_type: '',
@@ -800,7 +693,7 @@ const addChildProblem = () => {
     courseProblemList: []
   })
   selectedCategoryIndex.value = form.courseProblemsList[selectedChapterIndex.value].courseProblemList.length - 1
-  console.log('Added new category and selected it:', selectedCategoryIndex.value, 'category:', form.courseProblemsList[selectedChapterIndex.value].courseProblemList[selectedCategoryIndex.value])
+  console.log('Added new category and selected it:', selectedCategoryIndex.value)
 }
 
 const removeChildProblem = (childIndex) => {
@@ -824,18 +717,11 @@ const selectChapter = (row, column, event, index) => {
   }
   selectedChapterIndex.value = index
   selectedCategoryIndex.value = -1
-  console.log('Selected chapter index:', selectedChapterIndex.value, 'chapter:', form.courseProblemsList[index])
+  console.log('Selected chapter index:', selectedChapterIndex.value)
 }
 
 const selectCategory = debounce((row, column, event, index) => {
-  console.log('selectCategory triggered:', {
-    row,
-    column,
-    event: event ? { type: event.type, target: event.target } : null,
-    index,
-    selectedChapter: selectedChapter.value,
-    courseProblemList: selectedChapter.value?.courseProblemList
-  })
+  console.log('selectCategory triggered:', { row, column, event, index })
   if (!selectedChapter.value || !Array.isArray(selectedChapter.value.courseProblemList)) {
     ElMessage.warning('请先选择一个章节或章节数据无效')
     console.warn('No valid chapter or courseProblemList:', selectedChapter.value)
@@ -843,15 +729,14 @@ const selectCategory = debounce((row, column, event, index) => {
   }
   if (index === undefined || index === null || index === -1) {
     index = selectedChapter.value.courseProblemList.indexOf(row)
-    console.log('Computed index from row:', index, 'row:', row)
   }
   if (index === -1 || !selectedChapter.value.courseProblemList[index]) {
     ElMessage.warning('无法选择类别，请重试')
-    console.warn('Invalid category index:', index, 'row:', row, 'courseProblemList:', selectedChapter.value.courseProblemList)
+    console.warn('Invalid category index:', index)
     return
   }
   selectedCategoryIndex.value = index
-  console.log('Selected category index:', selectedCategoryIndex.value, 'category:', selectedChapter.value.courseProblemList[index])
+  console.log('Selected category index:', selectedCategoryIndex.value)
 }, 300)
 
 const getChapterRowClass = ({ rowIndex }) => {
@@ -881,12 +766,7 @@ const openProblemDialog = () => {
 }
 
 const addProblemOnClick = (problem) => {
-  console.log('addProblemOnClick triggered:', {
-    problem,
-    selectedChapterIndex: selectedChapterIndex.value,
-    selectedCategoryIndex: selectedCategoryIndex.value,
-    selectedCategory: selectedCategory.value
-  })
+  console.log('addProblemOnClick triggered:', { problem })
   if (!selectedChapter.value) {
     ElMessage.error('未选择章节，无法添加题目')
     console.error('No chapter selected')
@@ -894,10 +774,7 @@ const addProblemOnClick = (problem) => {
   }
   if (!selectedCategory.value) {
     ElMessage.error('未选择类别，无法添加题目')
-    console.error('No category selected', {
-      selectedCategoryIndex: selectedCategoryIndex.value,
-      courseProblemList: selectedChapter.value.courseProblemList
-    })
+    console.error('No category selected')
     return
   }
   const child = selectedCategory.value
@@ -913,7 +790,7 @@ const addProblemOnClick = (problem) => {
     })
     updateChapterStats()
     ElMessage.success(`已添加题目: ${problem.chinese_name}`)
-    console.log('Added problem:', problem.problem_id, 'to category:', child)
+    console.log('Added problem:', problem.problem_id)
   } else {
     ElMessage.warning('该题目已添加')
     console.log('Duplicate problem:', problem.problem_id)
@@ -1044,7 +921,7 @@ const addUserOnClick = (user) => {
   if (!selectedUserIds.value.includes(user.uuid)) {
     selectedUserIds.value.push(user.uuid)
     ElMessage.success(`已添加用户: ${user.username}`)
-    console.log('Added user:', user.uuid, 'to selectedUserIds:', selectedUserIds.value)
+    console.log('Added user:', user.uuid)
   } else {
     ElMessage.warning('该用户已添加')
     console.log('Duplicate user:', user.uuid)
@@ -1054,7 +931,7 @@ const addUserOnClick = (user) => {
 const removeUser = (index) => {
   const user = selectedUsers.value[index]
   selectedUserIds.value = selectedUserIds.value.filter(id => id !== user.uuid)
-  console.log('Removed user:', user.uuid, 'from selectedUserIds:', selectedUserIds.value)
+  console.log('Removed user:', user.uuid)
 }
 
 const submitUsers = async () => {
@@ -1062,24 +939,8 @@ const submitUsers = async () => {
     ElMessage.warning('请至少添加一个用户')
     return
   }
-  try {
-    const courseRequest = {
-      course_id: Number(props.courseId),
-      user_list: selectedUserIds.value
-    }
-    console.log('Submitting users:', courseRequest)
-    const res = await CourseControllerService.courseAdminUserSetUsingPost(courseRequest)
-    if (res.code === 0) {
-      ElMessage.success('用户添加成功')
-      console.log('Users submitted successfully:', res)
-    } else {
-      ElMessage.error(res.message || '添加用户失败')
-      console.error('Failed to submit users:', res)
-    }
-  } catch (error) {
-    ElMessage.error('网络错误，请稍后重试')
-    console.error('Network error in submitUsers:', error)
-  }
+  // For create mode, we'll handle users after course creation
+  ElMessage.success('用户列表已准备好，将在课程创建后保存')
 }
 
 const resetProblemDialog = (done) => {
@@ -1095,21 +956,37 @@ const resetUserDialog = (done) => {
 }
 
 const submitForm = async () => {
+  if (!courseForm.value) return
+  
   courseForm.value.validate(async (valid) => {
     if (valid) {
+      // Validate end time is after start time (only if both times are provided)
+      if (form.start_time && form.end_time && new Date(form.start_time) >= new Date(form.end_time)) {
+        ElMessage.error('结束时间必须晚于开始时间')
+        return
+      }
+      
+      loading.value = true
       try {
-        console.log('Submitting form:', form)
-        const res = await CourseControllerService.courseAdminProblemSetUsingPost(form)
+        // Convert course_id to number
+        const courseData = {
+          ...form,
+          course_id: Number(form.course_id)
+        }
+        console.log('Creating course with data:', courseData)
+        const res = await CourseControllerService.courseAdminAddUsingPost(courseData)
         if (res.code === 0) {
-          ElMessage.success('课程更新成功')
+          ElMessage.success('课程创建成功')
           router.push('/course')
         } else {
-          ElMessage.error(res.message || '更新失败')
-          console.error('Submission failed:', res)
+          ElMessage.error(res.message || '创建失败')
+          console.error('Creation failed:', res)
         }
       } catch (error) {
         ElMessage.error('网络错误，请稍后重试')
         console.error('Network error in submitForm:', error)
+      } finally {
+        loading.value = false
       }
     } else {
       ElMessage.error('请检查表单输入')
@@ -1122,26 +999,15 @@ const goBack = () => {
 }
 
 onMounted(() => {
-  console.log('Component mounted, courseId:', props.courseId)
+  console.log('CourseCreate component mounted')
   selectedChapterIndex.value = -1
   selectedCategoryIndex.value = -1
-  fetchCourse()
   fetchUserPages()
-})
-
-watch(selectedCategoryIndex, (newVal, oldVal) => {
-  console.log('selectedCategoryIndex changed:', {
-    newVal,
-    oldVal,
-    selectedCategory: selectedCategory.value,
-    selectedChapter: selectedChapter.value,
-    courseProblemList: selectedChapter.value?.courseProblemList
-  })
 })
 </script>
 
 <style scoped>
-.course-edit-container {
+.course-create-container {
   @apply bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen p-6 overflow-auto;
 }
 
@@ -1161,8 +1027,8 @@ watch(selectedCategoryIndex, (newVal, oldVal) => {
   @apply rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200;
 }
 
-.el-icon-edit {
-  @apply text-blue-600 text-3xl;
+.el-icon-plus {
+  @apply text-green-600 text-3xl;
 }
 
 .el-table {

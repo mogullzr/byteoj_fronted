@@ -17,6 +17,7 @@ import AdminAuthManageView from "../views/user/AdminAuthManageView.vue";
 import LogView from "../views/log/index.vue";
 import CourseView from "../views/course/CourseView.vue";
 import CourseEdit from "../views/course/CourseEdit.vue";
+import CourseCreate from "../views/course/CourseCreate.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -170,6 +171,15 @@ const routes: Array<RouteRecordRaw> = [
       show: false
     },
     children: [
+      {
+        path: "create",
+        name: "创建课程页面",
+        meta: {
+          access: "2",
+          show: true,
+        },
+        component: CourseCreate
+      },
       {
         path: "edit",
         name: "课程题目设定页面",

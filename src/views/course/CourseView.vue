@@ -1,9 +1,19 @@
 <template>
   <div class="course-list-container bg-gradient-to-br from-gray-50 to-gray-100 h-screen p-4">
     <div class="max-w-full mx-auto bg-white rounded-xl shadow-md p-6">
-      <h1 class="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-        <i class="el-icon-collection mr-2"></i> 课程管理
-      </h1>
+      <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900 flex items-center">
+          <i class="el-icon-collection mr-2"></i> 课程管理
+        </h1>
+        <el-button
+            type="primary"
+            @click="handleCreate"
+            class="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-6 py-2 shadow-md transition-colors duration-200"
+        >
+          <i class="el-icon-plus mr-1"></i>
+          创建课程
+        </el-button>
+      </div>
       <el-table
           :data="courses"
           style="width: 100%"
@@ -48,6 +58,30 @@
           </template>
           <template #default="{ row }">
             <el-tag type="primary" effect="dark" size="small">{{ row.num }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="pay" label="价格" width="140" align="center" header-align="center">
+          <template #header>
+            <span class="font-semibold text-gray-700">价格</span>
+          </template>
+          <template #default="{ row }">
+            <div class="price-display">
+              <el-tag 
+                v-if="row.pay === 0 || row.pay === null" 
+                type="success" 
+                effect="dark" 
+                size="large"
+                class="price-tag free-tag">
+                <i class="el-icon-check mr-1"></i>
+                免费
+              </el-tag>
+              <div v-else class="paid-price">
+                <div class="price-badge">
+                  <span class="currency">¥</span>
+                  <span class="amount">{{ parseFloat(row.pay).toFixed(2) }}</span>
+                </div>
+              </div>
+            </div>
           </template>
         </el-table-column>
         <el-table-column prop="create_time" label="创建时间" width="160" align="center" header-align="center">
@@ -134,6 +168,11 @@ const formatDate = (dateStr) => {
 // Handle edit
 const handleEdit = (courseId) => {
   router.push(`/course/edit?course_id=${courseId}`)
+}
+
+// Handle create
+const handleCreate = () => {
+  router.push('/course/create')
 }
 
 // Handle delete with triple confirmation
@@ -236,5 +275,51 @@ onMounted(() => {
 
 .el-icon-collection {
   @apply text-blue-600 text-2xl;
+}
+
+/* 价格显示样式 */
+.price-display {
+  @apply flex justify-center items-center;
+}
+
+.free-tag {
+  @apply bg-green-500 text-white rounded-full px-3 py-1 font-medium shadow-sm;
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  border: none !important;
+  font-size: 12px;
+}
+
+.free-tag:hover {
+  @apply transform scale-105 shadow-md transition-all duration-200;
+}
+
+.paid-price {
+  @apply flex justify-center;
+}
+
+.price-badge {
+  @apply bg-gradient-to-r from-orange-400 to-pink-500 text-white rounded-lg px-3 py-2 shadow-md;
+  display: flex;
+  align-items: baseline;
+  font-weight: 600;
+  min-width: 70px;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.price-badge:hover {
+  @apply transform scale-105 shadow-lg;
+  background: linear-gradient(135deg, #f97316, #ec4899);
+}
+
+.currency {
+  @apply text-sm opacity-90 mr-0.5;
+  font-size: 11px;
+}
+
+.amount {
+  @apply text-base font-bold;
+  font-size: 14px;
+  letter-spacing: 0.5px;
 }
 </style>

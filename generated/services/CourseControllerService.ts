@@ -100,6 +100,23 @@ export class CourseControllerService {
         });
     }
     /**
+     * courseJoin
+     * @returns string OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static courseJoinUsingPost(): CancelablePromise<string | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/course/join',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * courseSearchByCourseId
      * @param courseId CourseId
      * @returns BaseResponse_Course_ OK
