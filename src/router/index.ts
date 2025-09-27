@@ -18,6 +18,7 @@ import LogView from "../views/log/index.vue";
 import CourseView from "../views/course/CourseView.vue";
 import CourseEdit from "../views/course/CourseEdit.vue";
 import CourseCreate from "../views/course/CourseCreate.vue";
+import PaymentView from "../views/payment/PaymentView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -209,6 +210,15 @@ const routes: Array<RouteRecordRaw> = [
       show: true,
     },
     component: LogView,
+  },
+  {
+    path: "/payment",
+    name: "支付管理",
+    meta: {
+      access: "2",
+      show: true,
+    },
+    component: PaymentView,
   },
   {
     path: "/404",

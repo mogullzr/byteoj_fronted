@@ -262,6 +262,28 @@
         <el-menu-item index="10-1-1" @click="RouterToView('/log')">日志管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
+    <el-sub-menu index="11">
+      <template #title>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="30"
+          height="30"
+          viewBox="0 0 24 24"
+        >
+          <path
+            fill="#000000"
+            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2M8.5 14.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5s1.5.67 1.5 1.5s-.67 1.5-1.5 1.5m7 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5s1.5.67 1.5 1.5s-.67 1.5-1.5 1.5m-3.5-3c-.55 0-1-.45-1-1V8c0-.55.45-1 1-1s1 .45 1 1v2.5c0 .55-.45 1-1 1"
+          />
+        </svg>
+        <span>支付管理页面</span>
+      </template>
+      <el-menu-item-group>
+        <template #title>
+          <span>支付账单管理</span>
+        </template>
+        <el-menu-item index="11-1-1" @click="RouterToView('/payment')">支付账单管理</el-menu-item>
+      </el-menu-item-group>
+    </el-sub-menu>
   </el-menu>
 </template>
 
