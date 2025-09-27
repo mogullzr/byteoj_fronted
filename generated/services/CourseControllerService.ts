@@ -9,6 +9,7 @@ import type { BaseResponse_List_CourseProblemsVo_ } from '../models/BaseResponse
 import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
 import type { CourseRequest } from '../models/CourseRequest';
 import type { CourseUserRequest } from '../models/CourseUserRequest';
+import type { LantuPayCallbackRequest } from '../models/LantuPayCallbackRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -92,6 +93,27 @@ export class CourseControllerService {
             method: 'POST',
             url: '/api/course/admin/user/set',
             body: courseUserRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * courseJoin
+     * @param callbackRequest callbackRequest
+     * @returns string OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static courseJoinUsingPost(
+        callbackRequest: LantuPayCallbackRequest,
+    ): CancelablePromise<string | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/course/join',
+            body: callbackRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

@@ -82,9 +82,15 @@ export type { UserLoginRequest } from './models/UserLoginRequest';
 export type { UserModifyRequest } from './models/UserModifyRequest';
 export type { UserRegisterRequest } from './models/UserRegisterRequest';
 export type { UserSearchRequest } from './models/UserSearchRequest';
+
 export type { UserVo } from './models/UserVo';
 export type { View } from './models/View';
 export type { WebsiteBackgroundPictures } from './models/WebsiteBackgroundPictures';
+export type { BaseResponse_LantuPayVo_ } from './models/BaseResponse_LantuPayVo_';
+export type { LantuPayOtherRequest } from './models/LantuPayOtherRequest';
+export type { LantuPayRequest } from './models/LantuPayRequest';
+export type { LantuPayViewVo } from './models/LantuPayViewVo';
+export type { LantuPayVo } from './models/LantuPayVo';
 
 export { BasicErrorControllerService } from './services/BasicErrorControllerService';
 export { CompetitionControllerService } from './services/CompetitionControllerService';
@@ -95,3 +101,4 @@ export { RsaControllerService } from './services/RsaControllerService';
 export { SearchControllerService } from './services/SearchControllerService';
 export { UserControllerService } from './services/UserControllerService';
 export { WebSocketControllerService } from './services/WebSocketControllerService';
+export { LantuPayControllerService } from './services/LantuPayControllerService'
