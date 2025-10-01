@@ -97,7 +97,7 @@
           size="default"
           type="primary"
           style="font-size: 16px"
-          @click=""
+          @click="editCompetition(scope.row)"
         >
           编辑
         </el-button>
@@ -361,6 +361,16 @@ const downloadSoftware = () => {
     title: "下载开始",
     message: "软件下载已开始，请等待下载完成",
     type: "success",
+  });
+};
+
+// 编辑竞赛
+const editCompetition = (competition: CompetitionInfoVo) => {
+  router.push({
+    path: '/competition/edit',
+    query: {
+      competition_id: competition.competition_id
+    }
   });
 };
 </script>

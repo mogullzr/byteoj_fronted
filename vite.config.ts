@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import {CompetitionControllerService, ProblemAlgorithmControllerService, SearchControllerService} from "./generated";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -22,3 +23,4 @@ export default defineConfig({
     },
   },
 });
+
