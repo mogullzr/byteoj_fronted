@@ -126,7 +126,7 @@
 <!--        <span class="inline-block mx-2">•</span>-->
 <!--        <span class="inline-block mx-2">阅读约需 8 分钟</span>-->
         <div class="text-md opacity-80 font-bold mb-6">
-          <span class="inline-block mx-2" style="font-size: 20px">更新时间: 2025年7月18日 中午12:47:34</span>
+          <span class="inline-block mx-2" style="font-size: 20px">更新时间: 2025年10月6日 中午14:44:55</span>
         </div>
         <div class="flex justify-center gap-4">
           <!-- 后端仓库 -->
@@ -1337,79 +1337,114 @@ const majorData = {
   bigdata: {
     schoolContent: [
       {
-        title: 'C语言',
+        title: 'C语言(大一上)',
         description: '基础语法，简单算法，指针入门',
         tags: ['入门', '浅显', '基础']
       },
       {
-        title: '计算机导论课',
-        description: '对计算机的很多知识进行一概而论，让同学对计算机有个大概认识',
+        title: '大数据导论（大一上）',
+        description: '对计算机的很多知识进行一概而论，让同学对大数据专业有个大概认识',
         tags: ['入门', '基础']
       },
       {
-        title: 'Linux基础',
+        title: 'Linux基础（大一上）',
         description: 'Shell命令，文件操作',
         tags: ['命令', '文件', '基础']
       },
       {
-        title: '数据结构（简单）',
+        title: '数据结构（简单）（大一下）',
         description: '概念为主，代码为辅，科目抽象难讲，经验不丰富很难讲好',
         tags: ['入门', '基础']
       },
       {
-        title: 'MySQL数据库',
+        title: 'Python基础（大二上）',
+        description: '语法学习，有一门语言基础，1周基础学习时间都算多了',
+        tags: ['语法', '基础']
+      },
+      {
+        title: 'MySQL数据库（大二上）',
         description: '关系数据库理论，SQL基础',
         tags: ['理论', 'SQL', '概念']
       },
       {
-        title: '计算机组成原理',
+        title: '计算机组成原理（大二上）',
         description: '这门科目基本就是以理论为主，学习过程会很艰苦',
         tags: ['入门', '理论']
       },
       {
-        title: '操作系统',
-        description: '这门科目基本就是以理论为主，学习过程会很艰苦',
+        title: '网络基础（大二上）',
+        description: '一样偏向于概念的一门科目，但是和我们开发网站学习方向挂钩的内容更多',
         tags: ['入门', '理论']
       },
       {
-        title: 'Java EE 基础',
+        title: '数据采集和预处理（大二上）',
+        description: '单纯就是硬是单独开出一门课程，完全没必要',
+        tags: ['基础']
+      },
+      {
+        title: 'Java EE 基础（大二上）',
         description: '面向对象编程，集合框架等基础知识',
         tags: ['OOP', '集合', '基础']
       },
       {
-        title: 'Python基础 + 爬虫',
-        description: '语法学习，简单爬虫',
-        tags: ['语法', '简单爬虫', '基础']
+        title: '数据分析与应用（大二下）',
+        description: '',
+        tags: ['基础']
       },
       {
-        title: '算法设计与分析',
-        description: '学习设计算法，不太明白学习的意义，太浅了',
+        title: '操作系统（大二下）',
+        description: '这门科目基本就是以理论为主，学习过程会很艰苦',
+        tags: ['入门', '理论']
+      },
+      {
+        title: '算法设计与分析（大二下）',
+        description: '学习设计算法，无任何意义，太浅了',
         tags: ['基础', '算法']
       },
       {
-        title: '数据挖掘',
+        title: '机器学习（大二下）',
+        description: '和人工智能，训练、数学挂钩',
+        tags: ['基础']
+      },
+      {
+        title: '数据挖掘（大二下）',
         description: '主要应该是分析数据，设计数据的结构，清洗数据之类的操作',
         tags: ['基础', '数据清洗']
       },
       {
-        title: '数据采集技术',
-        description: '猜测是爬虫的代名词',
-        tags: ['基础', '大数据分析']
+        title: '并行程序设计（大三上）',
+        description: '',
+        tags: ['基础', '思维']
       },
       {
-        title: '深度学习',
+        title: 'Hadoop大数据技术与应用（大三上）',
+        description: '主要用于大数据分析，TB、EB、PB或者更大数据的分析',
+        tags: ['基础', '大数据']
+      },
+      {
+        title: '深度学习（大三上）',
         description: '......',
         tags: ['基础', '深度学习']
       },
       {
-        title: '软件概论',
-        description: '详细学习估计也是以理论为主的东西，学学画图之类的',
-        tags: ['基础', '业务']
+        title: '网络安全（大三上）',
+        description: '没上过，猜测：学习各种防护措施，如：彩虹表攻击、DDos攻击防护、端口暴露、CSRF攻击等等一系列网络攻击的防护措施吧',
+        tags: ['基础', '网络安全']
       },
       {
-        title: '计算机网络',
-        description: '一样偏向于概念的一门科目，但是和我们开发网站学习方向挂钩的内容更多',
-        tags: ['入门', '理论']
+        title: '自然语言处理（大三下）',
+        description: '到这个时间才学这个基本没用了',
+        tags: ['基础', '入门']
+      },
+      {
+        title: 'Spark（大三下）',
+        description: '和前面的Hadoop有异曲同工作用',
+        tags: ['基础', '大数据分析']
+      },
+      {
+        title: '机器视觉（大三下）',
+        description: '简单来说，就是和视觉识别有关的代码实现，数学挂钩很重',
+        tags: ['基础', 'OpenCv']
       },
     ],
     industryContent: [

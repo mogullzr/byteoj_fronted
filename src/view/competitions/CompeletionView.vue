@@ -555,11 +555,13 @@ const paginationArray = computed(() => {
   flex-shrink: 0;
 }
 .badge {
-  padding: 0.4rem 0.9rem;
+  padding: 0.6rem 1.2rem;
   border-radius: 9999px;
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   text-transform: uppercase;
+  min-width: 80px;
+  text-align: center;
 }
 .badge-blue {
   background-color: #dbeafe;

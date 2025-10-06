@@ -30,6 +30,7 @@ const isLoading = ref(false);
 const paymentPollingTimer = ref<NodeJS.Timeout | null>(null);
 const isQrCodeExpired = ref(false);
 const isRefreshing = ref(false);
+const showGroupQr = ref(false);
 
 // 0表示显示前言，1表示显示试题，2表示大家的提交记录，3表示排名，4表示学习宝典
 // 初始值将在获取报名状态后根据情况设置
@@ -281,6 +282,19 @@ const handleKeydown = (event: KeyboardEvent) => {
   if (event.key === 'Escape' && showPayment.value) {
     closePayment();
   }
+  if (event.key === 'Escape' && showGroupQr.value) {
+    closeGroupQr();
+  }
+};
+
+// 打开群聊二维码
+const openGroupQr = () => {
+  showGroupQr.value = true;
+};
+
+// 关闭群聊二维码
+const closeGroupQr = () => {
+  showGroupQr.value = false;
 };
 
 // 修改展示页面
@@ -362,14 +376,15 @@ const changeShow = (key: number) => {
       
       <!-- 未报名用户显示报名按钮 -->
       <div v-else class="register-section">
-        <div class="qq-tip-highlighted">
+        <div class="group-qr-tip-highlighted">
           <div class="tip-content">
-            <span class="tip-icon">💡</span>
-            <span class="tip-text">豫章数计的同学请联系QQ</span>
+            <span class="tip-icon">🎓</span>
+            <span class="tip-text">豫章数计的同学请扫码加群报名</span>
           </div>
-          <div class="qq-contact-highlight">
-            <strong>898561494@qq.com</strong>
-          </div>
+          <button @click="openGroupQr" class="group-qr-btn">
+            <span class="qr-icon">📱</span>
+            <span>点击查看群聊二维码</span>
+          </button>
         </div>
         <button 
           @click="handleCoursePayment"
@@ -377,6 +392,7 @@ const changeShow = (key: number) => {
           class="custom-register-btn"
         >
           <span v-if="isLoading" class="loading-spinner"></span>
+          <span v-else class="btn-icon">🎯</span>
           <span class="btn-text">{{ isLoading ? '处理中...' : '立即报名' }}</span>
         </button>
       </div>
@@ -470,6 +486,40 @@ const changeShow = (key: number) => {
         v-if="isShow === 4"
         style="word-wrap: break-word"
       >      </div>
+    </div>
+  </div>
+
+  <!-- 群聊二维码模态框 -->
+  <div v-if="showGroupQr" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+    <div class="group-qr-modal">
+      <!-- 标题栏 -->
+      <div class="modal-header">
+        <h2 class="modal-title">加入学习群</h2>
+        <button @click="closeGroupQr" class="modal-close">✕</button>
+      </div>
+
+      <!-- 二维码展示 -->
+      <div class="qr-display-section">
+        <div class="qr-display-container">
+          <img 
+            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250709110220883.jpg" 
+            alt="学习群二维码" 
+            class="group-qr-image"
+          />
+        </div>
+        <!-- 重要注意事项 -->
+        <div class="important-notice">
+          <div class="notice-content">
+            <span class="notice-icon">⚠️</span>
+            <span class="notice-text">请备注班级+姓名！！！！！!</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 操作按钮 -->
+      <div class="modal-actions">
+        <button @click="closeGroupQr" class="close-btn">关闭</button>
+      </div>
     </div>
   </div>
 
@@ -572,19 +622,19 @@ const changeShow = (key: number) => {
   gap: 8px;
 }
 
-/* 突出显示的QQ联系提示 */
-.qq-tip-highlighted {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border: 2px solid #f59e0b;
+/* 群聊二维码提示样式 */
+.group-qr-tip-highlighted {
+  background: linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%);
+  border: 2px solid #0288d1;
   border-radius: 8px;
   padding: 10px 12px;
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+  box-shadow: 0 4px 12px rgba(2, 136, 209, 0.2);
   animation: highlightPulse 2s ease-in-out infinite;
   position: relative;
   overflow: hidden;
 }
 
-.qq-tip-highlighted::before {
+.group-qr-tip-highlighted::before {
   content: '';
   position: absolute;
   top: -2px;
@@ -618,24 +668,44 @@ const changeShow = (key: number) => {
 
 .tip-text {
   font-size: 14px;
-  color: #92400e;
+  color: #01579b;
   font-weight: 500;
 }
 
-.qq-contact-highlight {
-  text-align: center;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 6px;
-  padding: 4px 8px;
-  border: 1px solid #fed7aa;
+/* 群聊二维码按钮样式 */
+.group-qr-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #81d4fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #0277bd;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(2, 119, 189, 0.1);
+  min-height: 48px;
 }
 
-.qq-contact-highlight strong {
-  color: #1e40af;
-  font-family: monospace;
-  font-size: 13px;
-  font-weight: 700;
-  text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
+.group-qr-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: #4fc3f7;
+  color: #01579b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(2, 119, 189, 0.2);
+}
+
+.group-qr-btn:active {
+  transform: translateY(0);
+}
+
+.qr-icon {
+  font-size: 18px;
 }
 
 .tip-icon {
@@ -648,61 +718,46 @@ const changeShow = (key: number) => {
   font-family: monospace;
 }
 
-/* 自定义报名按钮样式 - 淡雅风格 */
+/* 自定义报名按钮样式 - 简洁清晰风格 */
 .custom-register-btn {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  color: #475569;
-  font-weight: 500;
-  font-size: 14px;
+  gap: 10px;
+  padding: 16px 32px;
+  background: #ffffff;
+  border: 2px solid #d1d5db;
+  border-radius: 10px;
+  color: #374151;
+  font-weight: 600;
+  font-size: 18px;
   cursor: pointer;
   transition: all 0.2s ease;
-  overflow: hidden;
+  min-width: 160px;
+  min-height: 54px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-register-btn:hover:not(:disabled) {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #334155;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
 }
 
 .custom-register-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #f3f4f6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .custom-register-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  transform: none;
-  background: #f1f5f9;
-  border-color: #e2e8f0;
-  color: #94a3b8;
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #9ca3af;
 }
 
-.custom-register-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.4s;
-}
-
-.custom-register-btn:hover:not(:disabled)::before {
-  left: 100%;
-}
 
 .btn-text {
   position: relative;
@@ -712,7 +767,7 @@ const changeShow = (key: number) => {
 .btn-icon {
   position: relative;
   z-index: 1;
-  font-size: 16px;
+  font-size: 20px;
 }
 
 .loading-spinner {
@@ -1174,5 +1229,213 @@ const changeShow = (key: number) => {
 .confirm-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(79, 172, 254, 0.4);
+}
+
+/* 群聊二维码模态框样式 */
+.group-qr-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 480px;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease-out;
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #e3f2fd;
+}
+
+.modal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0277bd;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title::before {
+  content: '🎓';
+  font-size: 24px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #666;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-close:hover {
+  background: #f5f5f5;
+  color: #333;
+  transform: rotate(90deg);
+}
+
+/* 二维码展示区域 */
+.qr-display-section {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.qr-display-container {
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  border: 3px solid #42a5f5;
+  border-radius: 16px;
+  padding: 20px;
+  display: inline-block;
+  box-shadow: 0 8px 32px rgba(66, 165, 245, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.qr-display-container::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -100%;
+  width: 100%;
+  height: calc(100% + 4px);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.group-qr-image {
+  width: 360px;
+  height: 440px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+}
+
+/* 重要注意事项样式 */
+.important-notice {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.notice-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 3px solid #ff7675;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(255, 118, 117, 0.3);
+  animation: noticeHighlight 2s ease-in-out infinite;
+  position: relative;
+  overflow: hidden;
+}
+
+.notice-content::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -100%;
+  width: 100%;
+  height: calc(100% + 4px);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent);
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+@keyframes noticeHighlight {
+  0%, 100% {
+    box-shadow: 0 4px 20px rgba(255, 118, 117, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 6px 30px rgba(255, 118, 117, 0.5);
+    transform: scale(1.02);
+  }
+}
+
+.notice-icon {
+  font-size: 24px;
+  animation: bounce 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.notice-text {
+  font-size: 18px;
+  font-weight: 800;
+  color: #d63031;
+  text-shadow: 0 1px 2px rgba(214, 48, 49, 0.3);
+  letter-spacing: 0.5px;
+  position: relative;
+  z-index: 1;
+}
+
+/* 模态框操作按钮 */
+.modal-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.close-btn {
+  padding: 12px 32px;
+  background: linear-gradient(135deg, #42a5f5 0%, #1e88e5 100%);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(66, 165, 245, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.close-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.close-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(66, 165, 245, 0.4);
+}
+
+.close-btn:hover::before {
+  left: 100%;
+}
+
+.close-btn:active {
+  transform: translateY(0);
 }
 </style>

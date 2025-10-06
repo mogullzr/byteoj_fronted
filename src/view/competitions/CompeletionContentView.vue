@@ -435,11 +435,11 @@ const shareCompetition = () => {
                   competition_info.user_status === 5) &&
                 competition_info.status === 0
               "
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
               @click="Join"
             >
               <svg
-                class="w-5 h-5 mr-2"
+                class="w-6 h-6 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -455,11 +455,11 @@ const shareCompetition = () => {
             </button>
             <button
               v-else-if="competition_info.user_status === 0"
-              class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center"
+              class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
               @click="cancelJoin"
             >
               <svg
-                class="w-5 h-5 mr-2"
+                class="w-6 h-6 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -480,11 +480,11 @@ const shareCompetition = () => {
                   competition_info.user_status === 5) &&
                 competition_info.status === 1
               "
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow transition duration-300 flex items-center justify-center"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
               @click="showModal"
             >
               <svg
-                class="w-5 h-5 mr-2"
+                class="w-6 h-6 mr-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
