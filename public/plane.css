@@ -1,0 +1,185 @@
+/*!* --------------------首页飞机操作样式-------------------- *!*/
+/*.planeOpt kbd {*/
+/*    margin: 0 3px;*/
+/*    padding: 3px 5px;*/
+/*    border: 1px solid #b4b4b4;*/
+/*    border-radius: 3px;*/
+/*    background-color: #f8f8f8;*/
+/*    -webkit-box-shadow: 0 1px 3px rgba(0, 0, 0, .25), 0 2px 1px 0 rgba(255, 255, 255, .6) inset;*/
+/*    box-shadow: 0 1px 3px rgba(0, 0, 0, .25), 0 2px 1px 0 rgba(255, 255, 255, .6) inset;*/
+/*    color: #34495e;*/
+/*    white-space: nowrap;*/
+/*    font-weight: 600;*/
+/*    font-size: .9em;*/
+/*    font-family: Monaco, 'Ubuntu Mono', monospace;*/
+/*    line-height: 1em;*/
+/*}*/
+
+/*.planeOpt button {*/
+/*    cursor: pointer;*/
+/*    font-family: inherit;*/
+/*    font-size: 12px;*/
+/*    background: #49b1f5;*/
+/*    color: white;*/
+/*    padding: 0.5em 1em;*/
+/*    display: flex;*/
+/*    align-items: center;*/
+/*    border: none;*/
+/*    border-radius: 8px;*/
+/*    overflow: hidden;*/
+/*    transition: all 0.2s;*/
+/*}*/
+
+/*.planeOpt button span {*/
+/*    display: block;*/
+/*    margin-left: 0.3em;*/
+/*    transition: all 0.3s ease-in-out;*/
+/*}*/
+
+/*.planeOpt button svg {*/
+/*    display: block;*/
+/*    transform-origin: center center;*/
+/*    transition: transform 0.3s ease-in-out;*/
+/*}*/
+
+/*.planeOpt button:hover .svg-wrapper {*/
+/*    animation: fly-1 0.6s ease-in-out infinite alternate;*/
+/*}*/
+
+/*.planeOpt button:hover svg {*/
+/*    transform: translateX(1.2em) rotate(45deg) scale(1.1);*/
+/*}*/
+
+/*.planeOpt button:hover span {*/
+/*    transform: translateX(5em);*/
+/*}*/
+
+/*.planeOpt button:active {*/
+/*    transform: scale(0.95);*/
+/*}*/
+
+/* 切换飞机按钮样式 */
+#ship-switcher-container {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    z-index: 10000000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: all;
+}
+
+/* 飞机按钮容器样式 */
+#ship-buttons-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: all;
+}
+
+/* 启动按钮样式 */
+.start-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #ff5733;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    z-index: 10000001;
+    position: relative;
+    pointer-events: auto;
+    margin-bottom: 20px;
+}
+
+.start-button:hover {
+    transform: scale(1.1);
+    background-color: rgba(255, 87, 51, 0.8);
+    border-color: #fff;
+    box-shadow: 0 0 15px rgba(255, 87, 51, 0.8);
+}
+
+.start-button .start-icon {
+    font-size: 20px;
+}
+
+.start-button .ship-tooltip {
+    right: 50px;
+}
+
+.ship-button {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    /* 确保按钮可以被点击 */
+    z-index: 10000001;
+    position: relative;
+    pointer-events: auto;
+}
+
+.ship-button:hover {
+    transform: scale(1.1);
+    background-color: rgba(60, 60, 60, 0.8);
+}
+
+.ship-button.active {
+    background-color: rgba(52, 152, 219, 0.8);
+    border-color: #3498db;
+    box-shadow: 0 0 10px #3498db;
+}
+
+/* 弹出提示 */
+.ship-tooltip {
+    position: absolute;
+    right: 50px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+}
+
+.ship-button:hover .ship-tooltip {
+    opacity: 1;
+}
+
+/* 飞船切换按钮图标 */
+.ship-icon {
+    font-size: 20px;
+}
+
+/* 键盘快捷键提示样式 */
+.shortcut-info {
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+}
