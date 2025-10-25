@@ -90,6 +90,19 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" stroke="#2AABD2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2m16 0h2m-7-1v2m-6-2v2"/></g></svg>
         </div>
       </button>
+      <button class="formatHover mr-6" @click="formatCode" title="格式化代码">
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="30"
+            height="30"
+            viewBox="0 0 24 24"
+        >
+          <path
+              fill="#999999"
+              d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m1 2v14h14V5zm2 2h3v2H7zm0 3h3v2H7zm0 3h3v2H7zm5-6h5v2h-5zm0 3h5v2h-5zm0 3h5v2h-5z"
+          />
+        </svg>
+      </button>
       <button class="exportRecordsHover mr-6" @click="exportRecords" title="导出代码编辑记录">
         <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -1041,6 +1054,39 @@ const clearContent = () => {
   saveOperation(record);
 };
 
+const formatCode = () => {
+  if (!content.value || content.value.trim() === '') {
+    alert('没有可格式化的代码！');
+    return;
+  }
+  
+  // 只对 C/C++ 代码进行格式化
+  if (current_language.value !== 'C' && current_language.value !== 'C++') {
+    alert('格式化功能目前仅支持 C/C++ 代码！');
+    return;
+  }
+  
+  try {
+    const formattedCode = normalizeIndentation(content.value);
+    content.value = formattedCode;
+    
+    // 保存格式化后的代码到 localStorage
+    localStorage.setItem(
+      problem_id.value +
+      "-" +
+      useStore.loginUser.uuid +
+      "-" +
+      current_language.value,
+      content.value
+    );
+    
+    console.log('代码格式化成功！');
+  } catch (error) {
+    console.error('格式化代码失败:', error);
+    alert('格式化代码失败，请检查代码语法！');
+  }
+};
+
 const transformEditor = () => {
   if (isShow.value == null || isShow.value == "0") {
     localStorage.setItem("EditorStatus", "1");
@@ -1126,6 +1172,76 @@ const triggerEnterEvent = (element: HTMLTextAreaElement) => {
   element.dispatchEvent(event);
 };
 
+const normalizeIndentation = (code:string) => {
+  let result = [];
+  let indentLevel = 0;
+  let lastWasInclude = false;
+  let i = 0;
+  let current = '';
+
+  function pushLine(line) {
+    let trimmed = line.trim();
+    if (trimmed && trimmed.startsWith('#include')) {
+      lastWasInclude = true;
+    } else {
+      if (lastWasInclude) {
+        result.push('');
+      }
+      lastWasInclude = false;
+    }
+    result.push(line);
+  }
+
+  while (i < code.length) {
+    let ch = code.charAt(i);
+    if (/\s/.test(ch)) {
+      if (ch === '\n') {
+        if (current.trim()) {
+          let appended = ' '.repeat(indentLevel * 4) + current.trim();
+          pushLine(appended);
+        }
+        current = '';
+        i++;
+        continue;
+      } else {
+        current += ' ';
+        i++;
+        continue;
+      }
+    }
+    // ch is non-space
+    current += ch;
+    if (ch === '{') {
+      let appended = ' '.repeat(indentLevel * 4) + current.trim();
+      pushLine(appended);
+      current = '';
+      indentLevel++;
+      i++;
+      continue;
+    }
+    if (ch === '}') {
+      indentLevel--;
+      let appended = ' '.repeat(indentLevel * 4) + current.trim();
+      pushLine(appended);
+      current = '';
+      i++;
+      continue;
+    }
+    if (ch === ';') {
+      let appended = ' '.repeat(indentLevel * 4) + current.trim();
+      pushLine(appended);
+      current = '';
+      i++;
+      continue;
+    }
+    i++;
+  }
+  if (current.trim()) {
+    let appended = ' '.repeat(indentLevel * 4) + current.trim();
+    pushLine(appended);
+  }
+  return result.join('\n');
+}
 onMounted(() => {
   const textarea1 = document.getElementById(
       "auto-expand-textarea_1"
@@ -1228,6 +1344,13 @@ const removeWindow = () => {
     fill: #2aabd2;
   }
 }
+
+.formatHover:hover {
+  path {
+    fill: #2aabd2;
+  }
+}
+
 .reverseEditorHover:hover {
   path {
     fill: #2aabd2;
