@@ -1175,6 +1175,8 @@ const triggerEnterEvent = (element: HTMLTextAreaElement) => {
 const normalizeIndentation = (code:string) => {
   let result = [];
   let indentLevel = 0;
+  let parenLevel = 0;
+  let inExpression = false;
   let lastWasInclude = false;
   let i = 0;
   let current = '';
@@ -1209,28 +1211,46 @@ const normalizeIndentation = (code:string) => {
         continue;
       }
     }
-    // ch is non-space
+    // non-space
     current += ch;
+    if (ch === '(') {
+      parenLevel++;
+    }
+    if (ch === ')') {
+      parenLevel--;
+    }
     if (ch === '{') {
-      let appended = ' '.repeat(indentLevel * 4) + current.trim();
-      pushLine(appended);
-      current = '';
-      indentLevel++;
+      let trimmed = current.trim();
+      if (trimmed.endsWith('={')) {
+        inExpression = true;
+      } else {
+        let appended = ' '.repeat(indentLevel * 4) + trimmed;
+        pushLine(appended);
+        current = '';
+        indentLevel++;
+      }
       i++;
       continue;
     }
     if (ch === '}') {
-      indentLevel--;
-      let appended = ' '.repeat(indentLevel * 4) + current.trim();
-      pushLine(appended);
-      current = '';
+      if (inExpression) {
+        inExpression = false;
+      } else {
+        indentLevel--;
+        let appended = ' '.repeat(indentLevel * 4) + current.trim();
+        pushLine(appended);
+        current = '';
+      }
       i++;
       continue;
     }
     if (ch === ';') {
-      let appended = ' '.repeat(indentLevel * 4) + current.trim();
-      pushLine(appended);
-      current = '';
+      if (parenLevel === 0) {
+        let appended = ' '.repeat(indentLevel * 4) + current.trim();
+        pushLine(appended);
+        current = '';
+      }
+      // else: keep ; in current for inner expressions
       i++;
       continue;
     }
