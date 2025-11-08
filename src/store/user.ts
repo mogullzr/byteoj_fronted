@@ -1201,7 +1201,7 @@ export const UserStore = defineStore("user", {
         },
       ],
     ],
-    languages_options: ["C", "C++", "Python3", "Java", "Go", "JavaScript"],
+    languages_options: ["C/C++", "Python3", "Java", "Go", "JavaScript"],
     auto_code: [
       {
         caption: "include - 常用头文件",

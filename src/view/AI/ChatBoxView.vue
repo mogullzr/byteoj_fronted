@@ -10,6 +10,7 @@
           @change="updateModel"
           class="model-select"
         >
+          <option value="deepseek-v3-tenCloud">DeepSeek V3.1(最新推出！！！)</option>
           <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
             DeepSeek Reasoner
           </option>
@@ -314,7 +315,7 @@ const problem_id: Ref<any> = ref(path.toString().split("/")[3]);
 
 const deepSeekRequest: Ref<DeepSeekRequest> = ref({
   messageList: [],
-  model: "deepseek-ai/DeepSeek-R1-Distill-Llama-70B", // 默认模型
+  model: "deepseek-v3-tenCloud", // 默认模型
   problem_id: problem_id.value,
   status: 0,
   code: "",
@@ -324,7 +325,7 @@ const currentChat: Ref<ChatMessage> = ref({
   content: "",
 } as ChatMessage);
 const chatHistory: Ref<ChatMessage[]> = ref([]);
-const selectedModel = ref("deepseek-ai/DeepSeek-R1-Distill-Llama-70B"); // 默认选中第一个模型
+const selectedModel = ref("deepseek-v3-tenCloud"); // 默认选中第一个模型
 const isLoading = ref(false); // 加载状态
 const chatOutput = ref<any>(); // 聊天输出容器的引用
 

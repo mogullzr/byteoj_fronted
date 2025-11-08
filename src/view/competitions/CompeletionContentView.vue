@@ -616,6 +616,87 @@ onUnmounted(() => {
           </div>
         </div>
 
+        <!-- 比赛规则卡片 -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+              <svg
+                class="w-5 h-5 mr-2 text-orange-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              比赛规则
+            </h3>
+            <span class="px-3 py-1 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+              ACM赛制
+            </span>
+          </div>
+
+          <div class="space-y-3">
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <span class="text-orange-700 font-bold text-sm">1</span>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  按<span class="font-semibold text-gray-900">通过题目数量</span>排名
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <span class="text-orange-700 font-bold text-sm">2</span>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  题目数相同时，<span class="font-semibold text-gray-900">罚时少</span>者排名靠前
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-start">
+              <div class="flex-shrink-0 w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <span class="text-orange-700 font-bold text-sm">!</span>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 leading-relaxed">
+                  每次<span class="font-semibold text-red-600">错误提交</span>将增加 <span class="font-semibold text-red-600">5分钟</span>罚时
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p class="text-xs text-blue-700 leading-relaxed">
+                罚时 = 通过时间 + 错误提交次数 × 5分钟
+              </p>
+            </div>
+          </div>
+        </div>
+
         <!-- 比赛说明摘要 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">比赛说明</h3>

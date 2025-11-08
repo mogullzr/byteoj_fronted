@@ -146,7 +146,7 @@
             代码编辑器设置
           </div>
           <div class="divider"></div>
-          
+
           <!-- Theme Settings -->
           <div class="flex mb-6">
             <div>
@@ -168,31 +168,31 @@
               </select>
             </div>
           </div>
-          
+
           <div class="divider"></div>
-          
+
           <!-- Code Recording Settings -->
           <div class="mb-6">
             <div class="font-bold mb-3">代码记录功能</div>
             <div class="text-gray-400 mb-4">
               自动记录你的每一次编辑操作，支持代码回放
             </div>
-            
+
             <div class="flex flex-wrap gap-3 mb-4">
-              <button 
+              <button
                 class="btn btn-sm bg-yellow-500 text-white hover:bg-yellow-600"
                 @click="clearRecords"
               >
                 清空记录
               </button>
-              <button 
+              <button
                 class="btn btn-sm bg-orange-500 text-white hover:bg-orange-600"
                 @click="openReplayPage"
               >
                 🎬 查看代码回放
               </button>
             </div>
-            
+
             <div class="text-sm text-gray-600 mb-2">
               📝 已记录操作数量: {{ codeRecords.length }}
             </div>
@@ -201,7 +201,7 @@
             </div>
 
           </div>
-          
+
           <div class="divider"></div>
           <div class="modal-action">
             <form method="dialog">
@@ -218,7 +218,7 @@
       @init="editorInit"
       v-model:value="content"
       :lang="
-      current_language == 'C' || current_language == 'C++'
+      current_language == 'C' || current_language == 'C/C++'
         ? 'c_cpp'
         : current_language == 'Python3'
         ? 'python'
@@ -259,25 +259,35 @@
         style="background-color: #f5f5f5"
     >
       <div>代码运行状态：</div>
-      <div class="text-2xl text-sky-600" v-if="isLoading">
+      <!-- Pending 状态：浅灰色 + loading spinner -->
+      <div class="text-2xl" v-if="code_status == 'pending' || code_status == 'Pending'">
+        <span class="text-gray-400">Pending</span>
+        <span class="loading loading-spinner ml-3 text-gray-500"></span>
+      </div>
+      <!-- Running 状态：蓝色 + loading spinner -->
+      <div class="text-2xl text-sky-600" v-else-if="isLoading || code_status == 'running' || code_status == 'Running'">
         <span class="">Running</span>
         <span class="loading loading-spinner ml-3"></span>
       </div>
+      <!-- Accepted/Finished 状态：绿色 -->
       <span
           class="text-2xl ml-2"
           v-else-if="code_status == 'Accepted' || code_status == 'Finished'"
           style="color: #449d44"
       >{{ code_status }}</span
       >
+      <!-- 其他错误状态：红色 -->
       <span
           class="text-2xl text-red-500"
           v-else-if="code_status != 'Nonzero Exit Status'"
       >{{ code_status }}</span
       >
+      <!-- 编译错误：红色 -->
       <span class="text-2xl text-red-500" v-else>Compile Error</span>
     </div>
     <div class="collapse-content">
-      <div class="m-5" v-show="!isLoading">
+      <!-- Pending、Loading 或 Running 状态时不显示输出内容 -->
+      <div class="m-5" v-show="!isLoading && code_status != 'pending' && code_status != 'Pending' && code_status != 'Running' && code_status != 'running'">
         <span class="text-gray-700">输入</span>
         <textarea
             id="auto-expand-textarea_1"
@@ -324,7 +334,7 @@ import { ProblemAlgorithmControllerService } from "../../../../generated";
 import ace from "ace-builds";
 import ChatBoxView from "@/view/AI/ChatBoxView.vue";
 import DraggableWindowView from "@/components/Card/DraggableWindowView.vue";
-
+import {} from '@/plugins/CodeSubmit.js'
 const props = defineProps<{
   status: number
 }>();
@@ -370,7 +380,7 @@ const problem_id = ref(
 const languages_options = useStore.languages_options;
 const themes_options = useStore.themes_options;
 const languages_content = useStore.languages_content;
-const current_language = ref(localStorage.getItem("current_language") == null ? languages_options[1] : localStorage.getItem("current_language"));
+const current_language = ref(localStorage.getItem("current_language") == null ? languages_options[0] : localStorage.getItem("current_language"));
 const current_theme: Ref<any> = ref(
     localStorage.getItem("theme-" + useStore.loginUser.uuid) == null
         ? themes_options[0] ?? "github"
@@ -429,7 +439,7 @@ const BATCH_THRESHOLD = 50; // If multiple characters inserted within 50ms, trea
 interface ProblemRecord {
   type: number;          // 操作类型
   old_row: number | null; // 旧行
-  old_col: number | null; // 旧列  
+  old_col: number | null; // 旧列
   new_row: number | null; // 新行
   new_col: number | null; // 新列
   content: string | null; // 内容
@@ -443,7 +453,7 @@ const saveOperation = async (record: ProblemRecord) => {
     const requestData = {
       type: record.type,
       old_row: record.old_row,
-      old_col: record.old_col, 
+      old_col: record.old_col,
       new_row: record.new_row,
       new_col: record.new_col,
       content: record.content,
@@ -451,16 +461,16 @@ const saveOperation = async (record: ProblemRecord) => {
     };
 
     console.log('Saving record to backend:', requestData);
-    
+
     // TODO: Uncomment when backend API is ready
     // const response = await ProblemAlgorithmControllerService.saveProblemRecordUsingPost(requestData);
     // if (response.code !== 0) {
     //   console.error("Failed to save operation:", response.message);
     // }
-    
+
     // Also add to local array for Byteoj format export
     addToLocalRecords(record);
-    
+
   } catch (error) {
     console.error("Error saving operation:", error);
   }
@@ -470,7 +480,7 @@ const saveOperation = async (record: ProblemRecord) => {
 const addToLocalRecords = (record: ProblemRecord) => {
   // Convert to Byteoj format for local storage
   let ByteojRecord: any[];
-  
+
   if (record.type === OperationType.INSERT) {
     // [0, row, col, character, timestamp]
     ByteojRecord = [
@@ -510,15 +520,15 @@ const addToLocalRecords = (record: ProblemRecord) => {
       record.timestamp
     ];
   }
-  
+
   codeRecords.value.push(ByteojRecord);
-  
+
   // Debug logging
   const DEBUG_RECORDING = true;
   if (DEBUG_RECORDING) {
     console.log('✅ New record added:', ByteojRecord);
     console.log('📊 Total records:', codeRecords.value.length);
-    
+
     // 特别调试批量插入操作
     if (record.type === OperationType.BATCH_INSERT) {
       console.log('🔍 BATCH_INSERT record details:', {
@@ -528,7 +538,7 @@ const addToLocalRecords = (record: ProblemRecord) => {
         contentPreview: (record.content || '').substring(0, 100) + '...'
       });
     }
-    
+
     if (codeRecords.value.length === 1) {
       console.log('🎯 代码记录已开始！');
     }
@@ -557,7 +567,7 @@ const exportRecords = async () => {
     }
 
     const recordsString = getRecordsString();
-    
+
     // Try to use the modern Clipboard API
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(recordsString);
@@ -572,7 +582,7 @@ const exportRecords = async () => {
       document.body.appendChild(textArea);
       textArea.focus();
       textArea.select();
-      
+
       try {
         document.execCommand('copy');
         textArea.remove();
@@ -584,9 +594,9 @@ const exportRecords = async () => {
         prompt('无法自动复制，请手动复制以下内容:', recordsString);
       }
     }
-    
+
     console.log(`已导出 ${codeRecords.value.length} 条记录`);
-    
+
   } catch (error) {
     console.error('导出记录失败:', error);
     alert('导出记录失败，请重试。');
@@ -606,11 +616,11 @@ const openReplayPage = () => {
     const recordsData = JSON.stringify(codeRecords.value);
     localStorage.setItem('codeReplayData', recordsData);
     console.log(`已保存 ${codeRecords.value.length} 条记录到回放页面`);
-    
+
     // Open in new tab/window
     const url = router.resolve({ path: '/code-replay' }).href;
     window.open(url, '_blank');
-    
+
     // Optional: Show success message
     // alert(`已自动导入 ${codeRecords.value.length} 条记录到回放页面！`);
   } catch (error) {
@@ -666,12 +676,12 @@ const editorInit = () => {
   // Record changes (insertions/deletions) - Optimized for batch operations
   editor.session.on("change", (delta: any) => {
     const timestamp = Date.now() - startTimestamp.value;
-    
+
     if (delta.action === "insert") {
       const text = delta.lines.join("\n");
       const startRow = delta.start.row;
       const startCol = delta.start.column;
-      
+
       // Debug logging for content detection
       console.log('Change event - Insert detected:', {
         delta: delta,
@@ -684,12 +694,12 @@ const editorInit = () => {
         timestamp: timestamp,
         lastInsertTime: lastInsertTime
       });
-      
+
       // Detect if this is a batch operation
-      const isBatchOperation = text.length > 1 || 
+      const isBatchOperation = text.length > 1 ||
                               (timestamp - lastInsertTime < BATCH_THRESHOLD && lastInsertTime > 0) ||
                               isInPasteMode;
-      
+
       console.log('Batch operation detection:', {
         isBatchOperation: isBatchOperation,
         textLength: text.length,
@@ -697,17 +707,17 @@ const editorInit = () => {
         isInPasteMode: isInPasteMode,
         threshold: BATCH_THRESHOLD
       });
-      
+
       if (isBatchOperation) {
         // This is a batch operation (paste, autocomplete, etc.)
         console.log('🟠 Recording as BATCH_INSERT:', text.substring(0, 50) + (text.length > 50 ? '...' : ''));
-        
+
         // Check if this is a rapid repeat - if so, ignore it
         if (isInPasteMode && timestamp - lastInsertTime < 10) {
           console.log('⚠️ Ignoring rapid duplicate paste event (within 10ms)');
           return;
         }
-        
+
         const record: ProblemRecord = {
           type: OperationType.BATCH_INSERT,
           old_row: null,
@@ -718,7 +728,7 @@ const editorInit = () => {
           timestamp: timestamp
         };
         saveOperation(record);
-        
+
         // Immediately reset paste mode to prevent duplicates
         if (isInPasteMode) {
           isInPasteMode = false;
@@ -738,7 +748,7 @@ const editorInit = () => {
         };
         saveOperation(record);
       }
-      
+
       lastInsertTime = timestamp;
     } else if (delta.action === "remove") {
       // Handle character deletion
@@ -777,7 +787,7 @@ const editorInit = () => {
   editor.selection.on("changeCursor", () => {
     const currentPosition = editor.getCursorPosition();
     const timestamp = Date.now() - startTimestamp.value;
-    
+
     debouncedCursorMove(previousCursorPosition, currentPosition, timestamp);
     previousCursorPosition = { row: currentPosition.row, column: currentPosition.column };
   });
@@ -785,13 +795,13 @@ const editorInit = () => {
   // Record paste operations
   editor.on("paste", (e: any) => {
     console.log('📋 Paste event triggered:', e);
-    
+
     // Set paste mode flag to help change detection identify batch operations
     isInPasteMode = true;
     console.log('🚩 Set isInPasteMode to true');
-    
+
     // Note: We don't record the PASTE operation here anymore because:
-    // 1. The actual content will be captured by the change event 
+    // 1. The actual content will be captured by the change event
     // 2. The change event will mark it as BATCH_INSERT due to isInPasteMode
     // 3. isInPasteMode will be reset immediately in the change event to prevent duplicates
   });
@@ -800,7 +810,7 @@ const editorInit = () => {
   editor.commands.on("afterExec", (e: any) => {
     const timestamp = Date.now() - startTimestamp.value;
     const position = editor.getCursorPosition();
-    
+
     if (e.command.name === "undo") {
       const record: ProblemRecord = {
         type: OperationType.UNDO,
@@ -857,9 +867,10 @@ const judgeTest = async () => {
 
   code_message.value = "";
   code_time.value = 0;
+  correctOutput.value = undefined; // 清除标准答案，避免误导学生
 
   let temp_language = "";
-  if (current_language.value == "C++") {
+  if (current_language.value == "C/C++") {
     temp_language = "cpp";
   } else if (current_language.value == "C") {
     temp_language = "c";
@@ -916,20 +927,184 @@ const judgeTest = async () => {
     }
   }
 };
+// ============================================
+// 你的前端代码 - 优化版本
+// 主要改动：复用 WebSocket 连接，支持快速连续提交
+// ============================================
+
+import { Client } from '@stomp/stompjs';  // 使用 Client 类（新 API）
+import SockJS from 'sockjs-client';
+import { useRoute } from "vue-router";
+import { onUnmounted } from 'vue';  // 添加 ref 和 onUnmounted
+
+// ============================================
+// WebSocket 全局状态（改为 ref）
+// ============================================
+const route = useRoute();
+
+const stompClient = ref(null);           // WS 客户端
+const isConnected = ref(false);          // 连接状态
+const subscriptions = ref(new Map());    // 存储所有订阅
+
+// ============================================
+// WebSocket 连接管理（新增）
+// ============================================
+
+/**
+ * 初始化 WebSocket 连接（全局只连接一次）
+ */
+const initWebSocketConnection = () => {
+  // 如果已经连接，直接返回
+  if (isConnected.value && stompClient.value) {
+    console.log('[WebSocket] 已连接，复用现有连接');
+    return Promise.resolve();
+  }
+
+  // 如果正在连接中，等待连接完成
+  if (stompClient.value && !isConnected.value) {
+    return new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (isConnected.value) {
+          clearInterval(checkInterval);
+          resolve();
+        }
+      }, 100);
+    });
+  }
+
+  console.log('[WebSocket] 开始建立连接...');
+
+  return new Promise((resolve, reject) => {
+    try {
+      // 动态获取 WebSocket URL（根据当前协议和域名）
+      const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      const host = window.location.hostname;
+      const port = process.env.NODE_ENV === 'production' ? '' : ':7091';
+      const wsUrl = `${protocol}//${host}${port}/api/ws/judge`;
+      
+      console.log('[WebSocket] 连接地址:', wsUrl);
+
+      const client = new Client({
+        // WebSocket 工厂
+        webSocketFactory: () => new SockJS(wsUrl),
+
+        // 心跳配置
+        heartbeatIncoming: 20000,
+        heartbeatOutgoing: 20000,
+
+        // 自动重连
+        reconnectDelay: 3000,
+
+        // 调试日志（生产环境可关闭）
+        debug: (str) => {
+          // console.log('[STOMP]', str);
+        },
+
+        // 连接成功
+        onConnect: (frame) => {
+          console.log('[WebSocket] ✅ 连接成功');
+          isConnected.value = true;
+          resolve();
+        },
+
+        // STOMP 错误
+        onStompError: (frame) => {
+          console.error('[WebSocket] ❌ STOMP 错误:', frame);
+          isConnected.value = false;
+          reject(new Error('STOMP 连接失败'));
+        },
+
+        // WebSocket 错误
+        onWebSocketError: (event) => {
+          console.error('[WebSocket] ❌ 连接错误:', event);
+          isConnected.value = false;
+          reject(new Error('WebSocket 连接失败'));
+        },
+
+        // 断开连接
+        onDisconnect: () => {
+          console.warn('[WebSocket] ⚠️ 连接已断开');
+          isConnected.value = false;
+          subscriptions.value.clear();
+        }
+      });
+
+      // 激活连接
+      client.activate();
+      stompClient.value = client;
+
+    } catch (error) {
+      console.error('[WebSocket] ❌ 初始化失败:', error);
+      reject(error);
+    }
+  });
+};
+
+/**
+ * 订阅判题结果（新增）
+ */
+const subscribeJudgeResult = async (taskId, onMessage) => {
+  try {
+    // 确保 WebSocket 已连接
+    await initWebSocketConnection();
+
+    // 避免重复订阅
+    if (subscriptions.value.has(taskId)) {
+      console.warn(`[WebSocket] 任务 ${taskId} 已订阅`);
+      return;
+    }
+
+    console.log(`[WebSocket] 📡 订阅任务: ${taskId}`);
+
+    // 订阅 topic
+    const subscription = stompClient.value.subscribe(
+        `/topic/judge/${taskId}`,
+        (message) => {
+          const result = JSON.parse(message.body);
+          console.log('[WebSocket] 📥 收到消息:', result);
+
+          // 调用回调函数
+          onMessage(result);
+        }
+    );
+
+    // 保存订阅
+    subscriptions.value.set(taskId, subscription);
+
+  } catch (error) {
+    console.error('[WebSocket] ❌ 订阅失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 取消订阅（新增）
+ */
+const unsubscribeJudgeResult = (taskId) => {
+  const subscription = subscriptions.value.get(taskId);
+  if (subscription) {
+    subscription.unsubscribe();
+    subscriptions.value.delete(taskId);
+    console.log(`[WebSocket] 🚫 取消订阅: ${taskId}`);
+  }
+};
+
+// ============================================
+// 你原有的 submitJudge 函数（优化版）
+// ============================================
 
 const submitJudge = async () => {
-  let competition_id = ref(parseInt(path.toString().split("/")[2]));
-  let problem_index = path.toString().split("/")[4] ?? "";
+  const competition_id = parseInt(route.path.split("/")[2]);
+  const problem_index = route.path.split("/")[4] ?? "";
 
   isShow_1.value = true;
   isShow_2.value = true;
-
   input.value = "";
   code_message.value = "";
-  code_time.value = 0;
 
+  // 语言映射
   let temp_language = "";
-  if (current_language.value == "C++") {
+  if (current_language.value == "C/C++") {
     temp_language = "cpp";
   } else if (current_language.value == "C") {
     temp_language = "c";
@@ -938,64 +1113,150 @@ const submitJudge = async () => {
   } else if (current_language.value == "Java") {
     temp_language = "java";
   }
+
   isLoading.value = true;
-  if (problem_index == "") {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-            {
-              problem_id: problem_id.value,
-              language: temp_language,
-              source_code: content.value,
-            }
-        );
-    if (res.code === 0) {
-      code_status.value = res.data.status;
-      if (code_status.value == "Wrong Answer") {
-        input.value = res.data.input;
-        code_message.value = res.data.output;
-        correctOutput.value = res.data.correctOutput;
-      } else if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data.fileId;
-      } else if (code_status.value == "Accepted") {
-        audioClick.value.volume = 1;
-        audioClick.value?.play();
-      }
-      isLoading.value = false;
-      await modify();
 
-      isShow_1.value = false;
-      isShow_2.value = false;
-    }
-  } else {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-            {
-              competition_id: competition_id.value,
-              index: problem_index,
-              language: temp_language,
-              source_code: content.value,
-            }
-        );
-    if (res.code === 0) {
-      code_status.value = res.data.status;
-      if (code_status.value == "Wrong Answer") {
-        input.value = res.data.input;
-        code_message.value = res.data.output;
-        correctOutput.value = res.data.correctOutput;
-      } else if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data.fileId;
-      } else if (code_status.value == "Accepted") {
-        audioClick.value.volume = 1;
-        audioClick.value?.play();
-      }
-      isLoading.value = false;
-      await modify();
+  try {
+    let res;
 
-      isShow_1.value = false;
-      isShow_2.value = false;
+    // 提交代码
+    if (problem_index == "") {
+      res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost({
+        problem_id: problem_id.value,
+        language: temp_language,
+        source_code: content.value,
+      });
+    } else {
+      res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost({
+        competition_id: competition_id,
+        index: problem_index,
+        language: temp_language,
+        source_code: content.value,
+      });
     }
+
+    // 检查提交结果
+    if (res.code !== 0) {
+      code_message.value = res.message || "提交失败";
+      isLoading.value = false;
+      return;
+    }
+
+    // 获取 taskId
+    const taskId = res.data.taskId;
+    code_status.value = res.data.status || "Pending";
+    code_message.value = "提交成功，等待判题中...";
+
+    console.log('[提交] ✅ 任务ID:', taskId);
+
+    // ✅ 关键改动：订阅判题结果（复用连接）
+    await subscribeJudgeResult(taskId, (result) => {
+      handleJudgeResult(taskId, result);
+    });
+
+  } catch (error) {
+    console.error('[提交] ❌ 出错:', error);
+    code_message.value = "提交失败: " + (error.message || '未知错误');
+  } finally {
+    isLoading.value = false;
   }
 };
+
+// ============================================
+// 处理判题结果（整合你原有的逻辑）
+// ============================================
+
+const handleJudgeResult = (taskId, result) => {
+  console.log('[判题结果]', result);
+
+  // 更新状态
+  code_status.value = result.status;
+
+  // 根据不同状态处理（保留你原有的逻辑）
+  if (result.status === "Pending") {
+    code_message.value = "任务排队中...";
+  }
+  else if (result.status === "Running" || result.status === "running") {
+    code_message.value = "";  // 不显示输出内容
+  }
+  else if (result.status === "Retrying") {
+    code_message.value = result.message || "判题失败，正在重试...";
+  }
+  else if (result.status === "Wrong Answer") {
+    input.value = result.input || "";
+    code_message.value = result.message || result.output || "";
+    correctOutput.value = result.correctOutput || "";
+
+    // 判题完成
+    finishJudge(taskId);
+  }
+  else if (result.status === "Nonzero Exit Status") {
+    code_message.value = result.message || result.fileId || "";
+
+    finishJudge(taskId);
+  }
+  else if (result.status === "Accepted" || result.status === "Success") {
+    // 播放成功音效
+    audioClick.value.volume = 1;
+    audioClick.value?.play();
+    code_message.value = "";  // 不显示输出内容
+
+    finishJudge(taskId);
+  }
+  else if (result.status === "Failed" || result.status === "failed") {
+    code_message.value = result.message || "判题失败";
+
+    finishJudge(taskId);
+  }
+  else {
+    // 其他状态
+    code_message.value = result.message || `状态: ${result.status}`;
+  }
+};
+
+// ============================================
+// 判题完成后的处理
+// ============================================
+
+const finishJudge = (taskId) => {
+  // 调用原有的 modify 函数
+  modify();
+
+  // 隐藏 UI
+  isShow_1.value = false;
+  isShow_2.value = false;
+
+  // 取消订阅（释放资源）
+  setTimeout(() => {
+    unsubscribeJudgeResult(taskId);
+  }, 1000);
+};
+
+// ============================================
+// 组件生命周期
+// ============================================
+
+// 组件卸载时断开连接
+onUnmounted(() => {
+  console.log('[组件] 卸载，清理 WebSocket');
+
+  // 取消所有订阅
+  subscriptions.value.forEach((sub) => {
+    sub.unsubscribe();
+  });
+  subscriptions.value.clear();
+
+  // 断开连接
+  if (stompClient.value && isConnected.value) {
+    stompClient.value.deactivate();
+    isConnected.value = false;
+  }
+});
+
+// ============================================
+// 导出（如果需要在其他地方使用）
+// ============================================
+
 
 const getCurrentSelected = (keyId: string) => {
   let selectDiv: any = document.getElementById(keyId);
@@ -1059,17 +1320,17 @@ const formatCode = () => {
     alert('没有可格式化的代码！');
     return;
   }
-  
+
   // 只对 C/C++ 代码进行格式化
   if (current_language.value !== 'C' && current_language.value !== 'C++') {
     alert('格式化功能目前仅支持 C/C++ 代码！');
     return;
   }
-  
+
   try {
     const formattedCode = normalizeIndentation(content.value);
     content.value = formattedCode;
-    
+
     // 保存格式化后的代码到 localStorage
     localStorage.setItem(
       problem_id.value +
@@ -1079,7 +1340,7 @@ const formatCode = () => {
       current_language.value,
       content.value
     );
-    
+
     console.log('代码格式化成功！');
   } catch (error) {
     console.error('格式化代码失败:', error);
