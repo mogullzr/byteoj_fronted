@@ -125,10 +125,10 @@ const secondsToHMS = (seconds:number) => {
           >
             <td class="rank sticky-col sticky-rank">
               <span v-if="isTopThree(index)" class="medal">
-                {{ (currentPage - 1) * 20 + index + 1 }}
+                {{ (currentPage - 1) * 15 + index + 1 }}
               </span>
               <span v-else>
-                {{ (currentPage - 1) * 20 + index + 1 }}
+                {{ (currentPage - 1) * 15 + index + 1 }}
               </span>
             </td>
             <td class="user sticky-col sticky-user">
@@ -185,10 +185,10 @@ const secondsToHMS = (seconds:number) => {
           >
             <td class="rank sticky-col sticky-rank">
               <span v-if="isTopThree(index)" class="medal">
-                {{ (currentPage - 1) * 20 + index + 1 }}
+                {{ (currentPage - 1) * 15 + index + 1 }}
               </span>
               <span v-else>
-                {{ (currentPage - 1) * 20 + index + 1 }}
+                {{ (currentPage - 1) * 15 + index + 1 }}
               </span>
             </td>
             <td class="user sticky-col sticky-user">

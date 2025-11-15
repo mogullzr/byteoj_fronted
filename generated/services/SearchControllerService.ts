@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { BaseResponse_List_AutoCompeteVo_ } from '../models/BaseResponse_List_AutoCompeteVo_';
 import type { BaseResponse_SearchVo_ } from '../models/BaseResponse_SearchVo_';
 import type { SearchRequest } from '../models/SearchRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -22,6 +23,31 @@ export class SearchControllerService {
             method: 'POST',
             url: '/api/search/all/vo',
             body: searchRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * SearchAutoComplete
+     * @param keyword keyword
+     * @param limit limit
+     * @returns BaseResponse_List_AutoCompeteVo_ OK
+     * @throws ApiError
+     */
+    public static searchAutoCompleteUsingGet(
+        keyword: string,
+        limit: number,
+    ): CancelablePromise<BaseResponse_List_AutoCompeteVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/search/autoComplete',
+            query: {
+                'keyword': keyword,
+                'limit': limit,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

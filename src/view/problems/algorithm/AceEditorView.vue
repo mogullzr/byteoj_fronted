@@ -82,7 +82,7 @@
           />
         </svg>
       </button>
-      <button class="bothover mr-6" @click="showBot('ByteOJ AI 问答')">
+      <button class="bothover mr-6" @click="showBot('ByteOJ AI 问答')" v-if="isBotShow">
         <div v-if="!isBot">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" stroke="#666666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2m16 0h2m-7-1v2m-6-2v2"/></g></svg>
         </div>
@@ -339,11 +339,13 @@ const props = defineProps<{
   status: number
 }>();
 
+const path = router.currentRoute.value.fullPath;
 const audioClick: Ref<any> = ref(null);
 const useStore = UserStore();
 const isShow: Ref<string | null> = ref(localStorage.getItem("EditorStatus"));
 const flag: Ref<boolean> = ref(localStorage.getItem("ControlBlock") != null);
 const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == 'true');
+const isBotShow: Ref<boolean> = ref(path.toString().split("/")[2] != "competition");
 const font_size: Ref<any> = ref(
     localStorage.getItem("fontSize") == null
         ? 18
@@ -368,7 +370,6 @@ const options: any = ref({
   fontSize: font_size.value,
 });
 
-const path = router.currentRoute.value.fullPath;
 const problem_id = ref(
     path.toString().split("/")[1] == "competition"
         ? parseInt(path.toString().split("/")[2]) +
@@ -1203,14 +1204,41 @@ const handleJudgeResult = (taskId, result) => {
 
     finishJudge(taskId);
   }
+  else if (result.status === "Time Limit Exceeded") {
+    input.value = result.input || "";
+    code_message.value = result.message || result.output || "";
+    correctOutput.value = result.correctOutput || "";
+
+    finishJudge(taskId);
+  }
+  else if (result.status === "Memory Limit Exceeded") {
+    input.value = result.input || "";
+    code_message.value = result.message || result.output || "";
+    correctOutput.value = result.correctOutput || "";
+
+    finishJudge(taskId);
+  }
+  else if (result.status === "Runtime Error") {
+    input.value = result.input || "";
+    code_message.value = result.message || result.output || result.fileId || "";
+
+    finishJudge(taskId);
+  }
+  else if (result.status === "Compile Error") {
+    code_message.value = result.message || result.fileId || "";
+
+    finishJudge(taskId);
+  }
   else if (result.status === "Failed" || result.status === "failed") {
     code_message.value = result.message || "判题失败";
 
     finishJudge(taskId);
   }
   else {
-    // 其他状态
-    code_message.value = result.message || `状态: ${result.status}`;
+    // 其他未知状态，也需要完成判题
+    code_message.value = result.message || result.output || "";
+    
+    finishJudge(taskId);
   }
 };
 

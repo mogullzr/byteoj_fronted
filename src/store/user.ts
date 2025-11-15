@@ -1894,16 +1894,7 @@ export const UserStore = defineStore("user", {
     ],
     themes_options: ["textmate", "eclipse", "twilight", "monokai"],
     languages_content: [
-      "#include <stdio.h>\n" +
-        "\n" +
-        "int main()\n" +
-        "{\n" +
-        "    int a, b;\n" +
-        '    scanf("%d %d",&a,&b);\n' +
-        '    printf("%d", a + b);\n' +
-        "    \n" +
-        "    return 0;\n" +
-        "}",
+      // 678
       "#include <iostream>\n" +
         "#include <algorithm>\n" +
         "#include <cstring>\n" +

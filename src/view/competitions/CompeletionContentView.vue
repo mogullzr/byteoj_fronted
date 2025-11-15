@@ -23,6 +23,7 @@ const router = useRouter();
 const path = router.currentRoute.value.fullPath;
 
 const competition_id = ref(parseInt(path.toString().split("/")[2]));
+//
 const password = ref();
 const message = ref("");
 const status = ref();
@@ -34,7 +35,8 @@ let day: Ref<any> = ref(0);
 let hour: Ref<any> = ref(0);
 let min: Ref<any> = ref(0);
 let seconds: Ref<any> = ref(0);
-
+// 临时决策
+const submitted : Ref<boolean> = ref(false);
 const local: any =
   localStorage.getItem("competition-" + competition_id.value + "-status") !=
   undefined
@@ -177,8 +179,15 @@ onMounted(async () => {
         initRemainingTime(timer.value, 1);
       }
     }
+    submitted.value = new Date(competition_info.value.start_time) <= new Date();
   }
 });
+
+// 临时决策
+const handleSubmit = () => {
+  localStorage.setItem(`system-setting-${competition_id.value}`, '1');
+  router.push('/competition');
+};
 
 const onShowDialog = () => {
   showDialog.value = true;
@@ -524,6 +533,17 @@ onUnmounted(() => {
                 />
               </svg>
               报名参赛
+            </button>
+            <button v-if="submitted && !((competition_info.user_status === 1 ||
+                  competition_info.user_status === 2 ||
+                  competition_info.user_status === 5) &&
+                competition_info.status === 1)"
+                    @click="handleSubmit"
+                    class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]">
+              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              提交结束比赛
             </button>
           </div>
         </div>
