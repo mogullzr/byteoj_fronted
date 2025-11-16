@@ -1916,7 +1916,17 @@ export const UserStore = defineStore("user", {
       "if __name__ == \"__main__\":\n" +
       "    a, b = input().split()\n" +
       "    print(int(a) + int(b))",
-      "",
+      "import java.io.*;\n" +
+      "import java.util.*;\n" +
+      "\n" +
+      "public class Main {\n" +
+      "    public static void main(String args[]) throws Exception {\n" +
+      "        Scanner cin=new Scanner(System.in);\n" +
+      "        var a = cin.nextInt();\n" +
+      "        var b = cin.nextInt();\n" +
+      "        System.out.println(a + b);\n" +
+      "    }\n" +
+      "}",
       "Go",
       "JavaScript",
     ],

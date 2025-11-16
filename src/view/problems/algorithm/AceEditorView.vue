@@ -397,7 +397,7 @@ const content: Ref<any> = ref(
         "-" +
         current_language.value
     ) == null
-        ? languages_content[1]
+        ? languages_content[0]
         : localStorage.getItem(
             problem_id.value +
             "-" +
@@ -1350,7 +1350,7 @@ const formatCode = () => {
   }
 
   // 只对 C/C++ 代码进行格式化
-  if (current_language.value !== 'C' && current_language.value !== 'C++') {
+  if (current_language.value !== 'C' && current_language.value !== 'C++' && current_language.value !== 'C/C++') {
     alert('格式化功能目前仅支持 C/C++ 代码！');
     return;
   }
