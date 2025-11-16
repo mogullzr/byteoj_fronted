@@ -326,7 +326,7 @@ onUnmounted(() => {
 
       <!-- Search and User Actions (Visible on Desktop Only) -->
       <div class="hidden lg:flex flex-none items-center space-x-2">
-        <div class="relative search-container">
+        <div class="relative">
           <div class="form-control">
             <input
                 v-model="searchRequest.keyword"

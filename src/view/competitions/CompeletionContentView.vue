@@ -14,7 +14,7 @@ import { Startup } from "mathjax-full/js/components/startup";
 import elements = Startup.elements;
 import CompetitionContentControlView from "@/view/competitions/CompetitionContentComponent/CompetitionContentControlView.vue";
 import {useMessageBox} from "@/view/components/alert/useMessageBox";
-
+import {userMessage} from "@/view/components/alert/userMessage.js";
 const { success, error, warning } = useMessageBox();
 
 const dayjs = require("dayjs");
@@ -185,8 +185,19 @@ onMounted(async () => {
 
 // 临时决策
 const handleSubmit = () => {
-  localStorage.setItem(`system-setting-${competition_id.value}`, '1');
-  router.push('/competition');
+  userMessage({
+    title: '提交离开比赛',
+    content: '确认之后你将无法再进入该页面，你确定？',
+    confirmText: '确认',
+    onConfirm: () => {
+      localStorage.setItem(`system-setting-${competition_id.value}`, '1');
+      router.push('/competition');
+    },
+    onCancel: () => {
+      console.log('取消删除');
+    }
+  });
+
 };
 
 const onShowDialog = () => {
@@ -543,7 +554,7 @@ onUnmounted(() => {
               <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
-              提交结束比赛
+              提交离开比赛
             </button>
           </div>
         </div>

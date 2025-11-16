@@ -283,14 +283,12 @@ export class PostsControllerService {
      */
     public static postSearchByPageUsingPost(
         pageNum?: number,
-        uuid?: number,
     ): CancelablePromise<BaseResponse_List_PostsVo_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/posts/search/page',
             query: {
                 'pageNum': pageNum,
-                'uuid': uuid,
             },
             errors: {
                 401: `Unauthorized`,

@@ -16,6 +16,7 @@ import * as echarts from "echarts";
 import router from "@/router";
 import {useMessageBox} from "@/view/components/alert/useMessageBox";
 import CardRatingCharts from "@/view/competitions/CardRatingCharts.vue"
+import PostOwnCenter from "@/view/posts/PostOwnCenter.vue";
 // 用户标签
 
 const { success, error, warning } = useMessageBox();
@@ -648,6 +649,27 @@ const LoadAvatar = async (event: any) => {
           v-if="activeCategory === 'competition'"
       >
         <CardRatingCharts />
+      </div>
+
+      <input
+          type="radio"
+          name="my_tabs_3"
+          role="tab"
+          :class="
+          'tab font-bold' +
+          (activeCategory === 'post' ? ' text-black' : ' text-white')
+        "
+          aria-label="帖子"
+          style="font-size: 18px; white-space: nowrap"
+          @click="changeShow('post')"
+          :checked="activeCategory === 'post'"
+      />
+      <div
+          role="tabpanel"
+          class="tab-content bg-base-100 border-base-300 rounded-box"
+          v-if="activeCategory === 'post'"
+      >
+        <PostOwnCenter />
       </div>
     </div>
   </div>
