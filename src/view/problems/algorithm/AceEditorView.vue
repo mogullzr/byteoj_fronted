@@ -879,6 +879,10 @@ const judgeTest = async () => {
     temp_language = "python";
   } else if (current_language.value == "Java") {
     temp_language = "java";
+  } else if (current_language.value == "Go") {
+    temp_language = "go";
+  } else if (current_language.value == "JavaScript"){
+    temp_language = "javascript";
   }
   isLoading.value = true;
   if (problem_index == "") {
@@ -1113,6 +1117,10 @@ const submitJudge = async () => {
     temp_language = "python";
   } else if (current_language.value == "Java") {
     temp_language = "java";
+  } else if (current_language.value == "Go") {
+    temp_language = "go";
+  } else if (current_language.value == "JavaScript"){
+    temp_language = "javascript";
   }
 
   isLoading.value = true;

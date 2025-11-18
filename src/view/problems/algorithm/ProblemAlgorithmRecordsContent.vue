@@ -387,20 +387,59 @@ const goBack = () => {
       </div>
     </div>
   </div>
-  <div v-else class="card card-side bg-base-100 shadow-xl">
-    <figure style="width: 400px">
-      <img
-          src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/879a61e96ab7414f909ff14f1f6bf93a.jpeg"
-          alt="ByteOJ出品"
-      />
-    </figure>
-    <div class="card-body">
-      <h2 class="card-title">对不起，你没有权限访问这条记录</h2>
-      <p>请点击返回{{ competition_id == -1 ? "主页面" : "竞赛主页面" }}吧</p>
-      <div class="card-actions justify-end">
-        <button class="btn btn-primary text-white" @click="goBack">
-          返回{{ competition_id == -1 ? "主页面" : "竞赛主页面" }}
-        </button>
+  <div v-else class="min-h-screen flex items-center justify-center p-4
+                bg-cover bg-center bg-no-repeat relative"
+       :style="{ backgroundImage: 'ur[](https://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/879a61e96ab7414f909ff14f1f6bf93a.jpeg)' }">
+
+    <!-- 深色遮罩，让白色卡片更突出 -->
+    <div class="absolute inset-0 bg-black/40"></div>
+
+    <!-- 居中卡片 -->
+    <div class="relative z-10 max-w-2xl w-full">
+      <div class="bg-white rounded-3xl shadow-2xl overflow-hidden">
+        <div class="p-10 md:p-14 text-center">
+          <!-- 警告图标 -->
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-error/10 mb-6">
+            <svg class="w-12 h-12 text-error" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+
+          <!-- 标题 -->
+          <h1 class="text-4xl md:text-5xl font-bold text-base-content mb-4">
+            访问被拒绝
+          </h1>
+          <p class="text-lg text-base-content/70 mb-8 leading-relaxed">
+            对不起，您没有权限访问这条记录<br>
+            可能是未登录、权限不足或记录已被删除
+          </p>
+
+          <!-- 可能原因（和 ICPC 那张几乎一样） -->
+          <div class="text-left bg-base-200/50 rounded-2xl p-6 mb-10 text-base-content/80">
+            <p class="font-semibold mb-3">可能的原因：</p>
+            <ul class="space-y-2 text-base-content/70">
+              <li>• 您尚未登录或使用的是错误的账号</li>
+              <li>• 在竞赛期间您不允许访问其他人的提交记录</li>
+              <li>• 记录已被删除或链接已失效</li>
+            </ul>
+          </div>
+
+          <!-- 按钮组 -->
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <button @click="goBack" class="btn btn-primary btn-lg rounded-xl text-white">
+              返回{{ competition_id == -1 ? "主页" : "竞赛页面" }}
+            </button>
+            <a href="/" class="btn btn-ghost btn-lg rounded-xl">
+              回到首页
+            </a>
+          </div>
+
+          <!-- 小尾巴 -->
+          <p class="text-sm text-base-content/50 mt-10">
+            如需帮助，请联系管理员 · ByteOJ
+          </p>
+        </div>
       </div>
     </div>
   </div>

@@ -1927,7 +1927,15 @@ export const UserStore = defineStore("user", {
       "        System.out.println(a + b);\n" +
       "    }\n" +
       "}",
-      "Go",
+      "package main\n" +
+      "\n" +
+      "import \"fmt\"\n" +
+      "\n" +
+      "func main() {\n" +
+      "    var a, b int\n" +
+      "    fmt.Scan(&a, &b)\n" +
+      "    fmt.Println(a + b)\n" +
+      "}",
       "JavaScript",
     ],
     status_list: {
