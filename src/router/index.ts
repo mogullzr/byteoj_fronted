@@ -557,15 +557,15 @@ router.beforeEach(async (to, from, next) => {
   } catch (storageError) {}
 
   // 临时决策
-  if (to.path.includes("/competition")) {
-    let competition_id = to.path.split('/')[2];
-    const submitted = ref(localStorage.getItem(`system-setting-${competition_id}`));
-    if (submitted.value == '1') {
-      const { error } = useMessageBox();
-      error("对不起，您已提交，不可重复进入当前竞赛页面");
-      return next("/competition");
-    }
-  }
+  // if (to.path.includes("/competition")) {
+  //   let competition_id = to.path.split('/')[2];
+  //   const submitted = ref(localStorage.getItem(`system-setting-${competition_id}`));
+  //   if (submitted.value == '1') {
+  //     const { error } = useMessageBox();
+  //     error("对不起，您已提交，不可重复进入当前竞赛页面");
+  //     return next("/competition");
+  //   }
+  // }
 
   // 5. 获取目标路由所需权限
   const needAccess: string =

@@ -36,7 +36,7 @@ let hour: Ref<any> = ref(0);
 let min: Ref<any> = ref(0);
 let seconds: Ref<any> = ref(0);
 // 临时决策
-const submitted : Ref<boolean> = ref(false);
+// const submitted : Ref<boolean> = ref(false);
 const local: any =
   localStorage.getItem("competition-" + competition_id.value + "-status") !=
   undefined
@@ -179,26 +179,26 @@ onMounted(async () => {
         initRemainingTime(timer.value, 1);
       }
     }
-    submitted.value = new Date(competition_info.value.start_time) <= new Date();
+    // submitted.value = new Date(competition_info.value.start_time) <= new Date();
   }
 });
 
 // 临时决策
-const handleSubmit = () => {
-  userMessage({
-    title: '提交离开比赛',
-    content: '确认之后你将无法再进入该页面，你确定？',
-    confirmText: '确认',
-    onConfirm: () => {
-      localStorage.setItem(`system-setting-${competition_id.value}`, '1');
-      router.push('/competition');
-    },
-    onCancel: () => {
-      console.log('取消删除');
-    }
-  });
-
-};
+// const handleSubmit = () => {
+//   userMessage({
+//     title: '提交离开比赛',
+//     content: '确认之后你将无法再进入该页面，你确定？',
+//     confirmText: '确认',
+//     onConfirm: () => {
+//       localStorage.setItem(`system-setting-${competition_id.value}`, '1');
+//       router.push('/competition');
+//     },
+//     onCancel: () => {
+//       console.log('取消删除');
+//     }
+//   });
+//
+// };
 
 const onShowDialog = () => {
   showDialog.value = true;
@@ -474,89 +474,89 @@ onUnmounted(() => {
           </div>
 
           <!-- 报名按钮 -->
-          <div class="mt-6">
-            <button
-              v-if="
-                (competition_info.user_status === 1 ||
-                  competition_info.user_status === 2 ||
-                  competition_info.user_status === 5) &&
-                competition_info.status === 0
-              "
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
-              @click="Join"
-            >
-              <svg
-                class="w-6 h-6 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              立即报名
-            </button>
-            <button
-              v-else-if="competition_info.user_status === 0"
-              class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
-              @click="cancelJoin"
-            >
-              <svg
-                class="w-6 h-6 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M20 12H4"
-                />
-              </svg>
-              取消报名
-            </button>
-            <button
-              v-else-if="
-                (competition_info.user_status === 1 ||
-                  competition_info.user_status === 2 ||
-                  competition_info.user_status === 5) &&
-                competition_info.status === 1
-              "
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"
-              @click="showModal"
-            >
-              <svg
-                class="w-6 h-6 mr-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                />
-              </svg>
-              报名参赛
-            </button>
-            <button v-if="submitted && !((competition_info.user_status === 1 ||
-                  competition_info.user_status === 2 ||
-                  competition_info.user_status === 5) &&
-                competition_info.status === 1)"
-                    @click="handleSubmit"
-                    class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]">
-              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-              </svg>
-              提交离开比赛
-            </button>
-          </div>
+<!--          <div class="mt-6">-->
+<!--            <button-->
+<!--              v-if="-->
+<!--                (competition_info.user_status === 1 ||-->
+<!--                  competition_info.user_status === 2 ||-->
+<!--                  competition_info.user_status === 5) &&-->
+<!--                competition_info.status === 0-->
+<!--              "-->
+<!--              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"-->
+<!--              @click="Join"-->
+<!--            >-->
+<!--              <svg-->
+<!--                class="w-6 h-6 mr-3"-->
+<!--                fill="none"-->
+<!--                stroke="currentColor"-->
+<!--                viewBox="0 0 24 24"-->
+<!--              >-->
+<!--                <path-->
+<!--                  stroke-linecap="round"-->
+<!--                  stroke-linejoin="round"-->
+<!--                  stroke-width="2"-->
+<!--                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"-->
+<!--                />-->
+<!--              </svg>-->
+<!--              立即报名-->
+<!--            </button>-->
+<!--            <button-->
+<!--              v-else-if="competition_info.user_status === 0"-->
+<!--              class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"-->
+<!--              @click="cancelJoin"-->
+<!--            >-->
+<!--              <svg-->
+<!--                class="w-6 h-6 mr-3"-->
+<!--                fill="none"-->
+<!--                stroke="currentColor"-->
+<!--                viewBox="0 0 24 24"-->
+<!--              >-->
+<!--                <path-->
+<!--                  stroke-linecap="round"-->
+<!--                  stroke-linejoin="round"-->
+<!--                  stroke-width="2"-->
+<!--                  d="M20 12H4"-->
+<!--                />-->
+<!--              </svg>-->
+<!--              取消报名-->
+<!--            </button>-->
+<!--            <button-->
+<!--              v-else-if="-->
+<!--                (competition_info.user_status === 1 ||-->
+<!--                  competition_info.user_status === 2 ||-->
+<!--                  competition_info.user_status === 5) &&-->
+<!--                competition_info.status === 1-->
+<!--              "-->
+<!--              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]"-->
+<!--              @click="showModal"-->
+<!--            >-->
+<!--              <svg-->
+<!--                class="w-6 h-6 mr-3"-->
+<!--                fill="none"-->
+<!--                stroke="currentColor"-->
+<!--                viewBox="0 0 24 24"-->
+<!--              >-->
+<!--                <path-->
+<!--                  stroke-linecap="round"-->
+<!--                  stroke-linejoin="round"-->
+<!--                  stroke-width="2"-->
+<!--                  d="M12 6v6m0 0v6m0-6h6m-6 0H6"-->
+<!--                />-->
+<!--              </svg>-->
+<!--              报名参赛-->
+<!--            </button>-->
+<!--            <button v-if="submitted && !((competition_info.user_status === 1 ||-->
+<!--                  competition_info.user_status === 2 ||-->
+<!--                  competition_info.user_status === 5) &&-->
+<!--                competition_info.status === 1)"-->
+<!--                    @click="handleSubmit"-->
+<!--                    class="w-full mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg shadow transition duration-300 flex items-center justify-center text-lg min-h-[56px]">-->
+<!--              <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />-->
+<!--              </svg>-->
+<!--              提交离开比赛-->
+<!--            </button>-->
+<!--          </div>-->
         </div>
 
         <!-- 比赛信息卡片 -->

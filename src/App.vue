@@ -14,6 +14,7 @@
     "
   >
     <basic-layout class="font-lazy" />
+    <div id="global-alert-container"></div>
   </div>
 </template>
 
@@ -120,6 +121,78 @@ const iframeScript = `
   })();
 `;
 
+// 新增：WebSocket 告警监听相关
+let ws = null;
+
+const showSimpleAlert = (msg) => {
+  const container = document.getElementById('global-alert-container');
+  if (!container) return;
+
+  const alertDiv = document.createElement('div');
+  alertDiv.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #fff3f3;
+    color: #c62828;
+    border-left: 4px solid #d32828;
+    padding: 12px 16px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 9999;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    max-width: 400px;
+    white-space: pre-wrap;
+    animation: slideIn 0.3s ease;
+  `;
+  alertDiv.textContent = msg;
+  container.appendChild(alertDiv);
+
+  // 5秒后自动消失
+  setTimeout(() => {
+    alertDiv.style.animation = 'slideOut 0.3s ease forwards';
+    setTimeout(() => {
+      if (alertDiv.parentNode) alertDiv.parentNode.removeChild(alertDiv);
+    }, 300);
+  }, 5000);
+};
+
+const connectWebSocket = () => {
+  const userUuid = useStore.loginUser.uuid; // ←← 获取登录用户的 UUID
+  if (!userUuid) {
+    console.warn('未登录，不建立告警连接');
+    return;
+  }
+
+  // 通过 URL 参数传递 uuid（也可用 header，但 WebSocket 不支持自定义 header）
+  const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/alerts`;
+
+  ws = new WebSocket(wsUrl);
+  ws.onopen = () => {
+    console.log('✅ 已连接监考告警服务');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === 'ALERT') {
+        showSimpleAlert(`🚨 ${data.message}`);
+      }
+    } catch (e) {
+      console.error('WebSocket 消息解析失败:', e);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error('⚠️ WebSocket 连接错误:', error);
+  };
+
+  ws.onclose = () => {
+    console.log('🔌 告警连接已断开，5秒后重连...');
+    setTimeout(connectWebSocket, 5000); // 自动重连
+  };
+};
+
 // 设置iframe监听
 const setupIframeListener = () => {
   if (!iframeRef.value) return;
@@ -154,9 +227,16 @@ onMounted(() => {
   
   // 添加消息监听器
   window.addEventListener('message', handleIframeMessage);
+
+  // 启动 WebSocket 告警监听（仅管理员需要？可加判断）
+  connectWebSocket();
+
 });
 
 onUnmounted(() => {
+    if (ws) {
+      ws.close();
+    }
   // 移除消息监听器
   window.removeEventListener('message', handleIframeMessage);
 });

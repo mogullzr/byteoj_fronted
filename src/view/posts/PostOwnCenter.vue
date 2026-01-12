@@ -140,7 +140,7 @@ const handleDeleteCancel = () => {
 const loadPosts = async (pageNum = 1) => {
   loading.value = true
   try {
-    const res = await PostsControllerService.postSearchByPageUsingPost(pageNum)
+    const res = await PostsControllerService.postSearchByPageUsingPost(pageNum, "user")
     if (res.code === 0) {
       posts.value = res.data || []
       currentPage.value = pageNum
