@@ -45,7 +45,7 @@ const formatTimeAgo = (dateString: string | Dayjs) => {
 };
 
 onMounted(async () => {
-  const res = await PostsControllerService.postSearchByPageUsingPost(1, "");
+  const res = await PostsControllerService.postSearchByPageUsingPost("post", 1);
   if (res.code === 0) {
     posts_list.value = res.data;
     posts_list.value.forEach((post: any) => {
@@ -119,7 +119,7 @@ const scroll = () => {
       num.value++;
       currentPage.value++;
       const res = await PostsControllerService.postSearchByPageUsingPost(
-        currentPage.value
+        "post", currentPage.value
       );
       if (res.code === 0) {
         loading_posts_list.value = res.data;

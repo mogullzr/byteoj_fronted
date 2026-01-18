@@ -137,51 +137,51 @@ const goToDailyWithShuffle = () => {
         <DailyProblemView />
       </div>
 
-      <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        :class="
-          'tab font-bold' +
-          (activeCategory === 'math408' && status === '0'
-            ? ' text-black'
-            : ' text-white')
-        "
-        aria-label="数学考研试题"
-        style="font-size: 18px; white-space: nowrap"
-        @click="changeShow('math408_1')"
-        :checked="activeCategory === 'math408' && status === '0'"
-      />
-      <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box"
-        v-if="activeCategory === 'math408' && status === '0'"
-      >
-        <ProblemMathAllView />
-      </div>
+<!--      <input-->
+<!--        type="radio"-->
+<!--        name="my_tabs_2"-->
+<!--        role="tab"-->
+<!--        :class="-->
+<!--          'tab font-bold' +-->
+<!--          (activeCategory === 'math408' && status === '0'-->
+<!--            ? ' text-black'-->
+<!--            : ' text-white')-->
+<!--        "-->
+<!--        aria-label="数学考研试题"-->
+<!--        style="font-size: 18px; white-space: nowrap"-->
+<!--        @click="changeShow('math408_1')"-->
+<!--        :checked="activeCategory === 'math408' && status === '0'"-->
+<!--      />-->
+<!--      <div-->
+<!--        role="tabpanel"-->
+<!--        class="tab-content bg-base-100 border-base-300 rounded-box"-->
+<!--        v-if="activeCategory === 'math408' && status === '0'"-->
+<!--      >-->
+<!--        <ProblemMathAllView />-->
+<!--      </div>-->
 
-      <input
-        type="radio"
-        name="my_tabs_2"
-        role="tab"
-        :class="
-          'tab font-bold' +
-          (activeCategory === 'math408' && status === '1'
-            ? ' text-black'
-            : ' text-white')
-        "
-        aria-label="408考研试题"
-        style="font-size: 18px; white-space: nowrap"
-        @click="changeShow('math408_2')"
-        :checked="activeCategory === 'math408' && status === '1'"
-      />
-      <div
-        role="tabpanel"
-        class="tab-content bg-base-100 border-base-300 rounded-box"
-        v-if="activeCategory === 'math408' && status === '1'"
-      >
-        <Problem408AllView />
-      </div>
+<!--      <input-->
+<!--        type="radio"-->
+<!--        name="my_tabs_2"-->
+<!--        role="tab"-->
+<!--        :class="-->
+<!--          'tab font-bold' +-->
+<!--          (activeCategory === 'math408' && status === '1'-->
+<!--            ? ' text-black'-->
+<!--            : ' text-white')-->
+<!--        "-->
+<!--        aria-label="408考研试题"-->
+<!--        style="font-size: 18px; white-space: nowrap"-->
+<!--        @click="changeShow('math408_2')"-->
+<!--        :checked="activeCategory === 'math408' && status === '1'"-->
+<!--      />-->
+<!--      <div-->
+<!--        role="tabpanel"-->
+<!--        class="tab-content bg-base-100 border-base-300 rounded-box"-->
+<!--        v-if="activeCategory === 'math408' && status === '1'"-->
+<!--      >-->
+<!--        <Problem408AllView />-->
+<!--      </div>-->
     </div>
   </div>
 </template>

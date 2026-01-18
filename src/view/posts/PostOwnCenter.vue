@@ -36,6 +36,7 @@
           </div>
 
           <div class="actions">
+            <button @click="addPost(post.post_id)" class="add-btn">加入至个人博客</button>
             <button @click="viewPost(post.post_id)" class="view-btn">查看</button>
             <button @click="deletePost(post.post_id)" class="delete-btn">删除</button>
           </div>
@@ -140,7 +141,7 @@ const handleDeleteCancel = () => {
 const loadPosts = async (pageNum = 1) => {
   loading.value = true
   try {
-    const res = await PostsControllerService.postSearchByPageUsingPost(pageNum, "user")
+    const res = await PostsControllerService.postSearchByPageUsingPost("user", pageNum);
     if (res.code === 0) {
       posts.value = res.data || []
       currentPage.value = pageNum
@@ -216,6 +217,15 @@ const formatTime = (time) => {
   })
 }
 
+const addPost = async (postId) => {
+  const res = await PostsControllerService.userAddPostToBlogUsingPost(postId);
+  if (res.code === 0) {
+    success('加入博客成功');
+    posts.value = posts.value.filter(post => post.post_id !== postId)
+  } else {
+    error(res.message);
+  }
+}
 const viewPost = (postId) => {
   window.location.href = `/posts/${postId}`
 }
@@ -419,7 +429,7 @@ onMounted(() => {
   justify-content: flex-end;
 }
 
-.thumbs-btn, .view-btn {
+.thumbs-btn, .view-btn, .add-btn {
   padding: 6px 16px;
   border-radius: 4px;
   font-size: 13px;
@@ -441,6 +451,34 @@ onMounted(() => {
   background: #fff2e8;
   color: #fa8c16;
   border-color: #ffd5b5;
+}
+
+.add-btn {
+  background: #0b957e;
+  color: white;
+  border: none;                 /* 去掉那条没用的浅灰边框 */
+  border-radius: 6px;           /* 建议加个圆角，现代感强 */
+  padding: 10px 16px;
+  font-weight: 500;
+  transition: all 0.2s ease;    /* 平滑过渡 */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+
+.add-btn:hover {
+  background: #097c6a;         /* 变深一点，更有“按下去”的感觉 */
+  transform: translateY(-1px); /* 轻微浮起，很讨喜 */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+}
+
+.add-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.view-btn {
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #e0e0e0;
 }
 
 .view-btn {

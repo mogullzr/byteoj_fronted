@@ -67,6 +67,15 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "blog",
+        name: "个人博客",
+        component: () => import("@/view/user/UserBlogView.vue"),
+        meta: {
+          access: "1",
+          title: "ByteOJ - 个人博客",
+        },
+      },
+      {
         path: "",
         name: "用户中心",
         component: UserLayout,
@@ -212,6 +221,15 @@ const routes: Array<RouteRecordRaw> = [
         path: ":competition_id",
         name: "竞赛编号",
         children: [
+          // {
+          //   path: "procter",
+          //   name: "",
+          //   meta: {
+          //     access: "1",
+          //     title: "监考 - ByteOJ",
+          //   },
+          //   component: () => import("@/view/competitions/Procter/ProcterOnlineView.vue")
+          // },
           {
             path: "records/:record_id",
             name: "提交记录",
@@ -383,6 +401,15 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/special/SpecialBoxView.vue"),
   },
   {
+    path: "/update",
+    name: "网站更新日志",
+    meta: {
+      access: "0",
+      title: "ByteOJ - 网站更新日志",
+    },
+    component: () => import("@/view/WebSiteUpdateLogView.vue"),
+  },
+  {
     path: "/test",
     name: "test",
     component: () => import("@/components/Card/DraggableStartView.vue"),
@@ -405,6 +432,15 @@ const routes: Array<RouteRecordRaw> = [
       title: "ByteOJ - 需求分析",
     },
     component: () => import("@/view/RequirementsAnalysis.vue"),
+  },
+  {
+    path: "/studyPath",
+    name: "个性化学习路径生成",
+    meta: {
+      access: "1",
+      title: "ByteOJ - 个性化学习路径生成",
+    },
+    component: () => import("@/view/AI/PersonalLearningView.vue"),
   },
   // {
   //   path: "/data-structure-animation",
@@ -538,6 +574,7 @@ router.beforeEach(async (to, from, next) => {
   try {
     // 3. 强制获取最新用户状态（包含错误处理）
     await userStore.getLoginUser();
+    await userStore.isCompetition();
     loginUser = userStore.loginUser;
   } catch (error) {
     // 获取用户信息失败时，按未登录处理

@@ -1,8 +1,10 @@
 <template>
   <div class="mx-auto">
-    <NavbarView class="fixed" style="z-index: 999" v-if="isNavbarVisible" />
+    <NavbarView class="fixed" style="z-index: 999" v-if="!(route.path.split('/')[2] == 'blog') && isNavbarVisible" />
   </div>
-
+  <div class="proctor-fixed-wrapper" v-if="CompetitionStatus == 'true'">
+    <ProcterOnlineView />
+  </div>
   <div>
     <BottomView
       :is-navbar-visible="isNavbarVisible"
@@ -15,10 +17,10 @@
     <div
       :class="
         'mx-auto' +
-        (isNavbarVisible ? (route.path.split('/')[1] == 'introduction' ? ' pt-18' : ' pt-20') : '') +
+        (isNavbarVisible && !(route.path.split('/')[2] == 'blog') ? (route.path.split('/')[1] == 'introduction' || route.path.split('/')[1] == 'studyPath' ? ' pt-18' : ' pt-20') : '') +
         ((route.path.split('/')[1] == 'problems' &&
         route.path.split('/')[2] == 'algorithm' &&
-        status == '1') || (route.path.split('/')[1] == 'introduction')
+        status == '1') || (route.path.split('/')[1] == 'introduction') || (route.path.split('/')[1] == 'studyPath') || (route.path.split('/')[2] == 'blog')
           ? ''
           : ' pb-32')
       "
@@ -158,6 +160,16 @@
 .pt-18{
   padding-top: 4rem;
 }
+.proctor-fixed-wrapper {
+  position: fixed;
+  top: 60px;       /* 距离顶部 20px */
+  right: 20px;     /* 距离右侧 20px */
+  z-index: 10000;  /* 确保在所有内容之上（比 modal 的 101 高）*/
+  width: 360px;    /* 根据你的组件宽度调整 */
+  max-height: calc(100vh - 40px); /* 防止溢出屏幕 */
+  overflow: auto;  /* 内容过多时可滚动 */
+  pointer-events: auto; /* 确保按钮可点击 */
+}
 </style>
 
 <script lang="ts">
@@ -168,11 +180,14 @@ import { useRoute } from "vue-router";
 import router from "@/router";
 import axios from "axios";
 import PlaneGame from "@/view/components/PlaneGame.vue";
+import ProcterOnlineView from "@/view/competitions/Procter/ProcterOnlineView.vue";
+import {CompetitionControllerService} from "../../generated";
 
 export default defineComponent({
-  components: { PlaneGame, NavbarView, BottomView },
+  components: {ProcterOnlineView, PlaneGame, NavbarView, BottomView },
   data() {
     return {
+      CompetitionStatus: localStorage.getItem("CompetitionStatus"),
       status: localStorage.getItem("EditorStatus"),
       route: useRoute(),
       isNavbarVisible:

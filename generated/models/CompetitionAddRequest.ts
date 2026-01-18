@@ -17,5 +17,6 @@ export type CompetitionAddRequest = {
     start_time?: string;
     status?: number;
     type?: number;
+    is_procter?: number;
 };
 

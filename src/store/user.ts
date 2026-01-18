@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { User, UserControllerService } from "../../generated";
+import {CompetitionControllerService, User, UserControllerService} from "../../generated";
 import axios from "axios";
 import { ref } from "vue";
 
@@ -2031,6 +2031,14 @@ export const UserStore = defineStore("user", {
         if (res0.data !== "") {
           this.loginUser.background_picture = res0.data;
         }
+      }
+    },
+    async isCompetition() {
+      const res = await CompetitionControllerService.competitionUserStatusGetUsingPost();
+      if (res.code === 0) {
+        localStorage.setItem("CompetitionStatus", res.data);
+      } else {
+        localStorage.setItem("CompetitionStatus", "false");
       }
     },
     async getUserLocationInfo() {

@@ -35,6 +35,52 @@ export class PostsControllerService {
         });
     }
     /**
+     * userAddPostToBlog
+     * @param postId post_id
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static userAddPostToBlogUsingPost(
+        postId?: number,
+    ): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/posts/blog/add',
+            query: {
+                'post_id': postId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * userDeletePostToBlog
+     * @param postId post_id
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static userDeletePostToBlogUsingPost(
+        postId?: number,
+    ): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/posts/blog/delete',
+            query: {
+                'post_id': postId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * PostDelete
      * @param postId post_id
      * @returns BaseResponse_boolean_ OK
@@ -275,22 +321,22 @@ export class PostsControllerService {
     }
     /**
      * PostSearchByPage
-     * @param pageNum pageNum
      * @param mode mode
+     * @param pageNum pageNum
      * @returns BaseResponse_List_PostsVo_ OK
      * @returns any Created
      * @throws ApiError
      */
     public static postSearchByPageUsingPost(
+        mode?: string,
         pageNum?: number,
-        mode? :string
     ): CancelablePromise<BaseResponse_List_PostsVo_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/posts/search/page',
             query: {
-                'pageNum': pageNum,
                 'mode': mode,
+                'pageNum': pageNum,
             },
             errors: {
                 401: `Unauthorized`,

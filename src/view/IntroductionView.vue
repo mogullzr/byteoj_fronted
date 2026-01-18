@@ -949,13 +949,38 @@
             您的意见对我们非常重要，感谢您的参与
           </p>
         </div>
-
-        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow mx-auto">
+            <div class="card-body text-center p-8">
+              <h3 class="text-2xl font-semibold mb-6">ByteOJ问卷调查(学生版)</h3>
+              <p class="text-base-content/80 mb-6">打开QQ扫码参与，感谢您的支持！</p>
+              <img
+                  src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250713122814993.png"
+                  alt="问卷调查二维码"
+                  class="object-contain"
+                  loading="lazy"
+              >
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow max-w-2xl mx-auto">
+            <div class="card-body text-center p-8">
+              <h3 class="text-2xl font-semibold mb-6">ByteOJ问卷调查(教师版)</h3>
+              <p class="text-base-content/80 mb-6">打开QQ扫码参与，感谢您的支持！</p>
+              <img
+                  src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20260113193918029.png"
+                  alt="问卷调查二维码"
+                  class="object-contain"
+                  loading="lazy"
+              >
+            </div>
+          </div>
+        </div>
+        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow max-w-7xl mx-auto my-12">
           <div class="card-body text-center p-8">
-            <h3 class="text-2xl font-semibold mb-6">请帮忙完成毕业设计问卷调查</h3>
+            <h3 class="text-2xl font-semibold mb-6">问卷调查(计算机学生学习需求调研)</h3>
             <p class="text-base-content/80 mb-6">打开QQ扫码参与，感谢您的支持！</p>
             <img
-                src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250713122814993.png"
+                src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20260113192352752.png"
                 alt="问卷调查二维码"
                 class="object-contain"
                 loading="lazy"
