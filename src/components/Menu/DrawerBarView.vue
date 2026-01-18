@@ -260,6 +260,7 @@
           <span>日志管理模块</span>
         </template>
         <el-menu-item index="10-1-1" @click="RouterToView('/log')">日志管理</el-menu-item>
+        <el-menu-item index="10-1-2" @click="RouterToView('/log_website')">网站日志管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="11">

@@ -11,6 +11,22 @@
       >
         <el-icon style="margin-right: 6px"><Download /></el-icon>下载管理软件
       </el-button>
+      <el-button
+          type="primary"
+          size="large"
+          @click="router.push('/competition/check')"
+          style="font-size: 16px"
+      >
+        <el-icon style="margin-right: 6px"><monitor /></el-icon>实时监管桌面行为
+      </el-button>
+      <el-button
+          type="primary"
+          size="large"
+          @click="router.push('/competition/procter')"
+          style="font-size: 16px"
+      >
+        <el-icon style="margin-right: 6px"><monitor /></el-icon>实时监管用户行为
+      </el-button>
     </div>
     <div>
       <!-- 这里可以放其他全局操作按钮 -->
@@ -168,7 +184,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, Ref } from "vue";
 import { ElNotification } from "element-plus";
-import { Download } from "@element-plus/icons-vue";
+import {Download, Monitor} from "@element-plus/icons-vue";
 import {
   CompetitionControllerService,
   CompetitionInfoVo,

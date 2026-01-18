@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ProblemAlgorithmTestCaseRequest = {
-    input?: string;
-    output?: string;
-    runCode?:string;
+export type LogWebSiteUpdateRequest = {
+    description?: string;
+    module?: string;
+    timestamp?: number;
 };
 

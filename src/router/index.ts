@@ -20,6 +20,9 @@ import CourseView from "../views/course/CourseView.vue";
 import CourseEdit from "../views/course/CourseEdit.vue";
 import CourseCreate from "../views/course/CourseCreate.vue";
 import PaymentView from "../views/payment/PaymentView.vue";
+import OfflineUserMonitor from "../views/competition/OfflineUserMonitor.vue";
+import CompetitionProcterView from "../views/competition/CompetitionProcterView.vue";
+import LogWebsiteManagement from "../views/log/LogWebsiteManagement.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -175,6 +178,29 @@ const routes: Array<RouteRecordRaw> = [
     component: CompetitionEditView,
   },
   {
+    path: "/competition",
+    children: [
+      {
+        path: "check",
+        name: "竞赛监控页面",
+        meta: {
+          access: "2",
+          show: false,
+        },
+        component: OfflineUserMonitor,
+      },
+      {
+        path: "procter",
+        name: "竞赛监控信息监管页面",
+        meta: {
+          access: "2",
+          show: false
+        },
+        component: CompetitionProcterView
+      }
+    ],
+  },
+  {
     path: "/course",
     name: "课程页面",
     meta: {
@@ -222,6 +248,15 @@ const routes: Array<RouteRecordRaw> = [
     component: LogView,
   },
   {
+    path: "/log_website",
+    name: "网站日志管理",
+    meta: {
+      access: "2",
+      show: true,
+    },
+    component: LogWebsiteManagement,
+  },
+  {
     path: "/payment",
     name: "支付管理",
     meta: {
@@ -239,10 +274,6 @@ const routes: Array<RouteRecordRaw> = [
     },
     component: NotFoundView,
   },
-  {
-    path: "/:catchAll(.*)",
-    redirect: "/404",
-  },
 ];
 
 const router = createRouter({
@@ -254,6 +285,7 @@ router.beforeEach(async (to, from, next) => {
   const userStore = UseStore();
   let loginUser = userStore.loginUser;
 
+  console.log(to.fullPath)
   // 如果之前没有登录，自动登录
   if (String(loginUser.role) == "0") {
     // 加await是为了获取用户登录态之后再执行代码
