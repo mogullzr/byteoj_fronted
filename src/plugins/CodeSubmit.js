@@ -49,7 +49,8 @@ const initWebSocketConnection = () => {
         try {
             const client = new Client({
                 // WebSocket 工厂
-                webSocketFactory: () => new SockJS('http://localhost:7091/api/ws/judge'),
+                // webSocketFactory: () => new SockJS('http://localhost:7091/api/ws/judge'),
+                webSocketFactory: () => new SockJS('https://www.byteoj.com/api/ws/judge'),
 
                 // 心跳配置
                 heartbeatIncoming: 20000,

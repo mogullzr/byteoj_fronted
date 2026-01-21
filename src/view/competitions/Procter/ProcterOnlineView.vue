@@ -55,7 +55,8 @@ const latestResult = ref<any>(null)
 const nextCaptureIn = ref(0)
 
 // 接口地址
-const UPLOAD_URL = 'http://localhost:7091/api/competition/procter'
+// const UPLOAD_URL = 'http://localhost:7091/api/competition/procter'
+const UPLOAD_URL = 'https://www.byteoj.com/api/competition/procter'
 
 // 启动摄像头并等待首帧
 async function startCamera() {

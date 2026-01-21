@@ -144,7 +144,8 @@ const generatePath = async () => {
       status: 2,
       code: selectedTag.value,
     } as any;
-    const response: any = await fetch("http://localhost:7091/api/ai/ask", {
+    // const response: any = await fetch("http://localhost:7091/api/ai/ask", {
+    const response: any = await fetch("https://www.byteoj.com/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
