@@ -56,10 +56,10 @@
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>Math408管理</span></template>
-        <el-menu-item index="2-2-1" @click="RouterToMath408Add"
+        <el-menu-item index="2-2-1" @click="RouterToView('/problem/math408/add')"
           >数学408试题创建</el-menu-item
         >
-        <el-menu-item index="2-2-2" @click="RouterToView('/problem/math408/add')"
+        <el-menu-item index="2-2-2" @click="RouterToView('/problem/math408')"
           >数学408试题管理</el-menu-item
         >
       </el-menu-item-group>
