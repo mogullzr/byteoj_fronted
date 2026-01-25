@@ -340,6 +340,15 @@ const routes: Array<RouteRecordRaw> = [
     name: "题库",
     children: [
       {
+        path: "other/:problem_id",
+        name: "其他类型试题",
+        meta: {
+          access: "0"
+        },
+        component: () =>
+            import("@/view/problems/408/ProblemOtherContentView.vue")
+      },
+      {
         path: "algorithm/:problem_id",
         name: "algorithm题目展示",
         meta: {
@@ -349,7 +358,7 @@ const routes: Array<RouteRecordRaw> = [
           import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
       },
       {
-        path: "math408/:problem_id",
+        path: "other/:problem_id",
         name: "math和408题目展示",
         meta: {
           access: "0",

@@ -182,7 +182,7 @@ const searchByTag = async (tag_name: string) => {
             </td>
             <td v-else></td>
             <td>{{ problem.problem_id }}</td>
-            <router-link :to="'/problems/math408/' + problem.problem_id">
+            <router-link :to="'/problems/other/' + problem.problem_id">
               <td>
                 {{ problem.problem_name }}
               </td>

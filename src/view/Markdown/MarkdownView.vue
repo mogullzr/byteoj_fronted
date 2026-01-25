@@ -58,7 +58,11 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+/* 如果需要对 .custom-font 类进行额外的样式定义 */
+
+</style>
+
 
 //@font-face { // font-family: "CustomFont"; // src:
 url("/public/fontello.woff"), url("/public/fontello.eot"); /* 字体文件路径 */

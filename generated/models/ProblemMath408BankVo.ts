@@ -3,15 +3,15 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ProblemMath408BankVo = {
+    analysis?: string;
+    correct_answer?: string;
     description?: string;
     difficulty_name?: string;
     option_type?: number;
-    options?: Array<Record<string, string>>;
+    options?: string;
     problem_id?: number;
     problem_name?: string;
     source_name?: string;
-    status?: number;
-    tag_list?: Array<string>;
-    update_time?: string;
+    tagsList?: Array<string>;
 };
 

@@ -4,7 +4,7 @@
     <div class="input-wrapper">
       <input
           type="text"
-          placeholder="选择算法标签..."
+          placeholder="选择标签..."
           v-model="searchQuery"
           @input="handleInput"
           @click="showDropdown = true"
