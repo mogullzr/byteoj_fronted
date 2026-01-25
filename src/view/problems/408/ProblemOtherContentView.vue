@@ -158,7 +158,7 @@ const nextProblem = () => {
                 class="option-input"
                 :disabled="showAnswer"
             />
-            <span class="option-text">{{ getOptionLetter(index) }}. {{ opt }}</span>
+            <span class="option-text"><MarkdownView :style="showAnswer && problem.correct_answer.includes(getOptionLetter(index))? 'background-color: #d4edda' : (getOptionClass(getOptionLetter(index)) == 'wrong-option' ? 'background-color: #f8d7da':'')" :generate-data="'**' + getOptionLetter(index) + '.**' + opt" /></span>
           </label>
         </div>
       </div>
