@@ -160,7 +160,7 @@ watchEffect(async () => {
     pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
     sourceList: sourceList[0] == "" ? [] : sourceList,
     tagsList: tagsList[0] == 0 ? [] : tagsList,
-    status: 1
+    status: 2
   } as any;
 
   await initData();
@@ -272,7 +272,7 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
 <template>
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
     <div class="w-7/12 m-auto">
-      <div class="font-bold text-center text-4xl">ByteOJ计算机专业课题库</div>
+      <div class="font-bold text-center text-4xl">ByteOJ政治考研题库</div>
       <div class="w-full my-4 flex">
         <input
             v-model="searchRequest.keyword"

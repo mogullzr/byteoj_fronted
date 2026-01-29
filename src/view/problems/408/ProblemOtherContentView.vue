@@ -93,7 +93,8 @@ const submitAnswer = () => {
   if (problem.value.option_type === 1 || problem.value.option_type === 2) {
     const sortedUser = [...userAns].sort();
     const sortedCorrect = [...correct].sort();
-    isCorrect.value = JSON.stringify(sortedUser) === JSON.stringify(sortedCorrect);
+    console.log(sortedUser, sortedCorrect);
+    isCorrect.value = JSON.stringify(sortedUser) == JSON.stringify(sortedCorrect);
   } else if (problem.value.option_type === 3) {
     isCorrect.value = userAns[0] === (correct[0] || "").trim();
   } else {
@@ -133,7 +134,41 @@ const nextProblem = () => {
       </div>
 
       <div class="description">
-        <MarkdownView :generate-data="problem.description" />
+        <!-- 题目描述区域 -->
+        <div class="mt-4">
+          <div v-if="problem.option_type === 4" class="p-4 bg-base-200 rounded-lg border border-base-300">
+            <div class="flex items-start gap-3">
+              <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-5 w-5 text-info flex-shrink-0 mt-0.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+              >
+                <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.102m-.758-4.898a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                />
+              </svg>
+              <div>
+                <p class="text-sm text-base-content/80 mb-1">本题为引用题，点击下方链接查看原题：</p>
+                <a
+                    :href="problem.description"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link link-primary font-medium hover:underline break-all"
+                >
+                  题目链接（立即跳转至题目{{ problem.problem_id }}）
+                </a>
+              </div>
+            </div>
+          </div>
+          <div v-else>
+            <MarkdownView :generateData="problem.description" />
+          </div>
+        </div>
       </div>
 
       <!-- 选择题 -->
@@ -158,7 +193,7 @@ const nextProblem = () => {
                 class="option-input"
                 :disabled="showAnswer"
             />
-            <span class="option-text"><MarkdownView :style="showAnswer && problem.correct_answer.includes(getOptionLetter(index))? 'background-color: #d4edda' : (getOptionClass(getOptionLetter(index)) == 'wrong-option' ? 'background-color: #f8d7da':'')" :generate-data="'**' + getOptionLetter(index) + '.**' + opt" /></span>
+            <span class="option-text"><MarkdownView :style="showAnswer && problem.correct_answer.includes(getOptionLetter(index))? 'background-color: #d4edda' : (getOptionClass(getOptionLetter(index)) == 'wrong-option' ? 'background-color: #f8d7da':'')" :generate-data="'**' + getOptionLetter(index) + '**.' + opt" /></span>
           </label>
         </div>
       </div>
@@ -173,7 +208,7 @@ const nextProblem = () => {
         <textarea v-model="userTextAnswer" placeholder="请输入你的回答..." rows="5" class="text-area" :disabled="showAnswer"></textarea>
       </div>
 
-      <button @click="submitAnswer" class="submit-btn" :disabled="showAnswer">
+      <button @click="submitAnswer" class="submit-btn" :disabled="showAnswer" v-if="problem.option_type != 4">
         {{ showAnswer ? "已提交" : "提交答案" }}
       </button>
 
@@ -204,7 +239,13 @@ const nextProblem = () => {
 
         <div v-if="showAnalysis" class="analysis-box">
           <div class="analysis-header">
-            正确答案： <strong>{{ parsedCorrectAnswer().join('、') }}</strong>
+            正确答案：
+            <strong v-if='problem.option_type == 1 || problem.option_type == 2' style="color: #85ad45">
+              <MarkdownView style="background-color: #e9f5ff" :generate-data="parsedCorrectAnswer().join('、')|| '无'" />
+            </strong>
+            <span v-else style="color: #85ad45">
+              <MarkdownView style="background-color: #e9f5ff" :generate-data="problem.correct_answer || '无'" />
+            </span>
           </div>
           <div class="analysis-header">
             解析：

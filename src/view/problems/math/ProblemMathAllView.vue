@@ -129,6 +129,7 @@ const convertToFrameNumbers = (str: any): number[] => {
   }
 };
 const initData = async () => {
+  console.log(123)
   const res = await SearchControllerService.searchAllUsingPost(
       searchRequest.value
   );
@@ -159,6 +160,7 @@ watchEffect(async () => {
     pageSize: parseInt(<string>route.query.pageSize ?? "50") ?? 50,
     sourceList: sourceList[0] == "" ? [] : sourceList,
     tagsList: tagsList[0] == 0 ? [] : tagsList,
+    status: 0
   } as any;
 
   await initData();
@@ -381,7 +383,7 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
           </router-link>
           <td class="w-64">
             <button
-                v-for="tag in problem.algorithm_tags"
+                v-for="tag in problem.tagsList"
                 :key="tag"
                 @click="searchByTag(tag)"
             >

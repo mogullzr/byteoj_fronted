@@ -6,6 +6,7 @@ import DailyProblemView from "@/view/problems/DailyProblemView.vue";
 import { Ref, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { LocationQueryValue } from "vue-router";
+import ProblemPoliticsAllView from "@/view/problems/politics/ProblemPoliticsAllView.vue";
 
 // 0表示显示算法题库，1表示显示数学题库，2表示显示408题库
 const route = useRoute();
@@ -24,6 +25,9 @@ const changeShow = (key: string) => {
   } else if (key == "math408_2") {
     activeCategory.value = "other";
     status.value = "1";
+  } else if (key == "math408_3") {
+    activeCategory.value = "other";
+    status.value = "2"
   } else {
     activeCategory.value = key;
     status.value = null;
@@ -160,6 +164,28 @@ const goToDailyWithShuffle = () => {
         v-if="activeCategory === 'other' && status === '1'"
       >
         <Problem408AllView />
+      </div>
+      <input
+          type="radio"
+          name="my_tabs_3"
+          role="tab"
+          :class="
+          'tab font-bold' +
+          (activeCategory === 'other' && status === '2'
+            ? ' text-black'
+            : ' text-white')
+        "
+          aria-label="政治考研试题"
+          style="font-size: 18px; white-space: nowrap"
+          @click="changeShow('math408_3')"
+          :checked="activeCategory === 'other' && status === '2'"
+      />
+      <div
+          role="tabpanel"
+          class="tab-content bg-base-100 border-base-300 rounded-box"
+          v-if="activeCategory === 'other' && status === '2'"
+      >
+        <ProblemPoliticsAllView />
       </div>
 
       <input
