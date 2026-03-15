@@ -17,10 +17,16 @@
     <div
       :class="
         'mx-auto' +
-        (isNavbarVisible && !(route.path.split('/')[2] == 'blog') ? (route.path.split('/')[1] == 'introduction' || route.path.split('/')[1] == 'studyPath' ? ' pt-18' : ' pt-20') : '') +
+        (isNavbarVisible && !(route.path.split('/')[2] == 'blog') ? (route.path.split('/')[1] == 'introduction'
+        || route.path.split('/')[1] == 'studyPath'
+        || route.path.split('/')[1] == 'exam' ? ' pt-18' : ' pt-20') : '') +
         ((route.path.split('/')[1] == 'problems' &&
         route.path.split('/')[2] == 'algorithm' &&
-        status == '1') || (route.path.split('/')[1] == 'introduction') || (route.path.split('/')[1] == 'studyPath') || (route.path.split('/')[2] == 'blog')
+        status == '1')
+        || (route.path.split('/')[1] == 'introduction')
+        || (route.path.split('/')[1] == 'studyPath')
+        || (route.path.split('/')[2] == 'blog')
+        || (route.path.split('/')[1] == 'exam')
           ? ''
           : ' pb-32')
       "

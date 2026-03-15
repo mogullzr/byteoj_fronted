@@ -287,6 +287,9 @@ onUnmounted(() => {
                 <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
               </li>
               <li>
+                <a @click.prevent="handleNavigation('/exam')" href="/exam">考试</a>
+              </li>
+              <li>
                 <a @click.prevent="handleNavigation('/studyPath')" href="/studyPath">个性化学习路径生成</a>
               </li>
               <li>

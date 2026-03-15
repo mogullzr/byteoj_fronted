@@ -129,7 +129,6 @@ const convertToFrameNumbers = (str: any): number[] => {
   }
 };
 const initData = async () => {
-  console.log(123)
   const res = await SearchControllerService.searchAllUsingPost(
       searchRequest.value
   );

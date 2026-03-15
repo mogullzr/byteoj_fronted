@@ -3,7 +3,7 @@
     class="custom-font"
     :marked-heading-id="generateId"
     :editorId="id"
-    :modelValue="generateData"
+    :modelValue="processedData"
     previewTheme="github"
   />
 </template>
@@ -25,30 +25,44 @@ export default {
     },
   },
   computed: {
-    // 将 generateData 转换为自定义字符
-    // transformedData() {
-    //   const generateCustomText = (text) => {
-    //     const codePoints = [
-    //       0xe800, 0xe801, 0xe802, 0xe803, 0xe804, 0xe805, 0xe806, 0xe807,
-    //       0xe808, 0xe809,
-    //     ];
-    //     let result = "";
-    //     for (let i = 0; i < text.length; i++) {
-    //       const char = text[i];
-    //       if (/\d/.test(char)) {
-    //         // 如果是数字，转换为对应的字符
-    //         const codePoint = codePoints[parseInt(char)];
-    //         result += `&#x${codePoint.toString(16)};`;
-    //       } else {
-    //         result += char; // 如果不是数字，保留原字符
-    //       }
-    //     }
-    //     return result;
-    //   };
-    //
-    //   return generateCustomText(this.generateData);
-    // },
+    // 新增计算属性：处理反斜杠替换
+    processedData() {
+      if (!this.generateData) return "";
+
+      // 解释：
+      // 1. /\\\\/g  : 正则表达式。
+      //    - 在 JS 字符串中，\\\\ 代表两个实际的反斜杠字符 (\\)。
+      //    - g 标志表示全局替换。
+      // 2. '\\'     : 替换为。
+      //    - 在 JS 字符串中，\\ 代表一个实际的反斜杠字符 (\)。
+      return this.generateData.replace(/\\\\/g, '\\');
+    },
   },
+  // computed: {
+  //   // 将 generateData 转换为自定义字符
+  //   // transformedData() {
+  //   //   const generateCustomText = (text) => {
+  //   //     const codePoints = [
+  //   //       0xe800, 0xe801, 0xe802, 0xe803, 0xe804, 0xe805, 0xe806, 0xe807,
+  //   //       0xe808, 0xe809,
+  //   //     ];
+  //   //     let result = "";
+  //   //     for (let i = 0; i < text.length; i++) {
+  //   //       const char = text[i];
+  //   //       if (/\d/.test(char)) {
+  //   //         // 如果是数字，转换为对应的字符
+  //   //         const codePoint = codePoints[parseInt(char)];
+  //   //         result += `&#x${codePoint.toString(16)};`;
+  //   //       } else {
+  //   //         result += char; // 如果不是数字，保留原字符
+  //   //       }
+  //   //     }
+  //   //     return result;
+  //   //   };
+  //   //
+  //   //   return generateCustomText(this.generateData);
+  //   // },
+  // },
   data() {
     return {
       id,

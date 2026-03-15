@@ -451,6 +451,32 @@ const routes: Array<RouteRecordRaw> = [
     },
     component: () => import("@/view/AI/PersonalLearningView.vue"),
   },
+  {
+    path: "/exam",
+    name: "考试",
+
+    children: [
+      {
+        path: "content",
+        name: "考试详细信息",
+        meta: {
+          access: "1",
+          title: "ByteOJ - 考试内容"
+        },
+        component: () => import("@/view/exam/ProblemExamContent.vue")
+      },
+      {
+        path: "",
+        name: "考试查找",
+        meta: {
+          access: "1",
+          title: "ByteOJ - 考试中心"
+        },
+        component: () => import("@/view/exam/ProblemExam.vue")
+      },
+    ],
+
+  },
   // {
   //   path: "/data-structure-animation",
   //   name: "数据结构动画",

@@ -2,26 +2,47 @@
 <template>
   <div class="min-h-screen bg-gray-50 text-gray-800">
     <!-- 顶部导航 - 白色 -->
+    <!-- 顶部导航 - 白色 -->
     <header class="fixed top-0 left-0 right-0 z-50 h-14 bg-white border-b border-gray-200 shadow-sm">
       <div class="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
         <div class="flex items-center gap-8">
           <div class="text-xl font-bold text-gray-900">{{ user.username }}</div>
           <nav class="hidden md:flex items-center gap-6 text-sm text-gray-700">
             <a href="#" class="hover:text-emerald-600 transition-colors">全部文章</a>
-<!--            <a href="#" class="hover:text-emerald-600 transition-colors">分类</a>-->
-<!--            <a href="#" class="hover:text-emerald-600 transition-colors">归档</a>-->
-<!--            <a href="#" class="hover:text-emerald-600 transition-colors">标签</a>-->
           </nav>
         </div>
-        <router-link class="flex items-center gap-4" to="/user">
-          <span class="text-sm text-gray-600">去用户中心</span>
-          <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold cursor-pointer overflow-hidden">
-            <img :src="user.avatar" alt="用户头像" class="w-full h-full object-cover" />
+
+        <!-- 搜索框 + 用户头像 -->
+        <div class="flex items-center gap-4">
+          <!-- 搜索输入框 -->
+          <div class="relative hidden sm:block">
+            <input
+                v-model="searchKeyword"
+                @keyup.enter="handleSearch"
+                type="text"
+                placeholder="搜索文章..."
+                class="w-64 px-4 py-2 pr-10 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm"
+            />
+            <button
+                @click="handleSearch"
+                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-emerald-600"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
           </div>
-        </router-link>
+
+          <!-- 用户头像 -->
+          <router-link to="/user" class="flex items-center gap-2">
+            <span class="text-sm text-gray-600 hidden sm:inline">用户中心</span>
+            <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-sm font-bold cursor-pointer overflow-hidden">
+              <img :src="user.avatar" alt="用户头像" class="w-full h-full object-cover" />
+            </div>
+          </router-link>
+        </div>
       </div>
     </header>
-
     <div class="pt-14 flex">
       <!-- 左侧栏 -->
       <aside class="fixed left-0 top-14 bottom-0 w-80 md:w-72 bg-white border-r border-gray-200 shadow-md overflow-y-auto"
@@ -173,10 +194,10 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, Ref} from 'vue'
+import {onMounted, ref, Ref} from 'vue'
 import {PostsControllerService, SearchControllerService, SearchRequest} from "../../../generated"
 import UserStore from "@/store/user"
-import { useMessageBox } from "@/view/components/alert/useMessageBox"
+import {useMessageBox} from "@/view/components/alert/useMessageBox"
 import {useRoute, useRouter} from 'vue-router'
 
 const route = useRoute();
@@ -184,9 +205,10 @@ const searchRequest: Ref<SearchRequest> = ref({
   category: "post",
   pageNum: parseInt(<string>route.query.pageNum ?? "1") ?? 1,
   pageSize: 10,
-  status: 4
+  status: 4,
+  keyword: ''
 } as any);
-
+const searchKeyword = ref('')
 const router = useRouter()
 const { success, error } = useMessageBox()
 const userStore = UserStore()
@@ -205,6 +227,11 @@ const currentPage = ref(1)
 const totalPages = ref(1)
 const loading = ref(false)
 
+const handleSearch = () => {
+  searchRequest.value.keyword = searchKeyword.value.trim()
+  currentPage.value = 1 // 搜索时回到第一页
+  loadPosts(1)
+}
 const loadPosts = async (page = 1) => {
   loading.value = true
   try {

@@ -235,6 +235,7 @@
       @wheel.prevent="handleWheel"
   />
   <button
+      v-if="route.path.split('/')[1] != 'exam'"
       @click="submitJudge"
       class="text-lg btn float-right text-white hover:text-slate-700 m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400 submit-button"
       :disabled="isShow_2"
@@ -369,6 +370,7 @@ const options: any = ref({
   maxLines: 1000,
   fontSize: font_size.value,
 });
+
 
 const problem_id = ref(
     path.toString().split("/")[1] == "competition"
@@ -1560,6 +1562,15 @@ const normalizeIndentation = (code:string) => {
   return result.join('\n');
 }
 onMounted(() => {
+  if (route.query.problem_id != null) {
+    problem_id.value = route.query.problem_id;
+    content.value = localStorage.getItem(
+        problem_id.value +
+        "-" +
+        useStore.loginUser.uuid +
+        "-" +
+        current_language.value);
+  }
   const textarea1 = document.getElementById(
       "auto-expand-textarea_1"
   ) as HTMLTextAreaElement;
