@@ -23,6 +23,8 @@ import PaymentView from "../views/payment/PaymentView.vue";
 import OfflineUserMonitor from "../views/competition/OfflineUserMonitor.vue";
 import CompetitionProcterView from "../views/competition/CompetitionProcterView.vue";
 import LogWebsiteManagement from "../views/log/LogWebsiteManagement.vue";
+import ExamAdd from "../views/exam/ExamAdd.vue";
+import ExamManagement from "../views/exam/ExamManagement.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -273,6 +275,30 @@ const routes: Array<RouteRecordRaw> = [
       show: true,
     },
     component: PaymentView,
+  },
+  {
+    path: "/exam",
+    name: "考试",
+    children: [
+      {
+        path: "add",
+        name: "添加考试",
+        meta: {
+          access : "2",
+          show : true
+        },
+        component: ExamAdd
+      },
+      {
+        path: "management",
+        name: "考试管理",
+        meta: {
+          access : "2",
+          show : true
+        },
+        component: ExamManagement
+      },
+    ],
   },
   {
     path: "/404",

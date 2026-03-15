@@ -13,6 +13,6 @@ export type ProblemRequest = {
     problem_name?: string;
     source_name?: string;
     status?: number;
-    tag_list?: Array<number>;
+    tagsList?: Array<number>;
 };
 

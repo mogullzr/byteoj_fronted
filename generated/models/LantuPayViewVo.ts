@@ -14,5 +14,6 @@ export type LantuPayViewVo = {
     size?: number;
     status?: number;
     uuid?: number;
+    wx_trade_no?: string;
 };
 

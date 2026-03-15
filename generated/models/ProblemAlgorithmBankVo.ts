@@ -11,6 +11,7 @@ export type ProblemAlgorithmBankVo = {
     difficulty_name?: string;
     english_name?: string;
     index?: string;
+    is_delete?: number;
     memory_limit?: number;
     pages?: number;
     problem_id?: number;

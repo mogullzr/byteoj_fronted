@@ -11,6 +11,7 @@ export type CompetitionAddRequest = {
     created_by?: number;
     description?: string;
     end_time?: string;
+    is_procter?: number;
     math408_problem_list?: Array<CompetitionProblems>;
     password?: string;
     pattern?: number;

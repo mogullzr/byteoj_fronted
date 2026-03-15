@@ -2,11 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type PostsQueryRequest = {
-    keyword?: string;
+export type CompetitionSearchRequest = {
     pageNum?: number;
-    pageSize?: number;
-    status?: number;
-    tagsList?: Array<number>;
 };
 

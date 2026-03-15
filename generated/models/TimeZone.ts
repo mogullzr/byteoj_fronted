@@ -2,9 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ProblemAlgorithmTestCaseRequest = {
-    input?: string;
-    output?: string;
-    runCode?: string;
+export type TimeZone = {
+    displayName?: string;
+    dstsavings?: number;
+    id?: string;
+    rawOffset?: number;
 };
 

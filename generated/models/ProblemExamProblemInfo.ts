@@ -2,11 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type PostsQueryRequest = {
-    keyword?: string;
-    pageNum?: number;
-    pageSize?: number;
+export type ProblemExamProblemInfo = {
+    problem_id?: number;
+    score?: number;
     status?: number;
-    tagsList?: Array<number>;
 };
 

@@ -2,11 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type PostsQueryRequest = {
+export type AutoCompeteVo = {
+    id?: string;
     keyword?: string;
-    pageNum?: number;
-    pageSize?: number;
-    status?: number;
-    tagsList?: Array<number>;
+    raw?: string;
 };
 

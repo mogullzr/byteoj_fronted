@@ -102,8 +102,7 @@
 </style>
 <script lang="ts" setup>
 import { onMounted, ref, Ref } from "vue";
-import {ComponentSize, ElNotification} from "element-plus";
-import UseStore from "../../../store/store.ts";
+import {ElNotification} from "element-plus";
 import {
   ProblemAlgorithmBankVo, ProblemAlgorithmControllerService,
   SearchControllerService,
