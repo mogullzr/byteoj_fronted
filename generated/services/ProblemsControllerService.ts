@@ -4,13 +4,14 @@
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
+import type { BaseResponse_List_ProblemSimilarityVo_ } from '../models/BaseResponse_List_ProblemSimilarityVo_';
 import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_ProblemExamVo_';
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
+import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
 import type { ProblemRequest } from '../models/ProblemRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-import {ProblemExamEditRequest} from "../models/ProblemExamEditRequest";
 export class ProblemsControllerService {
     /**
      * ProblemSearchExamId
@@ -92,6 +93,27 @@ export class ProblemsControllerService {
             query: {
                 'problem_id': problemId,
             },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * ProblemSearchSimilarity
+     * @param problemIdList problem_id_list
+     * @returns BaseResponse_List_ProblemSimilarityVo_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static problemSearchSimilarityUsingPost(
+        problemIdList: Array<number>,
+    ): CancelablePromise<BaseResponse_List_ProblemSimilarityVo_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/similar',
+            body: problemIdList,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

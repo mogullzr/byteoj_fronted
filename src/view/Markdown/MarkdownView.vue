@@ -35,7 +35,7 @@ export default {
       //    - g 标志表示全局替换。
       // 2. '\\'     : 替换为。
       //    - 在 JS 字符串中，\\ 代表一个实际的反斜杠字符 (\)。
-      return this.generateData.replace(/\\\\/g, '\\');
+      return this.generateData;
     },
   },
   // computed: {
