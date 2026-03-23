@@ -13,6 +13,7 @@ export type Course = {
     end_time?: string;
     is_delete?: number;
     num?: number;
+    pay?: string;
     start_time?: string;
 };
 

@@ -8,6 +8,77 @@
   </div>
 
   <div class="exam-container" v-else>
+    <!-- 确认交卷弹窗 -->
+    <transition name="modal-fade">
+      <div v-if="showConfirmModal" class="modal-overlay">
+        <div class="confirm-modal">
+          <h3>确定要交卷吗？</h3>
+          <p>交卷后无法修改答案，请仔细检查！</p>
+          <div class="modal-buttons">
+            <button class="btn cancel" @click="showConfirmModal = false">我再检查一下</button>
+            <button class="btn confirm" @click="confirmSubmit" :disabled="submitting">
+              {{ submitting ? '提交中...' : '确认交卷' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </transition>
+
+    <!-- 提交中加载遮罩 -->
+    <transition name="fade">
+      <div v-if="submitting" class="loading-overlay">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          <p>正在提交试卷...</p>
+          <small>请勿关闭或刷新页面</small>
+        </div>
+      </div>
+    </transition>
+    <!-- 交卷结果遮罩层 -->
+    <div v-if="showResult" class="result-overlay">
+      <div class="result-card">
+        <div class="result-header">
+          <h2>交卷成功！</h2>
+          <div class="result-icon success">✓</div>
+        </div>
+
+        <div class="result-body">
+          <div class="exam-info">
+            <div class="info-row">
+              <span class="label">考试名称</span>
+              <span class="value">{{ resultData.exam_name }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">考生</span>
+              <span class="value">{{ resultData.username }}</span>
+            </div>
+            <div class="info-row total-score">
+              <span class="label">总分</span>
+              <span class="value highlight font-bold">{{ resultData.score_subjective + resultData.score_option }} / {{ resultData.total_score }} 分</span>
+            </div>
+          </div>
+
+          <div class="score-breakdown">
+            <div class="score-item">
+              <div class="score-label">客观题得分</div>
+              <div class="score-value">{{ resultData.score_option }} 分</div>
+            </div>
+            <div class="score-item">
+              <div class="score-label">主观题得分</div>
+              <div class="score-value">{{ resultData.score_subjective }} 分</div>
+            </div>
+          </div>
+
+          <div class="result-footer">
+            <p class="tip">成绩已提交，请等待老师批改主观题</p>
+            <div class="buttons">
+              <button class="btn primary" @click="goToDashboard">返回首页</button>
+              <button class="btn secondary" @click="showResult = false">查看答题卡</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- 顶部 Header -->
     <header>
       <div class="header-inner">
@@ -79,12 +150,58 @@
 
         <!-- 情况3: 填空题 (option_type=3) 或 简答题 (option_type=0) -->
         <template v-else>
-          <textarea
-              v-model="answers[currentQuestion.problem_id]"
-              class="fill-blank"
-              :placeholder="currentQuestion.option_type === 0 ? '请在此作答简答题...' : '请填写答案...'"
-              rows="8"
-          ></textarea>
+          <div class="fill-answer-area">
+            <!-- 已上传的图片展示区 -->
+            <div class="uploaded-images" v-if="getAnswerImages(currentQuestion.problem_id).length">
+              <div
+                  v-for="(imgUrl, idx) in getAnswerImages(currentQuestion.problem_id)"
+                  :key="idx"
+                  class="image-preview-item"
+              >
+                <img :src="imgUrl" alt="答题图片" class="preview-img" />
+                <button
+                    class="remove-btn"
+                    @click="removeUploadedImage(currentQuestion.problem_id, idx)"
+                    title="删除这张图片"
+                >×</button>
+              </div>
+            </div>
+
+            <!-- 上传区域 -->
+            <div class="upload-zone">
+              <input
+                  type="file"
+                  accept="image/*"
+                  class="file-input"
+                  id="file-upload"
+                  ref="fileInput"
+                  @change="handleFileChange"
+                  hidden
+              />
+
+              <button
+                  type="button"
+                  class="btn-upload"
+                  @click="triggerUpload"
+                  :disabled="uploading"
+              >
+                <span v-if="uploading">上传中...</span>
+                <span v-else>📤 上传答题图片</span>
+              </button>
+
+              <div class="upload-tip" v-if="!uploading">
+                支持 jpg / png / gif，建议单张小于 5MB
+              </div>
+            </div>
+
+            <!-- 可选：保留文本输入框（有些人可能想既写文字又传图） -->
+            <textarea
+                v-model="textAnswers[currentQuestion.problem_id]"
+                class="fill-blank"
+                placeholder="可在此补充文字说明（非必填）..."
+                rows="6"
+            ></textarea>
+          </div>
         </template>
       </div>
 
@@ -102,22 +219,39 @@
     <!-- 右侧工具栏 -->
     <aside class="sidebar">
       <!-- 答题卡 -->
+      <!-- 答题卡部分 -->
       <div class="card">
         <div class="card-header">答题卡</div>
-        <div class="question-nav">
-          <button
-              v-for="(q, index) in questions"
-              :key="q.problem_id"
-              class="q-btn"
-              :class="{
-                answered: isAnswered(q.problem_id),
-                current: index === currentIndex,
-                'is-algo': q.status === 3
-              }"
-              @click="currentIndexChange(index, q.status, q.problem_id)"
-          >
-            {{ index + 1 }}
-          </button>
+
+        <div class="question-nav-wrapper">
+
+          <!-- 先按 option_type 分组 -->
+          <template v-for="(group, groupIndex) in groupedQuestions" :key="'group-'+groupIndex">
+
+            <!-- 分组标题 -->
+            <div class="group-title">
+              {{ numberToChinese(groupIndex + 1) }}、{{ getGroupTypeName(group[0]) }}
+            </div>
+
+            <!-- 该组的题目按钮 -->
+            <div class="question-nav group-nav">
+              <button
+                  v-for="(q, idx) in group"
+                  :key="q.problem_id"
+                  class="q-btn"
+                  :class="{
+            answered: isAnswered(q.problem_id),
+            current: questions.indexOf(q) === currentIndex,
+            'is-algo': q.status === 3
+          }"
+                  @click="currentIndexChange(questions.indexOf(q), q.status, q.problem_id)"
+              >
+                {{ questions.indexOf(q) + 1 }}
+              </button>
+            </div>
+
+          </template>
+
         </div>
       </div>
 
@@ -157,15 +291,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 // 假设你的服务文件路径如下，请根据实际项目结构调整
-import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import router from "@/router";
 import Router from "@/router";
-
+import {ProblemsControllerService} from "../../../generated/services/ProblemsControllerService";
+import {UserControllerService} from "../../../generated";
+import {useMessageBox} from "@/view/components/alert/useMessageBox";
 // --- 类型定义 ---
 interface ProblemItem {
   problem_id: number
@@ -193,7 +328,195 @@ const currentIndex = ref(0)
 const answers = ref<Record<number, any>>({}) // key: problem_id
 const remaining = ref(3600) // 默认1小时，后续可从 examData.time 获取
 let timerInterval: number | null = null
+// ==================== 新增的状态 ====================
+const uploading = ref(false)
+const fileInput = ref<HTMLInputElement | null>(null)
 
+// 单独存文本部分（可选，如果你想同时支持文字+图片）
+const textAnswers = ref<Record<number, string>>({})
+// 新增：用于存储的 key（用 exam_id 区分不同考试）
+const storageKey = computed(() => {
+  const examId = examData.value?.exam_id
+  return examId ? `exam-${examId}-answers` : null
+})
+const { success, error, warning } = useMessageBox();
+
+// 新增状态
+const showResult = ref(false)
+const resultData = ref({
+  exam_id: 0,
+  exam_name: '',
+  total_score: 0,
+  uuid: 0,
+  username: '',
+  score_option: 0,
+  score_subjective: 0
+})
+// 新增状态
+const showConfirmModal = ref(false)
+const submitting = ref(false)
+
+// 统一从 answers 里取图片链接的辅助函数
+const getAnswerImages = (problemId: number) => {
+  const ans = answers.value[problemId]
+  if (!ans) return []
+  if (typeof ans === 'string' && ans.startsWith('http')) return [ans]
+  if (Array.isArray(ans)) return ans.filter(item => typeof item === 'string' && item.startsWith('http'))
+  return []
+}
+
+// 触发文件选择
+const triggerUpload = () => {
+  fileInput.value?.click()
+}
+
+// 处理文件上传
+const handleFileChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+
+  uploading.value = true
+
+  try {
+    const formData = new FormData()
+    // 支持一次传多张？这里示例只取第一张，你可以改成循环
+    formData.append('file', target.files[0])
+
+    // 调用你提供的上传接口（注意：你示例中是 userUploadPictureUsingPost(fileList, 1)）
+    // 这里假设改成了支持 FormData 的写法，根据实际 SDK 调整
+    const res = await UserControllerService.userUploadPictureUsingPost(
+        target.files,   // FileList
+        2               // 第二个参数是什么含义？请确认
+    )
+
+    if (res.code === 0) {
+      // 成功后清理
+      if (storageKey.value) {
+        localStorage.removeItem(storageKey.value)
+      }
+      // 假设 res.data 是字符串链接
+      const url = res.data
+
+      // 存入 answers（这里示例只支持一张，后面可改成数组）
+      answers.value[currentQuestion.value.problem_id] = url
+
+      // 如果你想支持多张，可以改成：
+      // if (!Array.isArray(answers.value[pid])) answers.value[pid] = []
+      // answers.value[pid].push(url)
+    } else {
+      error(res.message || "上传失败")
+    }
+  } catch (err) {
+    console.error("图片上传异常", err)
+    error("上传过程中发生错误")
+  } finally {
+    uploading.value = false
+    // 清空 input 防止重复触发相同文件
+    if (fileInput.value) fileInput.value.value = ''
+  }
+}
+
+// 删除已上传图片
+const removeUploadedImage = (problemId: number, index: number) => {
+  const current = answers.value[problemId]
+  if (Array.isArray(current)) {
+    current.splice(index, 1)
+    if (current.length === 0) {
+      delete answers.value[problemId]
+    }
+  } else {
+    // 单张直接删除
+    delete answers.value[problemId]
+  }
+}
+
+// ==================== 提交时的数据处理调整 ====================
+const handleSubmit = async () => {
+  showConfirmModal.value = true
+}
+
+// 确认后真正提交
+const confirmSubmit = async () => {
+  showConfirmModal.value = false
+  submitting.value = true
+
+
+  const answerList = []
+
+  for (const [pidStr, val] of Object.entries(answers.value)) {
+    const pid = Number(pidStr)
+    const q = questions.value.find(qq => qq.problem_id === pid)
+    if (!q) continue
+
+    let finalAnswer = ""
+
+    // 根据题型（q.status）决定 answer 格式
+    switch (q.option_type) {
+      case 1: // 单选
+        finalAnswer = `['${val}']`
+        break
+
+      case 2: // 多选
+        if (Array.isArray(val) && val.length > 0) {
+          finalAnswer = `[${val.map(v => `'${v}'`).join(',')}]`
+        }
+        break
+
+      case 3: // 填空
+      case 0: // 简答
+        // 图片链接（你主要想实现的）
+        if (typeof val === 'string' && val.startsWith('http')) {
+          finalAnswer = val
+        } else if (Array.isArray(val) && val.length > 0) {
+          finalAnswer = val.join(',')   // 或 JSON.stringify(val)，看后端要求
+        }
+        // 简答题可额外拼接文字（可选）
+        if (q.option_type === 0) {
+          const text = textAnswers.value[pid]?.trim()
+          if (text) finalAnswer = finalAnswer ? `${finalAnswer}\n${text}` : text
+        }
+        break
+
+      case 4: // 算法题
+        // 如果你后面实现了代码保存，这里可以放代码字符串
+        finalAnswer = val || ""   // 目前大多为空
+        break
+
+      default:
+        finalAnswer = String(val || "").trim()
+    }
+
+    // 无论是否作答，都包含这条记录，并带上真实的题型 status
+    answerList.push({
+      problem_id: pid,
+      answer: finalAnswer,
+      language: "",
+      status: q.option_type
+    })
+  }
+
+  const request = {
+    exam_id: examData.value?.exam_id,
+    answers: answerList
+  }
+
+  console.log('准备提交的数据：', JSON.stringify(request, null, 2))
+
+  // 调用接口...
+  try {
+    const res = await ProblemsControllerService.problemExamSubmitUsingPost(request)
+    if (res.code === 0) {
+      resultData.value = res.data
+      showResult.value = true
+    } else {
+      error("提交失败：" + (res.message || "未知错误"))
+    }
+  } catch (err) {
+    error("网络错误，提交失败")
+  } finally {
+    submitting.value = false
+  }
+}
 // --- 计算属性 ---
 const currentQuestion = computed(() => questions.value[currentIndex.value] || {})
 
@@ -266,7 +589,20 @@ const isAnswered = (id: number) => {
   if (Array.isArray(ans)) return ans.length > 0
   return String(ans).trim().length > 0
 }
+// 监听 answers 变化 → 保存到 localStorage（防抖版本更友好）
+watch(
+    answers,
+    (newAnswers) => {
+      if (!storageKey.value) return
 
+      // 简单深拷贝，避免循环引用问题
+      const toSave = JSON.parse(JSON.stringify(newAnswers))
+
+      localStorage.setItem(storageKey.value, JSON.stringify(toSave))
+      console.log('答案已保存到 localStorage')
+    },
+    { deep: true, debounce: 800 }  // 防抖 800ms，避免频繁写入
+)
 const currentIndexChange = (index: number, status: number, problem_id: number) => {
   currentIndex.value = index;
   localStorage.setItem(examData.value?.exam_id + "-currentIndex", index);
@@ -298,7 +634,7 @@ const startTimer = () => {
     remaining.value--
     if (remaining.value <= 0) {
       stopTimer()
-      alert('考试时间到！系统将自动提交～')
+      error('考试时间到！系统将自动提交～')
       handleSubmit()
     }
   }, 1000)
@@ -311,26 +647,65 @@ const stopTimer = () => {
   }
 }
 
-const handleSubmit = () => {
-  if (!confirm('确定要交卷吗？交卷后无法修改！')) return
-  stopTimer()
+// 分组后的数据
+const groupedQuestions = computed(() => {
+  if (!questions.value.length) return []
 
-  // 构造提交数据
-  const submitData = {
-    exam_id: examData.value?.exam_id,
-    answers: Object.entries(answers.value).map(([pid, val]) => ({
-      problem_id: Number(pid),
-      answer: val
-    }))
+  const groups: ProblemItem[][] = []
+  let currentGroup: ProblemItem[] = []
+  let prevType: number | null = null
+
+  questions.value.forEach(q => {
+    const type = getEffectiveType(q)  // 统一处理 type
+
+    if (type !== prevType || currentGroup.length === 0) {
+      if (currentGroup.length > 0) {
+        groups.push(currentGroup)
+      }
+      currentGroup = [q]
+      prevType = type
+    } else {
+      currentGroup.push(q)
+    }
+  })
+
+  if (currentGroup.length > 0) {
+    groups.push(currentGroup)
   }
 
-  console.log('提交数据:', submitData)
-  alert('试卷已提交！\n\n请在控制台查看提交数据结构。')
-  // TODO: 调用提交接口
+  return groups
+})
+
+// 获取显示用的类型名称
+const getGroupTypeName = (q: ProblemItem) => {
+  if (q.status === 3) return '算法题'
+  switch (q.option_type) {
+    case 0: return '简答题'
+    case 1: return '单选题'
+    case 2: return '多选题'
+    case 3: return '填空题'
+    case 4: return '算法题'   // 如果有独立用4表示算法题的情况
+    default: return '其他题型'
+  }
 }
 
+// 把 1,2,3,4... 转成 一、二、三...
+const numberToChinese = (n: number) => {
+  const chineseNums = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十']
+  if (n <= 10) return chineseNums[n - 1]
+  if (n === 11) return '十一'
+  // 更多可以继续扩展，或者用更通用的转换函数
+  return n.toString()
+}
+
+// 统一获取“类型”，方便分组（因为算法题用 status=3 判断）
+const getEffectiveType = (q: ProblemItem) => {
+  if (q.status === 3) return -1   // 用一个特殊值代表算法题
+  return q.option_type
+}
 // --- 生命周期 ---
 onMounted(async () => {
+
   const examId = route.query.exam_id
   let current = localStorage.getItem(examId + "-currentIndex");
   if (current) {
@@ -339,7 +714,7 @@ onMounted(async () => {
     currentIndex.value = 0
   }
   if (!examId) {
-    alert('缺少考试ID参数')
+    error('缺少考试ID参数')
     loading.value = false
     return
   }
@@ -369,13 +744,25 @@ onMounted(async () => {
       remaining.value = 2 * 3600
       startTimer()
     } else {
-      alert('获取题目失败：' + res.message)
+      error('获取题目失败：' + res.message)
     }
   } catch (error) {
-    console.error('加载考试数据异常', error)
-    alert('网络错误，加载失败')
+    error('网络错误，加载失败')
   } finally {
     loading.value = false
+  }
+
+  if (storageKey.value) {
+    const saved = localStorage.getItem(storageKey.value)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        answers.value = parsed
+        console.log('已从 localStorage 恢复答案')
+      } catch (e) {
+        console.warn('localStorage 答案解析失败，已忽略', e)
+      }
+    }
   }
 })
 
@@ -850,5 +1237,601 @@ input[type="checkbox"] {
   .sidebar {
     order: -1;
   }
+}
+
+.fill-answer-area {
+  padding: 12px 0;
+}
+
+.uploaded-images {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.image-preview-item {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.preview-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #f8fafc;
+}
+
+.remove-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.upload-zone {
+  text-align: center;
+  margin: 16px 0 24px;
+}
+
+.btn-upload {
+  padding: 10px 24px;
+  font-size: 1.05rem;
+  background: #6366f1;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-upload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.upload-tip {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.fill-blank {
+  /* 原来的样式 */
+  margin-top: 16px;
+}
+
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.4s ease;
+}
+
+.result-card {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-header {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.result-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.result-icon.success {
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin: 16px auto 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.result-body {
+  padding: 32px 28px;
+}
+
+.exam-info {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.total-score .value {
+  font-size: 1.5rem;
+  color: #6366f1;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.score-item {
+  background: #f1f5f9;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.score-label {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.result-footer {
+  text-align: center;
+}
+
+.tip {
+  color: #64748b;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 14px 32px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+}
+
+.btn.primary {
+  background: #6366f1;
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+}
+
+.btn.secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn.secondary:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  animation: fadeIn 0.4s ease;
+}
+
+.result-card {
+  background: white;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: scaleIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.result-header {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  padding: 32px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.result-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.result-icon.success {
+  width: 80px;
+  height: 80px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3.5rem;
+  font-weight: bold;
+  margin: 16px auto 0;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+.result-body {
+  padding: 32px 28px;
+}
+
+.exam-info {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 28px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.label {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.value {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.total-score .value {
+  font-size: 1.5rem;
+  color: #6366f1;
+}
+
+.score-breakdown {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.score-item {
+  background: #f1f5f9;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.score-label {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin-bottom: 8px;
+}
+
+.score-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.result-footer {
+  text-align: center;
+}
+
+.tip {
+  color: #64748b;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+.buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 14px 32px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.25s;
+  border: none;
+}
+
+.btn.primary {
+  background: #6366f1;
+  color: white;
+}
+
+.btn.primary:hover {
+  background: #4f46e5;
+  transform: translateY(-2px);
+}
+
+.btn.secondary {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.btn.secondary:hover {
+  background: #cbd5e1;
+  transform: translateY(-2px);
+}
+
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+}
+
+.confirm-modal {
+  background: white;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  padding: 32px 24px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+}
+
+.confirm-modal h3 {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.confirm-modal p {
+  color: #64748b;
+  margin: 0 0 28px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.btn {
+  padding: 12px 32px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn.cancel {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.btn.cancel:hover {
+  background: #cbd5e1;
+}
+
+.btn.confirm {
+  background: #ef4444;
+  color: white;
+}
+
+.btn.confirm:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* 提交中加载 */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1800;
+}
+
+.loading-spinner {
+  text-align: center;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e2e8f0;
+  border-top: 6px solid #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.loading-spinner small {
+  color: #64748b;
+}
+
+/* 动画过渡 */
+.modal-fade-enter-active, .modal-fade-leave-active,
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.modal-fade-enter-from, .modal-fade-leave-to,
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 18px 32px;
+  font-size: 1.22rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.35);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-submit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(99, 102, 241, 0.45);
+}
+
+.btn-submit:active {
+  transform: translateY(1px);
+  box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3);
+}
+
+.question-nav-wrapper {
+  padding: 20px;
+}
+
+.group-title {
+  font-weight: 700;
+  color: #475569;
+  padding: 12px 8px 6px;
+  font-size: 1.05rem;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 12px;
+  background: #f8fafc;
+  border-radius: 8px 8px 0 0;
+}
+
+.group-nav {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #cbd5e1;
+}
+
+.group-nav:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* 让分组之间的间距更明显一点 */
+.group-nav + .group-title {
+  margin-top: 20px;
 }
 </style>

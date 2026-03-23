@@ -11,6 +11,7 @@ export type CourseRequest = {
     course_title_description?: string;
     create_name?: string;
     end_time?: string;
+    pay?: string;
     start_time?: string;
 };
 

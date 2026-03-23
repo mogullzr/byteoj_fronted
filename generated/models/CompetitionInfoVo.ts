@@ -9,6 +9,7 @@ export type CompetitionInfoVo = {
     description?: string;
     end_time?: string;
     isCreated?: number;
+    is_delete?: number;
     joins?: number;
     page_Sum?: number;
     pattern?: number;

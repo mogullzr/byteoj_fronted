@@ -5,6 +5,7 @@
 export type CompetitionProblemsVo = {
     ac_total?: number;
     index?: string;
+    problem_id?: number;
     problem_name?: string;
     status?: number;
     test_total?: number;

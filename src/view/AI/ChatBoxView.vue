@@ -10,6 +10,7 @@
           @change="updateModel"
           class="model-select"
         >
+          <option value="Qwen/Qwen2.5-VL-72B-Instruct">QianWen2.5-VL</option>
           <option value="deepseek-v3-tenCloud">DeepSeek V3.1(最新推出！！！)</option>
           <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
             DeepSeek Reasoner
@@ -451,7 +452,6 @@ const startChat = async () => {
         status: props.status ?? 0,
       } as any;
     }
-
     const response: any = await fetch("https://www.byteoj.com/api/ai/ask", {
       method: "POST",
       headers: {

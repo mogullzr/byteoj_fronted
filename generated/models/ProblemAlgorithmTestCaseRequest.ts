@@ -5,5 +5,6 @@
 export type ProblemAlgorithmTestCaseRequest = {
     input?: string;
     output?: string;
+    runCode?: string;
 };
 

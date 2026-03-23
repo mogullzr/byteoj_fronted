@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { UserRatingVo } from './UserRatingVo';
+import type { UserRatingVo } from '../../../generated/models/UserRatingVo';
 export type BaseResponse_List_UserRatingVo_ = {
     code?: number;
     data?: Array<UserRatingVo>;

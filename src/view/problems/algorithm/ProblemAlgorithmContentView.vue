@@ -132,7 +132,7 @@ const showBot = () => {
                     </td>
                   </tr>
                   <!-- row 2 -->
-                  <tr class="bg-gray-100">
+                  <tr class="bg-gray-50">
                     <td>
                       <span style="float: left">时/空限制</span>
                       <span style="float: right"
@@ -148,7 +148,7 @@ const showBot = () => {
                       <span style="float: right">{{ problem.ac_total }}</span>
                     </td>
                   </tr>
-                  <tr class="bg-gray-100">
+                  <tr class="bg-gray-50">
                     <td>
                       <span style="float: left">总尝试次数：</span>
                       <span style="float: right">{{ problem.test_total }}</span>
@@ -167,7 +167,7 @@ const showBot = () => {
                       <div class="badge" style="float: right" v-else>无</div>
                     </td>
                   </tr>
-                  <tr class="bg-gray-100">
+                  <tr class="bg-gray-50">
                     <td>
                       <button class="badge" style="float: left" @click="click">
                         算法标签

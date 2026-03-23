@@ -31,7 +31,7 @@
           : ' pb-32')
       "
     >
-      <PlaneGame />
+<!--      <PlaneGame />-->
       <transition name="fade" mode="out-in">
         <!-- 添加 key 和 activated 事件处理 -->
         <router-view v-slot="{ Component, route }">

@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { View } from './View';
+import type { View } from '../../../generated/models/View';
 export type ModelAndView = {
     empty?: boolean;
     model?: any;

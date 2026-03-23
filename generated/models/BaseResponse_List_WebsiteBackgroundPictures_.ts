@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WebsiteBackgroundPictures } from './WebsiteBackgroundPictures';
+import type { WebsiteBackgroundPictures } from '../../../generated/models/WebsiteBackgroundPictures';
 export type BaseResponse_List_WebsiteBackgroundPictures_ = {
     code?: number;
     data?: Array<WebsiteBackgroundPictures>;

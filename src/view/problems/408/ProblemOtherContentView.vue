@@ -211,8 +211,7 @@ const getProblemType = (type: number) => {
 
 const getShortDescription = (desc: string) => {
   if (!desc) return '（无题目描述）';
-  const cleaned = desc.replace(/\\begin{cases}|\\end{cases}|\\frac{[^}]*}/g, ' ').replace(/<[^>]+>/g, '');
-  return cleaned.length > 110 ? cleaned.slice(0, 110) + '...' : cleaned;
+  return desc.length > 160 ? desc.slice(0, 160) + '...' : desc;
 };
 
 const parseStringArray = (str: string): string[] => {
@@ -327,9 +326,6 @@ const nextProblem = () => {
       <div class="meta-info mb-6">
         <span class="meta-item"><i class="fas fa-star"></i> {{ problem.difficulty_name }}</span>
         <span class="meta-item"><i class="fas fa-book"></i> {{ problem.source_name }}</span>
-        <span v-if="problem.tagsList.length" class="meta-item">
-          <i class="fas fa-tags"></i> {{ problem.tagsList.join(" · ") }}
-        </span>
       </div>
 
       <!-- 相似推荐区块 -->
@@ -413,16 +409,9 @@ const nextProblem = () => {
 
                 <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-600 mb-3">
                   <span class="font-medium opacity-90">{{ sim.source_name }}</span>
-                  <span class="opacity-40">•</span>
-                  <template v-for="(tag, idx) in sim.tagsList?.slice(0, 2)" :key="idx">
-                    <span class="badge badge-outline badge-xs border-slate-300">{{ tag }}</span>
-                  </template>
-                  <span v-if="sim.tagsList?.length > 2" class="text-xs opacity-60">+{{ sim.tagsList.length - 2 }}</span>
                 </div>
 
-                <p class="text-sm leading-relaxed text-slate-700 line-clamp-3">
-                  {{ getShortDescription(sim.description) }}
-                </p>
+                <MarkdownView class="text-sm leading-relaxed text-slate-700 line-clamp-3" :generate-data="getShortDescription(sim.description)" />
               </div>
 
               <!-- hover 提示 -->

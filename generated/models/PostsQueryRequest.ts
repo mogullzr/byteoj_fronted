@@ -6,6 +6,7 @@ export type PostsQueryRequest = {
     keyword?: string;
     pageNum?: number;
     pageSize?: number;
+    status?: number;
     tagsList?: Array<number>;
 };
 

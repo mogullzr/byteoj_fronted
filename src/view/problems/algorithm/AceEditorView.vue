@@ -2,7 +2,7 @@
   <audio ref="audioClick" v-show="false">
     <source src="../../../../public/vector.mp3" type="audio/mpeg" />
   </audio>
-  <div class="bg-neutral-100 w-full h-16" style="border: lightgray 1px solid">
+  <div class="bg-neutral-50 w-full h-16" style="border: lightgray 1px solid">
     <div class="flex">
       <div class="flex-1"></div>
       <select

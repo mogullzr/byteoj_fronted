@@ -10,17 +10,17 @@ export type PostsVo = {
     create_time?: string;
     is_thumbs?: number;
     location?: string;
+    pages?: number;
     post_id?: number;
     reading?: number;
     school?: string;
+    status?: number;
     tag_first?: string;
     tag_list?: Array<string>;
     thumbs_up?: number;
     title?: string;
     update_time?: string;
+    url?: string;
     uuid?: number;
-    pages?:number;
-    status?: number;
-    url?:string;
 };
 

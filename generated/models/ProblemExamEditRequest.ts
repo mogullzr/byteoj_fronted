@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ProblemExamProblemInfo } from '../../../generated/models/ProblemExamProblemInfo';
+import type { ProblemExamProblemInfo } from './ProblemExamProblemInfo';
 export type ProblemExamEditRequest = {
     end_date?: number;
     exam_id?: number;

@@ -1,10 +1,10 @@
 <template>
   <MdPreview
-    class="custom-font"
-    :marked-heading-id="generateId"
-    :editorId="id"
-    :modelValue="processedData"
-    previewTheme="github"
+      class="custom-font"
+      :marked-heading-id="generateId"
+      :editorId="id"
+      :modelValue="processedData"
+      previewTheme="github"
   />
 </template>
 
@@ -21,48 +21,15 @@ export default {
   props: {
     generateData: {
       type: String,
-      required: true, // 确保 generateData 是必传的
+      required: true,
     },
   },
   computed: {
-    // 新增计算属性：处理反斜杠替换
     processedData() {
       if (!this.generateData) return "";
-
-      // 解释：
-      // 1. /\\\\/g  : 正则表达式。
-      //    - 在 JS 字符串中，\\\\ 代表两个实际的反斜杠字符 (\\)。
-      //    - g 标志表示全局替换。
-      // 2. '\\'     : 替换为。
-      //    - 在 JS 字符串中，\\ 代表一个实际的反斜杠字符 (\)。
       return this.generateData;
     },
   },
-  // computed: {
-  //   // 将 generateData 转换为自定义字符
-  //   // transformedData() {
-  //   //   const generateCustomText = (text) => {
-  //   //     const codePoints = [
-  //   //       0xe800, 0xe801, 0xe802, 0xe803, 0xe804, 0xe805, 0xe806, 0xe807,
-  //   //       0xe808, 0xe809,
-  //   //     ];
-  //   //     let result = "";
-  //   //     for (let i = 0; i < text.length; i++) {
-  //   //       const char = text[i];
-  //   //       if (/\d/.test(char)) {
-  //   //         // 如果是数字，转换为对应的字符
-  //   //         const codePoint = codePoints[parseInt(char)];
-  //   //         result += `&#x${codePoint.toString(16)};`;
-  //   //       } else {
-  //   //         result += char; // 如果不是数字，保留原字符
-  //   //       }
-  //   //     }
-  //   //     return result;
-  //   //   };
-  //   //
-  //   //   return generateCustomText(this.generateData);
-  //   // },
-  // },
   data() {
     return {
       id,
@@ -73,12 +40,25 @@ export default {
 </script>
 
 <style scoped>
-/* 如果需要对 .custom-font 类进行额外的样式定义 */
+/* 方法：使用 :deep() 穿透到组件内部 */
 
+/* 1. 设置整体容器的字体大小 */
+.custom-font :deep(.md-editor-preview) {
+  font-size: 18px; /* 这里调整为你想要的大小，默认通常是 16px */
+  line-height: 1.9;
+}
+
+/* 2. 如果你只想调整段落，也可以更精确地选择 */
+.custom-font :deep(.md-editor-preview p) {
+  font-size: 18px;
+  line-height: 1.9;
+}
+
+/* 3. 如果标题太小，也可以单独调整标题大小 (可选) */
+.custom-font :deep(.md-editor-preview h1),
+.custom-font :deep(.md-editor-preview h2),
+.custom-font :deep(.md-editor-preview h3) {
+  /* 标题通常有独立的大小，如果需要统一放大可在此设置 */
+  /* font-size: 1.5em; */
+}
 </style>
-
-
-//@font-face { // font-family: "CustomFont"; // src:
-url("/public/fontello.woff"), url("/public/fontello.eot"); /* 字体文件路径 */
-//} // ///* 应用自定义字体 */ //.custom-font { // font-family: "CustomFont",
-sans-serif; // font-size: 24px; //}

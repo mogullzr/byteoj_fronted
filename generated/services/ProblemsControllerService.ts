@@ -5,13 +5,15 @@
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
 import type { BaseResponse_List_ProblemSimilarityVo_ } from '../models/BaseResponse_List_ProblemSimilarityVo_';
+import type { BaseResponse_ProblemExamSubmitVo_ } from '../models/BaseResponse_ProblemExamSubmitVo_';
 import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_ProblemExamVo_';
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
+import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
 import type { ProblemRequest } from '../models/ProblemRequest';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { CancelablePromise } from '../../../generated/core/CancelablePromise';
+import { OpenAPI } from '../../../generated/core/OpenAPI';
+import { request as __request } from '../../../generated/core/request';
 export class ProblemsControllerService {
     /**
      * ProblemSearchExamId
@@ -71,6 +73,27 @@ export class ProblemsControllerService {
             query: {
                 'exam_id': examId,
             },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * ProblemExamSubmit
+     * @param problemExamRequest problemExamRequest
+     * @returns BaseResponse_ProblemExamSubmitVo_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static problemExamSubmitUsingPost(
+        problemExamRequest: ProblemExamSubmitRequest,
+    ): CancelablePromise<BaseResponse_ProblemExamSubmitVo_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/exam/submit',
+            body: problemExamRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

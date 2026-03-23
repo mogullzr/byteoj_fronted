@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_int_ } from '../models/BaseResponse_int_';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type { CancelablePromise } from '../../../generated/core/CancelablePromise';
+import { OpenAPI } from '../../../generated/core/OpenAPI';
+import { request as __request } from '../../../generated/core/request';
 export class UsageControllerService {
     /**
      * UsageMaxCountGet
