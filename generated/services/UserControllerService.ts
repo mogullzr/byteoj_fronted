@@ -543,4 +543,43 @@ export class UserControllerService {
       },
     });
   }
+
+  /**
+   * userWeChatGetAuthorizationUrl
+   * @returns BaseResponse_string_ OK
+   * @throws ApiError
+   */
+  public static userWeChatGetAuthorizationUrlUsingGet(): CancelablePromise<BaseResponse_string_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/user/weChat/getAuthorizationUrl',
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * userWeChatLogin
+   * @param code code
+   * @returns BaseResponse_UserVo_ OK
+   * @throws ApiError
+   */
+  public static userWeChatLoginUsingGet(
+      code?: string,
+  ): CancelablePromise<BaseResponse_UserVo_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/user/weChat/login',
+      query: {
+        'code': code,
+      },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
 }

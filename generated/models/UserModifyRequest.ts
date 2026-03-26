@@ -17,5 +17,7 @@ export type UserModifyRequest = {
     url?: string;
     username?: string;
     uuid?: number;
+    password: string;
+    confirm_password?: string;
 };
 

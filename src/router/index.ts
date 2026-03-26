@@ -4,8 +4,6 @@ import { ACCESS_ENUM } from "@/access/access";
 import checkAccess from "@/access/check";
 import user from "@/store/user";
 import { User } from "../../generated";
-import {ref} from "vue";
-import {useMessageBox} from "@/view/components/alert/useMessageBox";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -487,6 +485,11 @@ const routes: Array<RouteRecordRaw> = [
   //   component: () => import("@/view/DataStructureAnimation/DataStructureAnimationView.vue"),
   // },
   {
+    path: "/user/complete",
+    name: "",
+    component: () => import("@/view/components/completeInfo/CompleteInfoView.vue")
+  },
+  {
     path: "/404",
     name: "404",
     component: () => import("@/view/components/NotFoundView.vue"),
@@ -503,101 +506,101 @@ const router = createRouter({
 });
 router.beforeEach(async (to, from, next) => {
   // 反调试逻辑
-  (function () {
-    "use strict";
-
-    console.log("反调试逻辑已执行");
-
-    // 检测开发者工具是否打开
-    const checkDevTools = () => {
-      const devtools = /./;
-      devtools.toString = () => {
-        console.log("开发者工具已打开");
-        return "devtools";
-      };
-      console.log("%c", devtools);
-    };
-
-    // 检测代码执行时间
-    const checkExecutionTime = () => {
-      const startTime = performance.now();
-      (function () {
-        const endTime = performance.now();
-        if (endTime - startTime > 100) {
-          console.log("检测到调试行为");
-        }
-      })();
-    };
-
-    // 动态生成多条件 debugger 模式
-    const generateDebugMode = () => {
-      const conditions = [
-        () => Math.random() > 0.5,
-        () => new Date().getSeconds() % 2 === 0,
-        () => navigator.userAgent.includes("Chrome"),
-        () => window.innerWidth > 1024,
-        () => localStorage.getItem("debug") === "true",
-        () => performance.now() > 1000,
-        () => document.querySelector("body") !== null,
-        () => typeof window.console !== "undefined",
-        () => window.location.href.includes("example.com"),
-        () => Math.floor(Math.random() * 10) > 5,
-      ];
-
-      // 随机选择 3 到 5 个条件
-      const selectedConditions = conditions
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.floor(Math.random() * 3) + 3);
-
-      // 随机插入 debugger 的位置
-      const debuggerPositions = [
-        "console.log('Debugger condition 1');",
-        "console.log('Debugger condition 2');",
-        "console.log('Debugger condition 3');",
-        "console.log('Debugger condition 4');",
-        "console.log('Debugger condition 5');",
-      ];
-
-      // 随机选择 1 到 3 个位置
-      const selectedPositions = debuggerPositions
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.floor(Math.random() * 3) + 1);
-
-      // 构建代码
-      let code = "";
-      selectedConditions.forEach((condition, index) => {
-        code += `if (${condition.toString()}) { ${
-          selectedPositions[index % selectedPositions.length]
-        } debugger; }\n`;
-      });
-
-      return code;
-    };
-
-    // 动态插入 debugger
-    const dynamicDebugger = () => {
-      try {
-        const debugMode = generateDebugMode();
-        new Function(debugMode)(); // 使用 new Function 代替 eval
-      } catch (e) {
-        console.error("Anti-debug error:", e);
-      }
-      const randomTime = Math.floor(Math.random() * 1001) + 3000;
-      setInterval(() => {
-        try {
-          const debugMode = generateDebugMode();
-          new Function(debugMode)(); // 使用 new Function 代替 eval
-        } catch (e) {
-          console.error("Anti-debug error:", e);
-        }
-      }, randomTime);
-    };
-
-    // 初始化
-    checkDevTools();
-    checkExecutionTime();
-    dynamicDebugger();
-  })();
+  // (function () {
+  //   "use strict";
+  //
+  //   console.log("反调试逻辑已执行");
+  //
+  //   // 检测开发者工具是否打开
+  //   const checkDevTools = () => {
+  //     const devtools = /./;
+  //     devtools.toString = () => {
+  //       console.log("开发者工具已打开");
+  //       return "devtools";
+  //     };
+  //     console.log("%c", devtools);
+  //   };
+  //
+  //   // 检测代码执行时间
+  //   const checkExecutionTime = () => {
+  //     const startTime = performance.now();
+  //     (function () {
+  //       const endTime = performance.now();
+  //       if (endTime - startTime > 100) {
+  //         console.log("检测到调试行为");
+  //       }
+  //     })();
+  //   };
+  //
+  //   // 动态生成多条件 debugger 模式
+  //   const generateDebugMode = () => {
+  //     const conditions = [
+  //       () => Math.random() > 0.5,
+  //       () => new Date().getSeconds() % 2 === 0,
+  //       () => navigator.userAgent.includes("Chrome"),
+  //       () => window.innerWidth > 1024,
+  //       () => localStorage.getItem("debug") === "true",
+  //       () => performance.now() > 1000,
+  //       () => document.querySelector("body") !== null,
+  //       () => typeof window.console !== "undefined",
+  //       () => window.location.href.includes("example.com"),
+  //       () => Math.floor(Math.random() * 10) > 5,
+  //     ];
+  //
+  //     // 随机选择 3 到 5 个条件
+  //     const selectedConditions = conditions
+  //       .sort(() => Math.random() - 0.5)
+  //       .slice(0, Math.floor(Math.random() * 3) + 3);
+  //
+  //     // 随机插入 debugger 的位置
+  //     const debuggerPositions = [
+  //       "console.log('Debugger condition 1');",
+  //       "console.log('Debugger condition 2');",
+  //       "console.log('Debugger condition 3');",
+  //       "console.log('Debugger condition 4');",
+  //       "console.log('Debugger condition 5');",
+  //     ];
+  //
+  //     // 随机选择 1 到 3 个位置
+  //     const selectedPositions = debuggerPositions
+  //       .sort(() => Math.random() - 0.5)
+  //       .slice(0, Math.floor(Math.random() * 3) + 1);
+  //
+  //     // 构建代码
+  //     let code = "";
+  //     selectedConditions.forEach((condition, index) => {
+  //       code += `if (${condition.toString()}) { ${
+  //         selectedPositions[index % selectedPositions.length]
+  //       } debugger; }\n`;
+  //     });
+  //
+  //     return code;
+  //   };
+  //
+  //   // 动态插入 debugger
+  //   const dynamicDebugger = () => {
+  //     try {
+  //       const debugMode = generateDebugMode();
+  //       new Function(debugMode)(); // 使用 new Function 代替 eval
+  //     } catch (e) {
+  //       console.error("Anti-debug error:", e);
+  //     }
+  //     const randomTime = Math.floor(Math.random() * 1001) + 3000;
+  //     setInterval(() => {
+  //       try {
+  //         const debugMode = generateDebugMode();
+  //         new Function(debugMode)(); // 使用 new Function 代替 eval
+  //       } catch (e) {
+  //         console.error("Anti-debug error:", e);
+  //       }
+  //     }, randomTime);
+  //   };
+  //
+  //   // 初始化
+  //   checkDevTools();
+  //   checkExecutionTime();
+  //   dynamicDebugger();
+  // })();
 
   // 1. 设置页面标题
   document.title = to.meta.title ? `${to.meta.title}` : "ByteOJ";
@@ -649,6 +652,12 @@ router.beforeEach(async (to, from, next) => {
     return next("/404"); // 使用return终止后续执行
   }
 
+  // 6.1.1 已登录 + 权限够 + 但邮箱为空 -> 强制去完善页
+  const isCompletingPage = to.path === '/user/complete';
+  if (loginUser.uuid !== -1 && (!loginUser.email || loginUser.email.trim() === "") && !isCompletingPage) {
+    // 使用 router.replace 替换当前历史，防止用户点后退回到受限页面
+    return next('/user/complete');
+  }
   // 6.2 检查需要登录的路由
   if (needAccess !== ACCESS_ENUM.NOT_LOGIN) {
     // 6.2.1 未登录情况
