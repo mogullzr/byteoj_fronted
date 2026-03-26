@@ -180,14 +180,14 @@
 
             <div class="flex flex-wrap gap-3 mb-4">
               <button
-                class="btn btn-sm bg-yellow-500 text-white hover:bg-yellow-600"
-                @click="clearRecords"
+                  class="btn btn-sm bg-yellow-500 text-white hover:bg-yellow-600"
+                  @click="clearRecords"
               >
                 清空记录
               </button>
               <button
-                class="btn btn-sm bg-orange-500 text-white hover:bg-orange-600"
-                @click="openReplayPage"
+                  class="btn btn-sm bg-orange-500 text-white hover:bg-orange-600"
+                  @click="openReplayPage"
               >
                 🎬 查看代码回放
               </button>
@@ -700,8 +700,8 @@ const editorInit = () => {
 
       // Detect if this is a batch operation
       const isBatchOperation = text.length > 1 ||
-                              (timestamp - lastInsertTime < BATCH_THRESHOLD && lastInsertTime > 0) ||
-                              isInPasteMode;
+          (timestamp - lastInsertTime < BATCH_THRESHOLD && lastInsertTime > 0) ||
+          isInPasteMode;
 
       console.log('Batch operation detection:', {
         isBatchOperation: isBatchOperation,
@@ -952,6 +952,45 @@ const route = useRoute();
 const stompClient = ref(null);           // WS 客户端
 const isConnected = ref(false);          // 连接状态
 const subscriptions = ref(new Map());    // 存储所有订阅
+const messageQueue = ref(new Map());     // 消息缓存队列（用于处理订阅前到达的消息）
+const MAX_QUEUE_SIZE = 10;               // 每个任务最多缓存10条消息
+
+// ============================================
+// 消息缓存管理
+// ============================================
+
+/**
+ * 缓存消息（如果订阅还未建立）
+ */
+const cacheMessage = (taskId, message) => {
+  if (!subscriptions.value.has(taskId)) {
+    // 还未订阅，缓存消息
+    if (!messageQueue.value.has(taskId)) {
+      messageQueue.value.set(taskId, []);
+    }
+    const queue = messageQueue.value.get(taskId);
+    if (queue.length < MAX_QUEUE_SIZE) {
+      queue.push(message);
+      console.log(`[消息缓存] 任务 ${taskId} 缓存消息，当前队列: ${queue.length}`);
+    }
+    return true;  // 已缓存
+  }
+  return false;  // 已订阅，不需要缓存
+};
+
+/**
+ * 消费缓存的消息
+ */
+const consumeCachedMessages = (taskId, onMessage) => {
+  const queue = messageQueue.value.get(taskId);
+  if (queue && queue.length > 0) {
+    console.log(`[消息缓存] 任务 ${taskId} 消费 ${queue.length} 条缓存消息`);
+    queue.forEach(message => {
+      onMessage(message);
+    });
+    messageQueue.value.delete(taskId);
+  }
+};
 
 // ============================================
 // WebSocket 连接管理（新增）
@@ -988,7 +1027,7 @@ const initWebSocketConnection = () => {
       const host = window.location.hostname;
       const port = process.env.NODE_ENV === 'production' ? '' : ':7091';
       const wsUrl = `${protocol}//${host}${port}/api/ws/judge`;
-      
+
       console.log('[WebSocket] 连接地址:', wsUrl);
 
       const client = new Client({
@@ -1011,6 +1050,22 @@ const initWebSocketConnection = () => {
         onConnect: (frame) => {
           console.log('[WebSocket] ✅ 连接成功');
           isConnected.value = true;
+
+          // 🔥 订阅全局主题，缓存所有判题消息（用于处理订阅前到达的消息）
+          stompClient.value.subscribe('/topic/judge/*', (message) => {
+            try {
+              const result = JSON.parse(message.body);
+              const taskId = result.taskId;
+
+              // 如果该任务还未订阅，缓存消息
+              if (taskId && !subscriptions.value.has(taskId)) {
+                cacheMessage(taskId, result);
+              }
+            } catch (e) {
+              // 忽略解析错误
+            }
+          });
+
           resolve();
         },
 
@@ -1062,6 +1117,9 @@ const subscribeJudgeResult = async (taskId, onMessage) => {
     }
 
     console.log(`[WebSocket] 📡 订阅任务: ${taskId}`);
+
+    // 先消费缓存的消息（处理订阅前到达的消息）
+    consumeCachedMessages(taskId, onMessage);
 
     // 订阅 topic
     const subscription = stompClient.value.subscribe(
@@ -1247,7 +1305,7 @@ const handleJudgeResult = (taskId, result) => {
   else {
     // 其他未知状态，也需要完成判题
     code_message.value = result.message || result.output || "";
-    
+
     finishJudge(taskId);
   }
 };
@@ -1371,12 +1429,12 @@ const formatCode = () => {
 
     // 保存格式化后的代码到 localStorage
     localStorage.setItem(
-      problem_id.value +
-      "-" +
-      useStore.loginUser.uuid +
-      "-" +
-      current_language.value,
-      content.value
+        problem_id.value +
+        "-" +
+        useStore.loginUser.uuid +
+        "-" +
+        current_language.value,
+        content.value
     );
 
     console.log('代码格式化成功！');
