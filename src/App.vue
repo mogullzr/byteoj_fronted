@@ -123,6 +123,11 @@ const iframeScript = `
 
 // 新增：WebSocket 告警监听相关
 let ws = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5; // 最大重连次数
+const RECONNECT_DELAY_BASE = 3000; // 基础延迟 3 秒
+let reconnectTimer = null;
+let isManualClose = false; // 标记是否手动关闭
 
 const showSimpleAlert = (msg) => {
   const container = document.getElementById('global-alert-container');
@@ -164,33 +169,73 @@ const connectWebSocket = () => {
     return;
   }
 
+  // 如果已经手动关闭，不再重连
+  if (isManualClose) {
+    console.log('已手动关闭连接，不再重连');
+    return;
+  }
+
+  // 限制重连次数
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error('⚠️ 达到最大重连次数，停止重连');
+    showSimpleAlert('⚠️ 告警服务连接失败，请刷新页面重试');
+    return;
+  }
+
   // 通过 URL 参数传递 uuid（也可用 header，但 WebSocket 不支持自定义 header）
   const wsUrl = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws/alerts`;
+  
+  console.log(`🔌 正在连接 WebSocket (${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})...`);
+  
+  try {
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+      console.log('✅ 已连接监考告警服务');
+      reconnectAttempts = 0; // 重置重连计数
+    };
 
-  ws = new WebSocket(wsUrl);
-  ws.onopen = () => {
-    console.log('✅ 已连接监考告警服务');
-  };
-
-  ws.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === 'ALERT') {
-        showSimpleAlert(`🚨 ${data.message}`);
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'ALERT') {
+          showSimpleAlert(`🚨 ${data.message}`);
+        }
+      } catch (e) {
+        console.error('WebSocket 消息解析失败:', e);
       }
-    } catch (e) {
-      console.error('WebSocket 消息解析失败:', e);
-    }
-  };
+    };
 
-  ws.onerror = (error) => {
-    console.error('⚠️ WebSocket 连接错误:', error);
-  };
+    ws.onerror = (error) => {
+      console.error('⚠️ WebSocket 连接错误:', error);
+      // 错误时主动关闭，触发 onclose 进行重连
+      if (ws) {
+        ws.close();
+      }
+    };
 
-  ws.onclose = () => {
-    console.log('🔌 告警连接已断开，5秒后重连...');
-    setTimeout(connectWebSocket, 5000); // 自动重连
-  };
+    ws.onclose = (event) => {
+      console.log(`🔌 告警连接已断开 (code: ${event.code}, reason: ${event.reason})`);
+      
+      // 如果不是手动关闭，则尝试重连
+      if (!isManualClose) {
+        reconnectAttempts++;
+        // 指数退避策略：每次延迟时间递增
+        const delay = RECONNECT_DELAY_BASE * Math.pow(2, reconnectAttempts - 1);
+        console.log(`⏳ ${delay/1000}秒后第${reconnectAttempts}次重连...`);
+        
+        reconnectTimer = setTimeout(() => {
+          connectWebSocket();
+        }, delay);
+      }
+    };
+  } catch (error) {
+    console.error('❌ 创建 WebSocket 失败:', error);
+    reconnectAttempts++;
+    reconnectTimer = setTimeout(() => {
+      connectWebSocket();
+    }, RECONNECT_DELAY_BASE);
+  }
 };
 
 // 设置iframe监听
@@ -234,9 +279,21 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    if (ws) {
-      ws.close();
-    }
+  // 标记为手动关闭，阻止重连
+  isManualClose = true;
+  
+  // 清除重连定时器
+  if (reconnectTimer) {
+    clearTimeout(reconnectTimer);
+    reconnectTimer = null;
+  }
+  
+  // 关闭 WebSocket 连接
+  if (ws) {
+    ws.close();
+    ws = null;
+  }
+  
   // 移除消息监听器
   window.removeEventListener('message', handleIframeMessage);
 });
