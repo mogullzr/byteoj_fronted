@@ -987,6 +987,11 @@
   dependencies:
     vue-demi "*"
 
+ace-builds@^1.43.6:
+  version "1.43.6"
+  resolved "https://registry.npmmirror.com/ace-builds/-/ace-builds-1.43.6.tgz#6feffd0283da5bbf45a2052470fe0fc3c442831a"
+  integrity sha512-L1ddibQ7F3vyXR2k2fg+I8TQTPWVA6CKeDQr/h2+8CeyTp3W6EQL8xNFZRTztuP8xNOAqL3IYPqdzs31GCjDvg==
+
 acorn-walk@^8.2.0:
   version "8.3.4"
   resolved "https://registry.npmmirror.com/acorn-walk/-/acorn-walk-8.3.4.tgz"
@@ -1250,6 +1255,11 @@ he@^1.2.0:
   resolved "https://registry.npmmirror.com/he/-/he-1.2.0.tgz"
   integrity sha512-F/1DnUGPopORZi0ni+CvrCgHQ5FyEAHRLSApuYWMmrbSwoN2Mn/7k+Gl38gJnR7yyDZk6WLXwiGod1JOWNDKGw==
 
+highlight.js@^11.11.1:
+  version "11.11.1"
+  resolved "https://registry.npmmirror.com/highlight.js/-/highlight.js-11.11.1.tgz"
+  integrity sha512-Xwwo44whKBVCYoliBQwaPvtd/2tYFkRQtXDWj1nackaV2JPXx3L0+Jvd8/qCJ2p+ML0/XVkJ2q+Mr+UVdpJK5w==
+
 immutable@^5.0.2:
   version "5.1.3"
   resolved "https://registry.npmmirror.com/immutable/-/immutable-5.1.3.tgz"
@@ -1479,6 +1489,11 @@ punycode.js@^2.3.1:
   resolved "https://registry.npmmirror.com/punycode.js/-/punycode.js-2.3.1.tgz"
   integrity sha512-uxFIHU0YlHYhDQtV4R9J6a52SLx28BCjT+4ieh7IGbgwVJWO+km431c4yRlREUAsAmt/uMjQUyQHNEPf0M39CA==
 
+resize-observer-polyfill@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.npmmirror.com/resize-observer-polyfill/-/resize-observer-polyfill-1.5.1.tgz#0e9020dd3d21024458d4ebd27e23e40269810464"
+  integrity sha512-LwZrotdHOo12nQuZlHEmtuXdqGoOD0OhaxopaNFxWzInpEgaLWoVuAMbTzixuosCx2nEG58ngzW3vxdWoxIgdg==
+
 rollup-plugin-dts@^5.3.1:
   version "5.3.1"
   resolved "https://registry.npmmirror.com/rollup-plugin-dts/-/rollup-plugin-dts-5.3.1.tgz"
@@ -1529,77 +1544,77 @@ rxjs@^7.4.0:
 
 sass-embedded-android-arm64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-android-arm64/-/sass-embedded-android-arm64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-android-arm64/-/sass-embedded-android-arm64-1.89.2.tgz#97546fbeeae3c7461435309b6b7022db37f65ea2"
   integrity sha512-+pq7a7AUpItNyPu61sRlP6G2A8pSPpyazASb+8AK2pVlFayCSPAEgpwpCE9A2/Xj86xJZeMizzKUHxM2CBCUxA==
 
 sass-embedded-android-arm@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-android-arm/-/sass-embedded-android-arm-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-android-arm/-/sass-embedded-android-arm-1.89.2.tgz#02be468f924f2f9d6e93816507d3f3f200ff3836"
   integrity sha512-oHAPTboBHRZlDBhyRB6dvDKh4KvFs+DZibDHXbkSI6dBZxMTT+Yb2ivocHnctVGucKTLQeT7+OM5DjWHyynL/A==
 
 sass-embedded-android-riscv64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-android-riscv64/-/sass-embedded-android-riscv64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-android-riscv64/-/sass-embedded-android-riscv64-1.89.2.tgz#d15899446b035cabacb49d20689e05823a144bc8"
   integrity sha512-HfJJWp/S6XSYvlGAqNdakeEMPOdhBkj2s2lN6SHnON54rahKem+z9pUbCriUJfM65Z90lakdGuOfidY61R9TYg==
 
 sass-embedded-android-x64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-android-x64/-/sass-embedded-android-x64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-android-x64/-/sass-embedded-android-x64-1.89.2.tgz#d76c99035a0f2835006dba6cc52f13fa41a3113a"
   integrity sha512-BGPzq53VH5z5HN8de6jfMqJjnRe1E6sfnCWFd4pK+CAiuM7iw5Fx6BQZu3ikfI1l2GY0y6pRXzsVLdp/j4EKEA==
 
 sass-embedded-darwin-arm64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-darwin-arm64/-/sass-embedded-darwin-arm64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-darwin-arm64/-/sass-embedded-darwin-arm64-1.89.2.tgz#57150b77676d4d82e84b2198f5f6983418fff04e"
   integrity sha512-UCm3RL/tzMpG7DsubARsvGUNXC5pgfQvP+RRFJo9XPIi6elopY5B6H4m9dRYDpHA+scjVthdiDwkPYr9+S/KGw==
 
 sass-embedded-darwin-x64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-darwin-x64/-/sass-embedded-darwin-x64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-darwin-x64/-/sass-embedded-darwin-x64-1.89.2.tgz#b0b1c5abb1d057daaa8f8a1e2b2497478865a22d"
   integrity sha512-D9WxtDY5VYtMApXRuhQK9VkPHB8R79NIIR6xxVlN2MIdEid/TZWi1MHNweieETXhWGrKhRKglwnHxxyKdJYMnA==
 
 sass-embedded-linux-arm64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-arm64/-/sass-embedded-linux-arm64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-arm64/-/sass-embedded-linux-arm64-1.89.2.tgz#f4d964d9773acd5e065513837d0412753e4a02a1"
   integrity sha512-2N4WW5LLsbtrWUJ7iTpjvhajGIbmDR18ZzYRywHdMLpfdPApuHPMDF5CYzHbS+LLx2UAx7CFKBnj5LLjY6eFgQ==
 
 sass-embedded-linux-arm@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-arm/-/sass-embedded-linux-arm-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-arm/-/sass-embedded-linux-arm-1.89.2.tgz#e9cd53cb299e6e8cada56acc801b8477f9876fb0"
   integrity sha512-leP0t5U4r95dc90o8TCWfxNXwMAsQhpWxTkdtySDpngoqtTy3miMd7EYNYd1znI0FN1CBaUvbdCMbnbPwygDlA==
 
 sass-embedded-linux-musl-arm64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-arm64/-/sass-embedded-linux-musl-arm64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-arm64/-/sass-embedded-linux-musl-arm64-1.89.2.tgz#e501d00d9cf050fcbb261b53255af85fa7c39c73"
   integrity sha512-nTyuaBX6U1A/cG7WJh0pKD1gY8hbg1m2SnzsyoFG+exQ0lBX/lwTLHq3nyhF+0atv7YYhYKbmfz+sjPP8CZ9lw==
 
 sass-embedded-linux-musl-arm@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-arm/-/sass-embedded-linux-musl-arm-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-arm/-/sass-embedded-linux-musl-arm-1.89.2.tgz#1b073158532b72597522ebffef0658374c9c04ba"
   integrity sha512-Z6gG2FiVEEdxYHRi2sS5VIYBmp17351bWtOCUZ/thBM66+e70yiN6Eyqjz80DjL8haRUegNQgy9ZJqsLAAmr9g==
 
 sass-embedded-linux-musl-riscv64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-riscv64/-/sass-embedded-linux-musl-riscv64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-riscv64/-/sass-embedded-linux-musl-riscv64-1.89.2.tgz#06542e8946885d09f2cea939092d145aeeee6d39"
   integrity sha512-N6oul+qALO0SwGY8JW7H/Vs0oZIMrRMBM4GqX3AjM/6y8JsJRxkAwnfd0fDyK+aICMFarDqQonQNIx99gdTZqw==
 
 sass-embedded-linux-musl-x64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-x64/-/sass-embedded-linux-musl-x64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-musl-x64/-/sass-embedded-linux-musl-x64-1.89.2.tgz#2fd441597a95f57d70d0c46e0e8c18ab4f52c596"
   integrity sha512-K+FmWcdj/uyP8GiG9foxOCPfb5OAZG0uSVq80DKgVSC0U44AdGjvAvVZkrgFEcZ6cCqlNC2JfYmslB5iqdL7tg==
 
 sass-embedded-linux-riscv64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-riscv64/-/sass-embedded-linux-riscv64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-riscv64/-/sass-embedded-linux-riscv64-1.89.2.tgz#eeea2fbcbd5b575391a5b702092c0e8cc03f661c"
   integrity sha512-g9nTbnD/3yhOaskeqeBQETbtfDQWRgsjHok6bn7DdAuwBsyrR3JlSFyqKc46pn9Xxd9SQQZU8AzM4IR+sY0A0w==
 
 sass-embedded-linux-x64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-linux-x64/-/sass-embedded-linux-x64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-linux-x64/-/sass-embedded-linux-x64-1.89.2.tgz#9a58127a312e7c011e3a20470ff5707b9aa78536"
   integrity sha512-Ax7dKvzncyQzIl4r7012KCMBvJzOz4uwSNoyoM5IV6y5I1f5hEwI25+U4WfuTqdkv42taCMgpjZbh9ERr6JVMQ==
 
 sass-embedded-win32-arm64@1.89.2:
   version "1.89.2"
-  resolved "https://registry.npmmirror.com/sass-embedded-win32-arm64/-/sass-embedded-win32-arm64-1.89.2.tgz"
+  resolved "https://registry.npmmirror.com/sass-embedded-win32-arm64/-/sass-embedded-win32-arm64-1.89.2.tgz#7e9ddcb5abe3a8eca370909686da37da60f97c85"
   integrity sha512-j96iJni50ZUsfD6tRxDQE2QSYQ2WrfHxeiyAXf41Kw0V4w5KYR/Sf6rCZQLMTUOHnD16qTMVpQi20LQSqf4WGg==
 
 sass-embedded-win32-x64@1.89.2:
@@ -1645,7 +1660,7 @@ semver@^7.5.4:
 
 sortablejs@1.10.2:
   version "1.10.2"
-  resolved "https://registry.npmmirror.com/sortablejs/-/sortablejs-1.10.2.tgz#6e40364d913f98b85a14f6678f92b5c1221f5290"
+  resolved "https://registry.npmmirror.com/sortablejs/-/sortablejs-1.10.2.tgz"
   integrity sha512-YkPGufevysvfwn5rfdlGyrGjt7/CRHwvRPogD/lC+TnvcN29jDpCifKP+rBqf+LRldfXSTh+0CGLcSg0VIxq3A==
 
 source-map-js@^1.2.0, source-map-js@^1.2.1:
@@ -1759,6 +1774,13 @@ vue-tsc@^2.0.29:
     "@vue/language-core" "2.0.29"
     semver "^7.5.4"
 
+vue3-ace-editor@^2.2.4:
+  version "2.2.4"
+  resolved "https://registry.npmmirror.com/vue3-ace-editor/-/vue3-ace-editor-2.2.4.tgz#1f2a787f91cf7979f27fab29e0e0604bb3ee1c17"
+  integrity sha512-FZkEyfpbH068BwjhMyNROxfEI8135Sc+x8ouxkMdCNkuj/Tuw83VP/gStFQqZHqljyX9/VfMTCdTqtOnJZGN8g==
+  dependencies:
+    resize-observer-polyfill "^1.5.1"
+
 vue@^3.5.13:
   version "3.5.13"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.13.tgz"
@@ -1772,7 +1794,7 @@ vue@^3.5.13:
 
 vuedraggable@^2.24.3:
   version "2.24.3"
-  resolved "https://registry.npmmirror.com/vuedraggable/-/vuedraggable-2.24.3.tgz#43c93849b746a24ce503e123d5b259c701ba0d19"
+  resolved "https://registry.npmmirror.com/vuedraggable/-/vuedraggable-2.24.3.tgz"
   integrity sha512-6/HDXi92GzB+Hcs9fC6PAAozK1RLt1ewPTLjK0anTYguXLAeySDmcnqE8IC0xa7shvSzRjQXq3/+dsZ7ETGF3g==
   dependencies:
     sortablejs "1.10.2"

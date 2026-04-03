@@ -10,10 +10,12 @@
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
+    "ace-builds": "^1.43.6",
     "axios": "^1.7.3",
     "dayjs": "^1.11.12",
     "echarts": "^5.6.0",
     "element-plus": "^2.10.4",
+    "highlight.js": "^11.11.1",
     "jsencrypt": "^3.3.2",
     "md-editor-v3": "^5.2.3",
     "openapi-typescript-codegen": "^0.29.0",
@@ -21,6 +23,7 @@
     "prettier": "^3.3.3",
     "vue": "^3.5.13",
     "vue-router": "^4.4.3",
+    "vue3-ace-editor": "^2.2.4",
     "vuedraggable": "^2.24.3"
   },
   "devDependencies": {

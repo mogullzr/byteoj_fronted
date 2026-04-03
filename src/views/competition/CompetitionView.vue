@@ -118,6 +118,14 @@
           编辑
         </el-button>
         <el-button
+          size="default"
+          type="warning"
+          style="font-size: 16px"
+          @click="viewSimilarity(scope.row)"
+        >
+          代码查重
+        </el-button>
+        <el-button
           v-if="scope.row.is_delete === 0"
           size="default"
           type="danger"
@@ -384,6 +392,16 @@ const downloadSoftware = () => {
 const editCompetition = (competition: CompetitionInfoVo) => {
   router.push({
     path: '/competition/edit',
+    query: {
+      competition_id: competition.competition_id
+    }
+  });
+};
+
+// 查看代码查重
+const viewSimilarity = (competition: CompetitionInfoVo) => {
+  router.push({
+    path: '/competition/similarity',
     query: {
       competition_id: competition.competition_id
     }

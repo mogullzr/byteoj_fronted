@@ -3,17 +3,20 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AlgorithmQueryRequest } from '../models/AlgorithmQueryRequest';
+import type { BaseResponse_AliyunVodVo_ } from '../models/BaseResponse_AliyunVodVo_';
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
-import type { BaseResponse_Judge_ } from '../models/BaseResponse_Judge_';
+import type { BaseResponse_JudgeTask_ } from '../models/BaseResponse_JudgeTask_';
 import type { BaseResponse_List_CompetitionProblemsVo_ } from '../models/BaseResponse_List_CompetitionProblemsVo_';
 import type { BaseResponse_List_Judge_ } from '../models/BaseResponse_List_Judge_';
 import type { BaseResponse_List_ProblemAlgorithmBankVo_ } from '../models/BaseResponse_List_ProblemAlgorithmBankVo_';
 import type { BaseResponse_List_ProblemAlgorithmTestCaseRequest_ } from '../models/BaseResponse_List_ProblemAlgorithmTestCaseRequest_';
 import type { BaseResponse_List_ProblemDailyNumVo_ } from '../models/BaseResponse_List_ProblemDailyNumVo_';
+import type { BaseResponse_List_ProblemDailyVo_ } from '../models/BaseResponse_List_ProblemDailyVo_';
 import type { BaseResponse_List_ProblemTagsVo_ } from '../models/BaseResponse_List_ProblemTagsVo_';
 import type { BaseResponse_List_string_ } from '../models/BaseResponse_List_string_';
 import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from '../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_';
 import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
+import type { BaseResponse_Page_CodeSimilarityVo_ } from '../models/BaseResponse_Page_CodeSimilarityVo_';
 import type { BaseResponse_ProblemAlgorithmBankVo_ } from '../models/BaseResponse_ProblemAlgorithmBankVo_';
 import type { BaseResponse_ProblemUserLastVo_ } from '../models/BaseResponse_ProblemUserLastVo_';
 import type { BaseResponse_ResponseEntity_Array_byte_ } from '../models/BaseResponse_ResponseEntity_Array_byte_';
@@ -198,6 +201,45 @@ export class ProblemAlgorithmControllerService {
         });
     }
     /**
+     * AliyunVodGet
+     * @param problemId problem_id
+     * @returns BaseResponse_AliyunVodVo_ OK
+     * @throws ApiError
+     */
+    public static aliyunVodGetUsingGet(
+        problemId: number,
+    ): CancelablePromise<BaseResponse_AliyunVodVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/algorithm/aliyun/vod',
+            query: {
+                'problem_id': problemId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * problemDailyGet
+     * @returns BaseResponse_List_ProblemDailyVo_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static problemDailyGetUsingPost(): CancelablePromise<BaseResponse_List_ProblemDailyVo_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/algorithm/get/daily',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * problemAlgorithmGetTags
      * @returns BaseResponse_List_string_ OK
      * @throws ApiError
@@ -232,13 +274,13 @@ export class ProblemAlgorithmControllerService {
     /**
      * problemAlgorithmJudgeSubmit
      * @param judgeRequest judgeRequest
-     * @returns BaseResponse_Judge_ OK
+     * @returns BaseResponse_JudgeTask_ OK
      * @returns any Created
      * @throws ApiError
      */
     public static problemAlgorithmJudgeSubmitUsingPost(
         judgeRequest: JudgeRequest,
-    ): CancelablePromise<BaseResponse_Judge_ | any> {
+    ): CancelablePromise<BaseResponse_JudgeTask_ | any> {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/problem/algorithm/judge/submit',
@@ -557,6 +599,29 @@ export class ProblemAlgorithmControllerService {
         });
     }
     /**
+     * problemDailySet
+     * @param problemId problem_id
+     * @returns BaseResponse_boolean_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static problemDailySetUsingPost(
+        problemId?: number,
+    ): CancelablePromise<BaseResponse_boolean_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/algorithm/set/daily',
+            query: {
+                'problem_id': problemId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * problemAlgorithmSetUserLast
      * @param userLastEnter userLastEnter
      * @returns BaseResponse_boolean_ OK
@@ -570,6 +635,37 @@ export class ProblemAlgorithmControllerService {
             method: 'POST',
             url: '/api/problem/algorithm/set/problemLast',
             body: userLastEnter,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * getSimilarityList
+     * @param competitionId competitionId
+     * @param currentPage currentPage
+     * @param pageSize pageSize
+     * @param problemIndex problemIndex
+     * @returns BaseResponse_Page_CodeSimilarityVo_ OK
+     * @throws ApiError
+     */
+    public static getSimilarityListUsingGet(
+        competitionId: number,
+        currentPage: number = 1,
+        pageSize: number = 20,
+        problemIndex?: string,
+    ): CancelablePromise<BaseResponse_Page_CodeSimilarityVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/algorithm/similarity/list',
+            query: {
+                'competitionId': competitionId,
+                'currentPage': currentPage,
+                'pageSize': pageSize,
+                'problemIndex': problemIndex,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

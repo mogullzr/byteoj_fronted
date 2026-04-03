@@ -14,6 +14,7 @@ import Math408View from "../views/problems/math/Math408View.vue";
 import AlgorithmTestCaseAddView from "../views/problems/algorithm/AlgorithmTestCaseAddView.vue";
 import CompetitionView from "../views/competition/CompetitionView.vue";
 import CompetitionEditView from "../views/competition/CompetitionEditView.vue";
+import CompetitionSimilarityView from "../views/competition/CompetitionSimilarityView.vue";
 import AdminAuthManageView from "../views/user/AdminAuthManageView.vue";
 import LogView from "../views/log/index.vue";
 import CourseView from "../views/course/CourseView.vue";
@@ -187,6 +188,15 @@ const routes: Array<RouteRecordRaw> = [
       show: false,
     },
     component: CompetitionEditView,
+  },
+  {
+    path: "/competition/similarity",
+    name: "竞赛代码查重页面",
+    meta: {
+      access: "2",
+      show: false,
+    },
+    component: CompetitionSimilarityView,
   },
   {
     path: "/competition",
