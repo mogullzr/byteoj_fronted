@@ -716,6 +716,7 @@ export class ProblemAlgorithmControllerService {
      */
     public static getSimilarityListUsingGet(
         competitionId: number,
+        uuid: number,
         currentPage: number = 1,
         pageSize: number = 20,
         problemIndex?: string,
@@ -725,6 +726,7 @@ export class ProblemAlgorithmControllerService {
             url: '/api/problem/algorithm/similarity/list',
             query: {
                 'competitionId': competitionId,
+                'uuid': uuid,
                 'currentPage': currentPage,
                 'pageSize': pageSize,
                 'problemIndex': problemIndex,

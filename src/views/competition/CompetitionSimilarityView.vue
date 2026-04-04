@@ -94,6 +94,30 @@
                 <el-option label="J题" value="J" />
               </el-select>
             </el-form-item>
+            <el-form-item label="用户查询">
+              <el-select
+                v-model="searchForm.uuid"
+                placeholder="搜索用户名"
+                filterable
+                remote
+                reserve-keyword
+                :remote-method="searchUsers"
+                :loading="userSearchLoading"
+                clearable
+                style="width: 220px"
+                @change="handleUserSelectPairwise"
+              >
+                <el-option
+                  v-for="user in userList"
+                  :key="user.uuid"
+                  :label="user.username"
+                  :value="user.uuid"
+                >
+                  <span style="float: left">{{ user.username }}</span>
+                  <span style="float: right; color: #8492a6; font-size: 13px">ID: {{ user.uuid }}</span>
+                </el-option>
+              </el-select>
+            </el-form-item>
             <el-form-item>
               <el-button type="primary" @click="loadSimilarityData" :icon="Search">查询</el-button>
               <el-button @click="resetSearch" :icon="Refresh">重置</el-button>
@@ -117,7 +141,7 @@
                 <el-tag type="primary" size="large" effect="dark">{{ scope.row.problemIndex }}题</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="用户1" prop="userName1" min-width="150" align="center">
+            <el-table-column label="用户1" prop="userName1" min-width="200" align="left">
               <template #default="scope">
                 <div class="user-cell">
                   <el-avatar :size="32" style="background-color: #409EFF; margin-right: 8px">
@@ -127,7 +151,7 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="用户2" prop="userName2" min-width="150" align="center">
+            <el-table-column label="用户2" prop="userName2" min-width="200" align="left">
               <template #default="scope">
                 <div class="user-cell">
                   <el-avatar :size="32" style="background-color: #67C23A; margin-right: 8px">
@@ -522,6 +546,7 @@ const total = ref(0);
 
 const searchForm = ref({
   problemIndex: '',
+  uuid: -1
 });
 
 const dialogVisible = ref(false);
@@ -639,6 +664,18 @@ const handleUserSelect = (userUuid: number | null) => {
   }
 };
 
+// 两两对比用户选择处理
+const handleUserSelectPairwise = (userUuid: number | null) => {
+  if (userUuid) {
+    ElNotification({
+      title: '已选择用户',
+      message: `将查询该用户的相似度记录`,
+      type: 'success',
+      duration: 2000,
+    });
+  }
+};
+
 const highRiskCount = computed(() => {
   return filteredList.value.filter(item => (item.similarityScore || 0) >= 0.9).length;
 });
@@ -681,7 +718,11 @@ const loadSimilarityData = async () => {
   loading.value = true;
   try {
     const response = await ProblemAlgorithmControllerService.getSimilarityListUsingGet(
-      competitionId.value, currentPage.value, pageSize.value, searchForm.value.problemIndex || undefined
+      competitionId.value, 
+      searchForm.value.uuid || -1,
+      currentPage.value, 
+      pageSize.value, 
+      searchForm.value.problemIndex || undefined
     );
     if (response.code === 0 && response.data) {
       similarityList.value = response.data.records || [];
@@ -735,7 +776,8 @@ const loadClusterData = async () => {
 };
 
 const resetSearch = () => {
-  searchForm.value = { problemIndex: '' };
+  searchForm.value = { problemIndex: '', uuid: -1 };
+  userList.value = [];
   currentPage.value = 1;
   loadSimilarityData();
 };
@@ -1114,7 +1156,7 @@ onMounted(() => {
 .user-cell {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .similarity-cell { padding: 0 10px; }
@@ -1161,6 +1203,7 @@ onMounted(() => {
 .code-header {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   padding: 12px 16px;
   background: white;
   border-bottom: 1px solid #e4e7ed;
