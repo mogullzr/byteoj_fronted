@@ -16,6 +16,7 @@ import type { BaseResponse_List_ProblemTagsVo_ } from '../models/BaseResponse_Li
 import type { BaseResponse_List_string_ } from '../models/BaseResponse_List_string_';
 import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from '../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_';
 import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
+import type { BaseResponse_Page_ClusterVo_ } from '../models/BaseResponse_Page_ClusterVo_';
 import type { BaseResponse_Page_CodeSimilarityVo_ } from '../models/BaseResponse_Page_CodeSimilarityVo_';
 import type { BaseResponse_ProblemAlgorithmBankVo_ } from '../models/BaseResponse_ProblemAlgorithmBankVo_';
 import type { BaseResponse_ProblemUserLastVo_ } from '../models/BaseResponse_ProblemUserLastVo_';
@@ -635,6 +636,68 @@ export class ProblemAlgorithmControllerService {
             method: 'POST',
             url: '/api/problem/algorithm/set/problemLast',
             body: userLastEnter,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * getClustersByProblem
+     * @param competitionId competitionId
+     * @param currentPage currentPage
+     * @param pageSize pageSize
+     * @param problemIndex problemIndex
+     * @returns BaseResponse_Page_ClusterVo_ OK
+     * @throws ApiError
+     */
+    public static getClustersByProblemUsingGet(
+        competitionId: number,
+        currentPage: number = 1,
+        pageSize: number = 1,
+        problemIndex?: string,
+    ): CancelablePromise<BaseResponse_Page_ClusterVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/algorithm/similarity/clusters',
+            query: {
+                'competitionId': competitionId,
+                'currentPage': currentPage,
+                'pageSize': pageSize,
+                'problemIndex': problemIndex,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * getClustersByUser
+     * @param competitionId competitionId
+     * @param userUuid userUuid
+     * @param currentPage currentPage
+     * @param pageSize pageSize
+     * @returns BaseResponse_Page_ClusterVo_ OK
+     * @throws ApiError
+     */
+    public static getClustersByUserUsingGet(
+        competitionId: number,
+        userUuid: number,
+        currentPage: number = 1,
+        pageSize: number = 10,
+    ): CancelablePromise<BaseResponse_Page_ClusterVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/algorithm/similarity/clusters/user',
+            query: {
+                'competitionId': competitionId,
+                'currentPage': currentPage,
+                'pageSize': pageSize,
+                'userUuid': userUuid,
+            },
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

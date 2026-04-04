@@ -13,7 +13,7 @@
     "ace-builds": "^1.43.6",
     "axios": "^1.7.3",
     "dayjs": "^1.11.12",
-    "echarts": "^5.6.0",
+    "echarts": "^6.0.0",
     "element-plus": "^2.10.4",
     "highlight.js": "^11.11.1",
     "jsencrypt": "^3.3.2",
