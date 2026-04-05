@@ -30,6 +30,7 @@ export const UserStore = defineStore("user", {
       url: "",
       background_picture: "",
     } as User,
+    siteKey: "0x4AAAAAACzOvrGS3pashnof",
     difficulty_list: {
       简单: 0,
       中等: 1,

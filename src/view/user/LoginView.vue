@@ -69,7 +69,6 @@ const onLoginSubmit = async () => {
     });
     if (res.code === 0) {
       success("登录成功");
-      setCookie("JSESSIONID", res.data.sessionId);
       setTimeout(function () {
         window.location.replace("/home");
       }, 1500);

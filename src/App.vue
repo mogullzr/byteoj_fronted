@@ -12,7 +12,7 @@
     :style="
       'background-image: url(' + useStore.loginUser.background_picture + ')'
     "
-  >
+  ><div id="turnstile-widget"></div>
     <basic-layout class="font-lazy" />
     <div id="global-alert-container"></div>
   </div>
@@ -265,6 +265,21 @@ const handleIframeMessage = (event) => {
 };
 
 onMounted(() => {
+  // 确保 window.turnstile 已加载
+  if (window.turnstile) {
+    window.turnstile.render('#turnstile-widget', {
+      sitekey: "0x4AAAAAACzOvrGS3pashnof",
+      theme: "auto",
+      size: "normal",
+      callback: (token) => {
+        console.log("验证成功，Token:", token);
+        // 处理验证成功的逻辑
+      },
+      'error-callback': (err) => {
+        console.error("验证出错:", err);
+      }
+    });
+  }
   // 生成一个 0 或 1 的随机数
   const ra = r(3); // 生成 1 或 2 或 3
   // 根据随机数设置 isIframeEnabled 的值
