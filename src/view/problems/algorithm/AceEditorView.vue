@@ -940,7 +940,7 @@ const judgeTest = async () => {
 // ============================================
 
 import { Client } from '@stomp/stompjs';  // 使用 Client 类（新 API）
-import SockJS from 'sockjs-client';
+// 🔥 已移除 SockJS，改为纯 WebSocket
 import { useRoute } from "vue-router";
 import { onUnmounted } from 'vue';  // 添加 ref 和 onUnmounted
 
@@ -1023,7 +1023,7 @@ const initWebSocketConnection = () => {
   return new Promise((resolve, reject) => {
     try {
       // 动态获取 WebSocket URL（根据当前协议和域名）
-      const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const host = window.location.hostname;
       const port = process.env.NODE_ENV === 'production' ? '' : ':7091';
       const wsUrl = `${protocol}//${host}${port}/api/ws/judge`;
@@ -1031,8 +1031,8 @@ const initWebSocketConnection = () => {
       console.log('[WebSocket] 连接地址:', wsUrl);
 
       const client = new Client({
-        // WebSocket 工厂
-        webSocketFactory: () => new SockJS(wsUrl),
+        // 🔥 使用纯 WebSocket，移除 SockJS
+        brokerURL: wsUrl,
 
         // 心跳配置
         heartbeatIncoming: 20000,

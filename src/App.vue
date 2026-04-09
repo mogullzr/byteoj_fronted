@@ -289,7 +289,7 @@ onMounted(() => {
   window.addEventListener('message', handleIframeMessage);
 
   // 启动 WebSocket 告警监听（仅管理员需要？可加判断）
-  connectWebSocket();
+  // connectWebSocket();
 
 });
 

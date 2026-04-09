@@ -1,12 +1,12 @@
 // ============================================
-// 你的前端代码 - 优化版本
+// 你的前端代码 - 优化版本（使用 SockJS + STOMP）
 // 主要改动：复用 WebSocket 连接，支持快速连续提交
 // ============================================
 
-import { Client } from '@stomp/stompjs';  // 使用 Client 类（新 API）
-import SockJS from 'sockjs-client';
+import { Client } from '@stomp/stompjs';
+// 🔥 已移除 SockJS，改为纯 WebSocket
 import { useRoute } from "vue-router";
-import { ref, onUnmounted } from 'vue';  // 添加 ref 和 onUnmounted
+import { ref, onUnmounted } from 'vue';
 
 // ============================================
 // WebSocket 全局状态（改为 ref）
@@ -47,10 +47,17 @@ const initWebSocketConnection = () => {
 
     return new Promise((resolve, reject) => {
         try {
+            // 🔥 动态获取 WebSocket URL（根据当前协议和域名）
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.hostname;
+            const port = process.env.NODE_ENV === 'production' ? '' : ':7091';
+            const wsUrl = `${protocol}//${host}${port}/api/ws/judge`;
+
+            console.log('[WebSocket] 连接地址:', wsUrl);
+
             const client = new Client({
-                // WebSocket 工厂
-                // webSocketFactory: () => new SockJS('http://localhost:7091/api/ws/judge'),
-                webSocketFactory: () => new SockJS('https://www.byteoj.com/api/ws/judge'),
+                // 🔥 使用纯 WebSocket，移除 SockJS
+                brokerURL: wsUrl,
 
                 // 心跳配置
                 heartbeatIncoming: 20000,
