@@ -57,14 +57,14 @@ const initWebSocketConnection = () => {
 
             const client = new Client({
                 // 🔥 使用纯 WebSocket，移除 SockJS
-                brokerURL: wsUrl,
+                webSocketFactory: () => new SockJS(wsUrl),
 
                 // 心跳配置
-                heartbeatIncoming: 20000,
-                heartbeatOutgoing: 20000,
+                heartbeatIncoming: 10000,
+                heartbeatOutgoing: 10000,
 
                 // 自动重连
-                reconnectDelay: 3000,
+                reconnectDelay: 2000,
 
                 // 调试日志（生产环境可关闭）
                 debug: (str) => {
@@ -75,7 +75,7 @@ const initWebSocketConnection = () => {
                 onConnect: (frame) => {
                     console.log('[WebSocket] ✅ 连接成功');
                     isConnected.value = true;
-                    resolve();
+                    // resolve();
                 },
 
                 // STOMP 错误

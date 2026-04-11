@@ -2,31 +2,31 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AlgorithmQueryRequest } from "../models/AlgorithmQueryRequest";
-import type { BaseResponse_AliyunVodVo_ } from "../models/BaseResponse_AliyunVodVo_";
-import type { BaseResponse_boolean_ } from "../models/BaseResponse_boolean_";
-import type { BaseResponse_Judge_ } from "../models/BaseResponse_Judge_";
-import type { BaseResponse_List_CompetitionProblemsVo_ } from "../models/BaseResponse_List_CompetitionProblemsVo_";
-import type { BaseResponse_List_Judge_ } from "../models/BaseResponse_List_Judge_";
-import type { BaseResponse_List_ProblemAlgorithmBankVo_ } from "../models/BaseResponse_List_ProblemAlgorithmBankVo_";
-import type { BaseResponse_List_ProblemAlgorithmTestCaseRequest_ } from "../models/BaseResponse_List_ProblemAlgorithmTestCaseRequest_";
-import type { BaseResponse_List_ProblemDailyInfo_ } from "../models/BaseResponse_List_ProblemDailyInfo_";
-import type { BaseResponse_List_ProblemDailyNumVo_ } from "../models/BaseResponse_List_ProblemDailyNumVo_";
-import type { BaseResponse_List_ProblemTagsVo_ } from "../models/BaseResponse_List_ProblemTagsVo_";
-import type { BaseResponse_List_string_ } from "../models/BaseResponse_List_string_";
-import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_";
-import type { BaseResponse_long_ } from "../models/BaseResponse_long_";
-import type { BaseResponse_ProblemAlgorithmBankVo_ } from "../models/BaseResponse_ProblemAlgorithmBankVo_";
-import type { BaseResponse_ProblemUserLastVo_ } from "../models/BaseResponse_ProblemUserLastVo_";
-import type { BaseResponse_ResponseEntity_Array_byte_ } from "../models/BaseResponse_ResponseEntity_Array_byte_";
-import type { BaseResponse_SubmissionsAlgorithmRecordsVo_ } from "../models/BaseResponse_SubmissionsAlgorithmRecordsVo_";
-import type { JudgeRequest } from "../models/JudgeRequest";
-import type { ProblemAlgorithmRequest } from "../models/ProblemAlgorithmRequest";
-import type { ProblemAlgorithmTestCaseRequest } from "../models/ProblemAlgorithmTestCaseRequest";
-import type { UserLastEnter } from "../models/UserLastEnter";
-import type { CancelablePromise } from "../core/CancelablePromise";
-import { OpenAPI } from "../core/OpenAPI";
-import { request as __request } from "../core/request";
+import type { AlgorithmQueryRequest } from '../models/AlgorithmQueryRequest';
+import type { BaseResponse_AliyunVodVo_ } from '../models/BaseResponse_AliyunVodVo_';
+import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_JudgeTask_ } from '../models/BaseResponse_JudgeTask_';
+import type { BaseResponse_List_CompetitionProblemsVo_ } from '../models/BaseResponse_List_CompetitionProblemsVo_';
+import type { BaseResponse_List_Judge_ } from '../models/BaseResponse_List_Judge_';
+import type { BaseResponse_List_ProblemAlgorithmBankVo_ } from '../models/BaseResponse_List_ProblemAlgorithmBankVo_';
+import type { BaseResponse_List_ProblemAlgorithmTestCaseRequest_ } from '../models/BaseResponse_List_ProblemAlgorithmTestCaseRequest_';
+import type { BaseResponse_List_ProblemDailyNumVo_ } from '../models/BaseResponse_List_ProblemDailyNumVo_';
+import type { BaseResponse_List_ProblemDailyVo_ } from '../models/BaseResponse_List_ProblemDailyVo_';
+import type { BaseResponse_List_ProblemTagsVo_ } from '../models/BaseResponse_List_ProblemTagsVo_';
+import type { BaseResponse_List_string_ } from '../models/BaseResponse_List_string_';
+import type { BaseResponse_List_SubmissionsAlgorithmRecordsVo_ } from '../models/BaseResponse_List_SubmissionsAlgorithmRecordsVo_';
+import type { BaseResponse_long_ } from '../models/BaseResponse_long_';
+import type { BaseResponse_ProblemAlgorithmBankVo_ } from '../models/BaseResponse_ProblemAlgorithmBankVo_';
+import type { BaseResponse_ProblemUserLastVo_ } from '../models/BaseResponse_ProblemUserLastVo_';
+import type { BaseResponse_ResponseEntity_Array_byte_ } from '../models/BaseResponse_ResponseEntity_Array_byte_';
+import type { BaseResponse_SubmissionsAlgorithmRecordsVo_ } from '../models/BaseResponse_SubmissionsAlgorithmRecordsVo_';
+import type { JudgeRequest } from '../models/JudgeRequest';
+import type { ProblemAlgorithmRequest } from '../models/ProblemAlgorithmRequest';
+import type { ProblemAlgorithmTestCaseRequest } from '../models/ProblemAlgorithmTestCaseRequest';
+import type { UserLastEnter } from '../models/UserLastEnter';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class ProblemAlgorithmControllerService {
   /**
    * problemAlgorithmAdd
@@ -38,16 +38,16 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmAddUsingPost(
-    problemAlgorithmRequest: ProblemAlgorithmRequest,
-    status?: number,
-    username?: string
+      problemAlgorithmRequest: ProblemAlgorithmRequest,
+      status?: number,
+      username?: string,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/add",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/add',
       query: {
-        status: status,
-        username: username,
+        'status': status,
+        'username': username,
       },
       body: problemAlgorithmRequest,
       errors: {
@@ -65,13 +65,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmDeleteUsingPost(
-    problemId?: number
+      problemId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/delete",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/delete',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -88,11 +88,11 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmModifyUsingPost(
-    problemAlgorithmRequest: ProblemAlgorithmRequest
+      problemAlgorithmRequest: ProblemAlgorithmRequest,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/modify",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/modify',
       body: problemAlgorithmRequest,
       errors: {
         401: `Unauthorized`,
@@ -110,14 +110,14 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmTestCaseAddUsingPost(
-    problemAlgorithmTestCaseRequestList: Array<ProblemAlgorithmTestCaseRequest>,
-    problemId?: number
+      problemAlgorithmTestCaseRequestList: Array<ProblemAlgorithmTestCaseRequest>,
+      problemId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/testCase/add",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/testCase/add',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       body: problemAlgorithmTestCaseRequestList,
       errors: {
@@ -135,15 +135,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmTestCaseGetUsingPost(
-    problemId?: number
-  ): CancelablePromise<
-    BaseResponse_List_ProblemAlgorithmTestCaseRequest_ | any
-  > {
+      problemId?: number,
+  ): CancelablePromise<BaseResponse_List_ProblemAlgorithmTestCaseRequest_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/testCase/get",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/testCase/get',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -161,14 +159,14 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmTestCasesAddUsingPost(
-    file: Blob,
-    problemId?: number
+      file: Blob,
+      problemId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/testCaseFile/add",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/testCaseFile/add',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       body: file,
       errors: {
@@ -186,13 +184,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmTestCaseFileGetUsingPost(
-    problemId?: number
+      problemId?: number,
   ): CancelablePromise<BaseResponse_ResponseEntity_Array_byte_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/admin/testCaseFile/get",
+      method: 'POST',
+      url: '/api/problem/algorithm/admin/testCaseFile/get',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -208,13 +206,35 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static aliyunVodGetUsingGet(
-    problemId: number
+      problemId: number,
   ): CancelablePromise<BaseResponse_AliyunVodVo_> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/api/problem/algorithm/aliyun/vod",
+      method: 'GET',
+      url: '/api/problem/algorithm/aliyun/vod',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
+      },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * AliyunVodAdd
+   * @param problemId problem_id
+   * @returns BaseResponse_AliyunVodVo_ OK
+   * @throws ApiError
+   */
+  public static aliyunVodAddUsingGet(
+      problemId: number,
+  ): CancelablePromise<BaseResponse_AliyunVodVo_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/problem/algorithm/aliyun/vod/add',
+      query: {
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -225,16 +245,14 @@ export class ProblemAlgorithmControllerService {
   }
   /**
    * problemDailyGet
-   * @returns BaseResponse_List_ProblemDailyInfo_ OK
+   * @returns BaseResponse_List_ProblemDailyVo_ OK
    * @returns any Created
    * @throws ApiError
    */
-  public static problemDailyGetUsingPost(): CancelablePromise<
-    BaseResponse_List_ProblemDailyInfo_ | any
-  > {
+  public static problemDailyGetUsingPost(): CancelablePromise<BaseResponse_List_ProblemDailyVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/get/daily",
+      method: 'POST',
+      url: '/api/problem/algorithm/get/daily',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -249,8 +267,8 @@ export class ProblemAlgorithmControllerService {
    */
   public static problemAlgorithmGetTagsUsingGet(): CancelablePromise<BaseResponse_List_string_> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/api/problem/algorithm/get/tags",
+      method: 'GET',
+      url: '/api/problem/algorithm/get/tags',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -265,8 +283,30 @@ export class ProblemAlgorithmControllerService {
    */
   public static problemAlgorithmGetTagsPlusCategoryUsingGet(): CancelablePromise<BaseResponse_List_ProblemTagsVo_> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/api/problem/algorithm/get/tagsPlusCategory",
+      method: 'GET',
+      url: '/api/problem/algorithm/get/tagsPlusCategory',
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+        404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * getJudgeResult
+   * @param taskId taskId
+   * @returns BaseResponse_JudgeTask_ OK
+   * @throws ApiError
+   */
+  public static getJudgeResultUsingGet(
+      taskId: string,
+  ): CancelablePromise<BaseResponse_JudgeTask_> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/problem/algorithm/judge/result',
+      query: {
+        'taskId': taskId,
+      },
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -277,16 +317,16 @@ export class ProblemAlgorithmControllerService {
   /**
    * problemAlgorithmJudgeSubmit
    * @param judgeRequest judgeRequest
-   * @returns BaseResponse_Judge_ OK
+   * @returns BaseResponse_JudgeTask_ OK
    * @returns any Created
    * @throws ApiError
    */
   public static problemAlgorithmJudgeSubmitUsingPost(
-    judgeRequest: JudgeRequest
-  ): CancelablePromise<BaseResponse_Judge_ | any> {
+      judgeRequest: JudgeRequest,
+  ): CancelablePromise<BaseResponse_JudgeTask_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/judge/submit",
+      method: 'POST',
+      url: '/api/problem/algorithm/judge/submit',
       body: judgeRequest,
       errors: {
         401: `Unauthorized`,
@@ -303,11 +343,11 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmJudgeUsingPost(
-    judgeRequest: JudgeRequest
+      judgeRequest: JudgeRequest,
   ): CancelablePromise<BaseResponse_List_Judge_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/judge/test",
+      method: 'POST',
+      url: '/api/problem/algorithm/judge/test',
       body: judgeRequest,
       errors: {
         401: `Unauthorized`,
@@ -324,11 +364,11 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmRecordAddUsingPost(
-    judgeRequest: JudgeRequest
+      judgeRequest: JudgeRequest,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/record/add",
+      method: 'POST',
+      url: '/api/problem/algorithm/record/add',
       body: judgeRequest,
       errors: {
         401: `Unauthorized`,
@@ -346,15 +386,15 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmRecordsByUUidByPageUsingPost(
-    pageNum?: number,
-    problemId?: number
+      pageNum?: number,
+      problemId?: number,
   ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/records",
+      method: 'POST',
+      url: '/api/problem/algorithm/records',
       query: {
-        pageNum: pageNum,
-        problem_id: problemId,
+        'pageNum': pageNum,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -371,13 +411,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmRecordsSumByUuidByPageUsingPost(
-    problemId?: number
+      problemId?: number,
   ): CancelablePromise<BaseResponse_long_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/records/page/sum",
+      method: 'POST',
+      url: '/api/problem/algorithm/records/page/sum',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -395,15 +435,15 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmRecordByRecordIdUsingPost(
-    competitionId?: number,
-    submissionId?: number
+      competitionId?: number,
+      submissionId?: number,
   ): CancelablePromise<BaseResponse_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/records/recordId",
+      method: 'POST',
+      url: '/api/problem/algorithm/records/recordId',
       query: {
-        competition_id: competitionId,
-        submission_id: submissionId,
+        'competition_id': competitionId,
+        'submission_id': submissionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -420,13 +460,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmRecordsAllByUuidByPageUsingPost(
-    pageNum?: number
+      pageNum?: number,
   ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/records/user/page",
+      method: 'POST',
+      url: '/api/problem/algorithm/records/user/page',
       query: {
-        pageNum: pageNum,
+        'pageNum': pageNum,
       },
       errors: {
         401: `Unauthorized`,
@@ -441,12 +481,10 @@ export class ProblemAlgorithmControllerService {
    * @returns any Created
    * @throws ApiError
    */
-  public static problemAlgorithmRecordsAllSumByUuidByPageUsingPost(): CancelablePromise<
-    BaseResponse_long_ | any
-  > {
+  public static problemAlgorithmRecordsAllSumByUuidByPageUsingPost(): CancelablePromise<BaseResponse_long_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/records/user/sum",
+      method: 'POST',
+      url: '/api/problem/algorithm/records/user/sum',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -462,11 +500,11 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static listAlgorithmVoByPageUsingPost(
-    algorithmQueryRequest: AlgorithmQueryRequest
+      algorithmQueryRequest: AlgorithmQueryRequest,
   ): CancelablePromise<BaseResponse_List_ProblemAlgorithmBankVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search",
+      method: 'POST',
+      url: '/api/problem/algorithm/search',
       body: algorithmQueryRequest,
       errors: {
         401: `Unauthorized`,
@@ -483,13 +521,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmSearchSumByDifficultyUsingPost(
-    difficulty?: string
+      difficulty?: string,
   ): CancelablePromise<BaseResponse_long_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search/difficulty/sum",
+      method: 'POST',
+      url: '/api/problem/algorithm/search/difficulty/sum',
       query: {
-        difficulty: difficulty,
+        'difficulty': difficulty,
       },
       errors: {
         401: `Unauthorized`,
@@ -507,15 +545,15 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static competitionSearchProblemUsingPost(
-    competitionId?: number,
-    index?: string
+      competitionId?: number,
+      index?: string,
   ): CancelablePromise<BaseResponse_ProblemAlgorithmBankVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search/problem",
+      method: 'POST',
+      url: '/api/problem/algorithm/search/problem',
       query: {
-        competition_id: competitionId,
-        index: index,
+        'competition_id': competitionId,
+        'index': index,
       },
       errors: {
         401: `Unauthorized`,
@@ -532,13 +570,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmSearchByProblemIdUsingPost(
-    problemId?: number
+      problemId?: number,
   ): CancelablePromise<BaseResponse_ProblemAlgorithmBankVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search/problemId",
+      method: 'POST',
+      url: '/api/problem/algorithm/search/problemId',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -554,8 +592,8 @@ export class ProblemAlgorithmControllerService {
    */
   public static problemAlgorithmUserLastUsingGet(): CancelablePromise<BaseResponse_ProblemUserLastVo_> {
     return __request(OpenAPI, {
-      method: "GET",
-      url: "/api/problem/algorithm/search/problemLast",
+      method: 'GET',
+      url: '/api/problem/algorithm/search/problemLast',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -571,13 +609,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static competitionSearchProblemsUsingPost(
-    competitionId?: number
+      competitionId?: number,
   ): CancelablePromise<BaseResponse_List_CompetitionProblemsVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search/problems",
+      method: 'POST',
+      url: '/api/problem/algorithm/search/problems',
       query: {
-        competition_id: competitionId,
+        'competition_id': competitionId,
       },
       errors: {
         401: `Unauthorized`,
@@ -592,12 +630,10 @@ export class ProblemAlgorithmControllerService {
    * @returns any Created
    * @throws ApiError
    */
-  public static getProblemDailyNumUsingPost(): CancelablePromise<
-    BaseResponse_List_ProblemDailyNumVo_ | any
-  > {
+  public static getProblemDailyNumUsingPost(): CancelablePromise<BaseResponse_List_ProblemDailyNumVo_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/search/user/daily",
+      method: 'POST',
+      url: '/api/problem/algorithm/search/user/daily',
       errors: {
         401: `Unauthorized`,
         403: `Forbidden`,
@@ -613,13 +649,13 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemDailySetUsingPost(
-    problemId?: number
+      problemId?: number,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/set/daily",
+      method: 'POST',
+      url: '/api/problem/algorithm/set/daily',
       query: {
-        problem_id: problemId,
+        'problem_id': problemId,
       },
       errors: {
         401: `Unauthorized`,
@@ -636,11 +672,11 @@ export class ProblemAlgorithmControllerService {
    * @throws ApiError
    */
   public static problemAlgorithmSetUserLastUsingPost(
-    userLastEnter: UserLastEnter
+      userLastEnter: UserLastEnter,
   ): CancelablePromise<BaseResponse_boolean_ | any> {
     return __request(OpenAPI, {
-      method: "POST",
-      url: "/api/problem/algorithm/set/problemLast",
+      method: 'POST',
+      url: '/api/problem/algorithm/set/problemLast',
       body: userLastEnter,
       errors: {
         401: `Unauthorized`,
@@ -649,4 +685,5 @@ export class ProblemAlgorithmControllerService {
       },
     });
   }
+
 }

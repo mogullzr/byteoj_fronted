@@ -1052,19 +1052,19 @@ const initWebSocketConnection = () => {
           isConnected.value = true;
 
           // 🔥 订阅全局主题，缓存所有判题消息（用于处理订阅前到达的消息）
-          stompClient.value.subscribe('/topic/judge/*', (message) => {
-            try {
-              const result = JSON.parse(message.body);
-              const taskId = result.taskId;
-
-              // 如果该任务还未订阅，缓存消息
-              if (taskId && !subscriptions.value.has(taskId)) {
-                cacheMessage(taskId, result);
-              }
-            } catch (e) {
-              // 忽略解析错误
-            }
-          });
+          // stompClient.value.subscribe('/topic/judge/*', (message) => {
+          //   try {
+          //     const result = JSON.parse(message.body);
+          //     const taskId = result.taskId;
+          //
+          //     // 如果该任务还未订阅，缓存消息
+          //     if (taskId && !subscriptions.value.has(taskId)) {
+          //       cacheMessage(taskId, result);
+          //     }
+          //   } catch (e) {
+          //     // 忽略解析错误
+          //   }
+          // });
 
           resolve();
         },
@@ -1158,6 +1158,8 @@ const unsubscribeJudgeResult = (taskId) => {
 // 你原有的 submitJudge 函数（优化版）
 // ============================================
 
+// ... existing code ...
+
 const submitJudge = async () => {
   const competition_id = parseInt(route.path.split("/")[2]);
   const problem_index = route.path.split("/")[4] ?? "";
@@ -1186,6 +1188,9 @@ const submitJudge = async () => {
   isLoading.value = true;
 
   try {
+    // 🔥 关键改动1:先建立WebSocket连接(不等待订阅完成)
+    await initWebSocketConnection();
+
     let res;
 
     // 提交代码
@@ -1218,7 +1223,7 @@ const submitJudge = async () => {
 
     console.log('[提交] ✅ 任务ID:', taskId);
 
-    // ✅ 关键改动：订阅判题结果（复用连接）
+    // 🔥 关键改动2:提交后立即订阅(此时HTTP连接已建立,WebSocket也已就绪)
     await subscribeJudgeResult(taskId, (result) => {
       handleJudgeResult(taskId, result);
     });
@@ -1231,6 +1236,7 @@ const submitJudge = async () => {
   }
 };
 
+// ... existing code ...
 // ============================================
 // 处理判题结果（整合你原有的逻辑）
 // ============================================
