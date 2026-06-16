@@ -26,6 +26,10 @@ import CompetitionProcterView from "../views/competition/CompetitionProcterView.
 import LogWebsiteManagement from "../views/log/LogWebsiteManagement.vue";
 import ExamAdd from "../views/exam/ExamAdd.vue";
 import ExamManagement from "../views/exam/ExamManagement.vue";
+import PostManagementView from "../views/posts/PostManagementView.vue";
+import {Picture} from "@element-plus/icons-vue";
+import PictureManagementView from "../views/picture/PictureManagementView.vue";
+import VideoUploadView from "../views/video/VideoUploadView.vue";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -222,6 +226,15 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
+    path: "/posts",
+    name: "帖子管理页面",
+    meta: {
+      access: "2",
+      show: false
+    },
+    component: PostManagementView
+  },
+  {
     path: "/course",
     name: "课程页面",
     meta: {
@@ -260,6 +273,15 @@ const routes: Array<RouteRecordRaw> = [
     ]
   },
   {
+    path: "/picture",
+    name: "图片管理页面",
+    meta: {
+      access: "2",
+      show: false
+    },
+    component: PictureManagementView
+  },
+  {
     path: "/log",
     name: "日志管理",
     meta: {
@@ -276,6 +298,15 @@ const routes: Array<RouteRecordRaw> = [
       show: true,
     },
     component: LogWebsiteManagement,
+  },
+  {
+    path: "/video",
+    name: "视频管理页面",
+    meta: {
+      access: "2",
+      show: false
+    },
+    component: VideoUploadView
   },
   {
     path: "/payment",

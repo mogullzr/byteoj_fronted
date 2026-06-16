@@ -2,10 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ProblemExamProblemInfo = {
+export type VideoUploadRequest = {
     problem_id?: number;
-    score?: number;
-    status?: number;
-    type?: number;
+    videoFile?: Blob;
 };
 

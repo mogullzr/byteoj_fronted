@@ -8,7 +8,7 @@ const isShow = useStore.isShow;
 
 <template>
   <div class="common-layout">
-    <el-container style="margin: 0; padding: 0">
+    <el-container class="layout-container">
       <el-aside width="200px" v-if="useStore.isShow == true">
         <DrawerBarView />
       </el-aside>
@@ -16,7 +16,7 @@ const isShow = useStore.isShow;
         <el-header v-if="useStore.isShow == true">
           <NavBarView />
         </el-header>
-        <el-main>
+        <el-main class="layout-main">
           <router-view />
         </el-main>
       </el-container>
@@ -24,4 +24,19 @@ const isShow = useStore.isShow;
   </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+.common-layout,
+.layout-container {
+  min-height: 100vh;
+}
+
+.layout-container {
+  margin: 0;
+  padding: 0;
+}
+
+.layout-main {
+  padding: 0;
+  background: #f5f7fa;
+}
+</style>

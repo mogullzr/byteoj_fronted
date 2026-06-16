@@ -120,8 +120,7 @@
         <template #title>
           <span>帖子管理</span>
         </template>
-        <el-menu-item index="4-1-1">帖子信息管理</el-menu-item>
-        <el-menu-item index="4-1-2">评论信息管理</el-menu-item>
+        <el-menu-item index="4-1-1" @click="RouterToView('/posts')">帖子信息管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="5">
@@ -228,15 +227,9 @@
       </template>
       <el-menu-item-group>
         <template #title>
-          <span>设置默认图片</span>
+          <span>图片管理</span>
         </template>
-        <el-menu-item index="9-1-1">默认图片管理</el-menu-item>
-      </el-menu-item-group>
-      <el-menu-item-group>
-        <template #title>
-          <span>管理用户图片</span>
-        </template>
-        <el-menu-item index="9-1-1">用户图片管理</el-menu-item>
+        <el-menu-item index="9-1-1" @click="RouterToView('/picture')">图片管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="9">
@@ -258,7 +251,7 @@
         <template #title>
           <span>视频管理</span>
         </template>
-        <el-menu-item index="9-1-2">视频信息管理</el-menu-item>
+        <el-menu-item index="9-1-2" @click="RouterToView('/video')">视频信息管理</el-menu-item>
       </el-menu-item-group>
     </el-sub-menu>
     <el-sub-menu index="10">
