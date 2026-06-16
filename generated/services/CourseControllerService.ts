@@ -213,4 +213,26 @@ export class CourseControllerService {
             },
         });
     }
+    /**
+     * courseUserJoin
+     * @param courseId course_id
+     * @returns BaseResponse_boolean_ OK
+     * @throws ApiError
+     */
+    public static courseUserJoinUsingGet(
+        courseId?: number,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/course/user/join',
+            query: {
+                'course_id': courseId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
 }

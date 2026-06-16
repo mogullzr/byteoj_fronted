@@ -62,7 +62,7 @@ onMounted(async () => {
       const local = localStorage.getItem("study-" + course_id.value + "-status");
       isShow.value = local ? parseInt(local) : 1;
     }
-    
+
     // 设置选中态
     let element: any = document.getElementById(isShow.value.toString());
     if (element !== null) {
@@ -77,7 +77,7 @@ onMounted(async () => {
     // 无论成功失败都要结束加载状态
     isCheckingStatus.value = false;
   }
-  
+
   // 添加键盘事件监听器
   document.addEventListener('keydown', handleKeydown);
 });
@@ -95,30 +95,47 @@ onUnmounted(() => {
 const handleCoursePayment = async () => {
   try {
     isLoading.value = true;
-    const lantuPayRequest: LantuPayRequest = {
-      course_id: course_id.value
-    };
-    
-    const res = await LantuPayControllerService.lantuPayUsingPost(lantuPayRequest);
-    
-    if (res.code === 0 && res.data) {
-      paymentData.value = {
-        weixin_url: res.data.weixin_url || "",
-        out_trade_no: res.data.out_trade_no || "",
-        fund: res.data.fund || ""
+
+    if (course.value.pay == "0") {
+      const res = await CourseControllerService.courseUserJoinUsingGet(course_id.value);
+      if (res.code === 0) {
+        clearInterval(paymentPollingTimer.value!);
+        paymentPollingTimer.value = null;
+        messageBox.success("报名成功！正在刷新页面...");
+
+        // 延迟1秒后刷新页面
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        return;
+      }
+    }
+    else {
+      const lantuPayRequest: LantuPayRequest = {
+        course_id: course_id.value
       };
-      showPayment.value = true;
-      
-      // 开始轮询支付状态
-      startPaymentPolling(res.data.out_trade_no);
-    } else {
-      messageBox.error("支付订单创建失败，请稍后重试");
+
+      const res = await LantuPayControllerService.lantuPayUsingPost(lantuPayRequest);
+
+      if (res.code === 0 && res.data) {
+        paymentData.value = {
+          weixin_url: res.data.weixin_url || "",
+          out_trade_no: res.data.out_trade_no || "",
+          fund: res.data.fund || ""
+        };
+        showPayment.value = true;
+
+        // 开始轮询支付状态
+        startPaymentPolling(res.data.out_trade_no);
+      } else {
+        messageBox.error("支付订单创建失败，请稍后重试");
+      }
     }
   } catch (error) {
     console.error("支付请求失败:", error);
     messageBox.error("支付请求失败，请检查网络连接");
-  } finally {
-
+  }
+  finally {
     isLoading.value = false;
   }
 };
@@ -130,40 +147,40 @@ const startPaymentPolling = (outTradeNo: string) => {
     clearInterval(paymentPollingTimer.value);
     paymentPollingTimer.value = null;
   }
-  
+
   // 重置过期状态
   isQrCodeExpired.value = false;
-  
+
   let pollCount = 0;
   const maxPolls = 90; // 3分钟 = 180秒，每2秒一次 = 90次
-  
+
   console.log(`开始支付状态轮询，订单号: ${outTradeNo}，最大轮询次数: ${maxPolls}`);
-  
+
   paymentPollingTimer.value = setInterval(async () => {
     pollCount++;
     console.log(`第${pollCount}次轮询支付状态，剩余${maxPolls - pollCount}次`);
-    
+
     try {
       const lantuPayOtherRequest: LantuPayOtherRequest = {
         out_trade_no: outTradeNo
       };
-      
+
       const statusRes = await LantuPayControllerService.lantuPayStatusUsingPost(lantuPayOtherRequest);
-      
+
       if (statusRes.code === 0 && statusRes.data === true) {
         // 支付成功
         console.log("检测到支付成功，停止轮询");
         clearInterval(paymentPollingTimer.value!);
         paymentPollingTimer.value = null;
         messageBox.success("支付成功！正在刷新页面...");
-        
+
         // 延迟1秒后刷新页面
         setTimeout(() => {
           window.location.reload();
         }, 1000);
         return;
       }
-      
+
       // 检查是否超时
       if (pollCount >= maxPolls) {
         console.log("支付状态轮询达到最大次数，停止轮询");
@@ -176,7 +193,7 @@ const startPaymentPolling = (outTradeNo: string) => {
     } catch (error) {
       console.error(`第${pollCount}次支付状态查询失败:`, error);
       // 继续轮询，不中断
-      
+
       // 如果连续失败次数过多，也要考虑停止轮询
       if (pollCount >= maxPolls) {
         console.log("轮询次数已达上限，即使有错误也要停止");
@@ -233,17 +250,17 @@ const copyOrderNumber = async () => {
 const refreshPaymentCode = async () => {
   try {
     isRefreshing.value = true;
-    
+
     // 停止当前轮询
     stopPaymentPolling();
-    
+
     // 重新请求支付订单
     const lantuPayRequest: LantuPayRequest = {
       course_id: course_id.value
     };
-    
+
     const res = await LantuPayControllerService.lantuPayUsingPost(lantuPayRequest);
-    
+
     if (res.code === 0 && res.data) {
       // 更新支付数据
       paymentData.value = {
@@ -251,13 +268,13 @@ const refreshPaymentCode = async () => {
         out_trade_no: res.data.out_trade_no || "",
         fund: res.data.fund || ""
       };
-      
+
       // 重置过期状态
       isQrCodeExpired.value = false;
-      
+
       // 开始新的轮询
       startPaymentPolling(res.data.out_trade_no);
-      
+
       messageBox.success("二维码已刷新，请重新扫码支付");
     } else {
       messageBox.error("刷新二维码失败，请稍后重试");
@@ -347,7 +364,7 @@ const changeShow = (key: number) => {
           <span class="loading-text">加载中...</span>
         </div>
       </div>
-      
+
       <!-- 已报名用户显示用户信息 -->
       <div v-else-if="isJoined" class="card bg-base-100 shadow-2xl">
         <div class="card-body flex py-0">
@@ -373,7 +390,7 @@ const changeShow = (key: number) => {
           </button>
         </div>
       </div>
-      
+
       <!-- 未报名用户显示报名按钮 -->
       <div v-else class="register-section">
         <div class="group-qr-tip-highlighted">
@@ -386,7 +403,7 @@ const changeShow = (key: number) => {
             <span>点击查看群聊二维码</span>
           </button>
         </div>
-        <button 
+        <button
           @click="handleCoursePayment"
           :disabled="isLoading"
           class="custom-register-btn"
@@ -501,9 +518,9 @@ const changeShow = (key: number) => {
       <!-- 二维码展示 -->
       <div class="qr-display-section">
         <div class="qr-display-container">
-          <img 
-            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250709110220883.jpg" 
-            alt="学习群二维码" 
+          <img
+            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250709110220883.jpg"
+            alt="学习群二维码"
             class="group-qr-image"
           />
         </div>
@@ -546,10 +563,10 @@ const changeShow = (key: number) => {
       <div class="qr-section">
         <div class="qr-container">
           <div class="qr-wrapper" :class="{ 'qr-expired': isQrCodeExpired }">
-            <img 
-              v-if="paymentData.weixin_url" 
-              :src="paymentData.weixin_url" 
-              alt="微信支付二维码" 
+            <img
+              v-if="paymentData.weixin_url"
+              :src="paymentData.weixin_url"
+              alt="微信支付二维码"
               class="qr-image"
             />
             <div v-else class="qr-loading">
@@ -567,9 +584,9 @@ const changeShow = (key: number) => {
           </div>
         </div>
         <div class="wechat-tip">
-          <img 
-            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250927230025890.png" 
-            alt="微信支付" 
+          <img
+            src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250927230025890.png"
+            alt="微信支付"
             class="wechat-pay-logo"
           />
           <span>使用微信扫码支付</span>
@@ -577,10 +594,10 @@ const changeShow = (key: number) => {
         <div v-if="paymentData.fund" class="payment-amount">
           支付金额：<span class="amount-value">¥{{ paymentData.fund }}</span>
         </div>
-        
+
         <!-- 刷新按钮 -->
         <div class="refresh-section">
-          <button 
+          <button
             @click="refreshPaymentCode"
             :disabled="isRefreshing"
             class="refresh-btn"
@@ -646,10 +663,10 @@ const changeShow = (key: number) => {
 }
 
 @keyframes highlightPulse {
-  0%, 100% { 
+  0%, 100% {
     box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
   }
-  50% { 
+  50% {
     box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);
   }
 }

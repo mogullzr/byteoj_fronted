@@ -2,7 +2,7 @@
   <audio ref="audioClick" v-show="false">
     <source src="../../../../public/vector.mp3" type="audio/mpeg" />
   </audio>
-  <div class="bg-neutral-50 w-full h-16" style="border: lightgray 1px solid">
+  <div class="bg-neutral-100 w-full h-16" style="border: lightgray 1px solid">
     <div class="flex">
       <div class="flex-1"></div>
       <select
@@ -82,26 +82,13 @@
           />
         </svg>
       </button>
-      <button class="bothover mr-6" @click="showBot('ByteOJ AI 问答')" v-if="isBotShow">
+      <button class="bothover mr-6" @click="showBot('ByteOJ AI 问答')">
         <div v-if="!isBot">
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" stroke="#666666" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2m16 0h2m-7-1v2m-6-2v2"/></g></svg>
         </div>
         <div v-else>
           <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24"><g fill="none" stroke="#2AABD2" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2m16 0h2m-7-1v2m-6-2v2"/></g></svg>
         </div>
-      </button>
-      <button class="formatHover mr-6" @click="formatCode" title="格式化代码">
-        <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="30"
-            height="30"
-            viewBox="0 0 24 24"
-        >
-          <path
-              fill="#999999"
-              d="M4 3h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m1 2v14h14V5zm2 2h3v2H7zm0 3h3v2H7zm0 3h3v2H7zm5-6h5v2h-5zm0 3h5v2h-5zm0 3h5v2h-5z"
-          />
-        </svg>
       </button>
       <button class="exportRecordsHover mr-6" @click="exportRecords" title="导出代码编辑记录">
         <svg
@@ -218,7 +205,7 @@
       @init="editorInit"
       v-model:value="content"
       :lang="
-      current_language == 'C' || current_language == 'C/C++'
+      current_language == 'C/C++'
         ? 'c_cpp'
         : current_language == 'Python3'
         ? 'python'
@@ -235,7 +222,6 @@
       @wheel.prevent="handleWheel"
   />
   <button
-      v-if="route.path.split('/')[1] != 'exam'"
       @click="submitJudge"
       class="text-lg btn float-right text-white hover:text-slate-700 m-4 w-28 bg-green-400 hover:bg-green-500 active:bg-emerald-500 g-border-b-gray-400 submit-button"
       :disabled="isShow_2"
@@ -260,35 +246,25 @@
         style="background-color: #f5f5f5"
     >
       <div>代码运行状态：</div>
-      <!-- Pending 状态：浅灰色 + loading spinner -->
-      <div class="text-2xl" v-if="code_status == 'pending' || code_status == 'Pending'">
-        <span class="text-gray-400">Pending</span>
-        <span class="loading loading-spinner ml-3 text-gray-500"></span>
-      </div>
-      <!-- Running 状态：蓝色 + loading spinner -->
-      <div class="text-2xl text-sky-600" v-else-if="isLoading || code_status == 'running' || code_status == 'Running'">
+      <div class="text-2xl text-sky-600" v-if="isLoading">
         <span class="">Running</span>
         <span class="loading loading-spinner ml-3"></span>
       </div>
-      <!-- Accepted/Finished 状态：绿色 -->
       <span
           class="text-2xl ml-2"
           v-else-if="code_status == 'Accepted' || code_status == 'Finished'"
           style="color: #449d44"
       >{{ code_status }}</span
       >
-      <!-- 其他错误状态：红色 -->
       <span
           class="text-2xl text-red-500"
           v-else-if="code_status != 'Nonzero Exit Status'"
       >{{ code_status }}</span
       >
-      <!-- 编译错误：红色 -->
       <span class="text-2xl text-red-500" v-else>Compile Error</span>
     </div>
     <div class="collapse-content">
-      <!-- Pending、Loading 或 Running 状态时不显示输出内容 -->
-      <div class="m-5" v-show="!isLoading && code_status != 'pending' && code_status != 'Pending' && code_status != 'Running' && code_status != 'running'">
+      <div class="m-5" v-show="!isLoading">
         <span class="text-gray-700">输入</span>
         <textarea
             id="auto-expand-textarea_1"
@@ -335,18 +311,16 @@ import { ProblemAlgorithmControllerService } from "../../../../generated";
 import ace from "ace-builds";
 import ChatBoxView from "@/view/AI/ChatBoxView.vue";
 import DraggableWindowView from "@/components/Card/DraggableWindowView.vue";
-import {} from '@/plugins/CodeSubmit.js'
+
 const props = defineProps<{
   status: number
 }>();
 
-const path = router.currentRoute.value.fullPath;
 const audioClick: Ref<any> = ref(null);
 const useStore = UserStore();
 const isShow: Ref<string | null> = ref(localStorage.getItem("EditorStatus"));
 const flag: Ref<boolean> = ref(localStorage.getItem("ControlBlock") != null);
 const isBot: Ref<boolean> = ref(localStorage.getItem("isBot") == 'true');
-const isBotShow: Ref<boolean> = ref(path.toString().split("/")[2] != "competition");
 const font_size: Ref<any> = ref(
     localStorage.getItem("fontSize") == null
         ? 18
@@ -371,7 +345,7 @@ const options: any = ref({
   fontSize: font_size.value,
 });
 
-
+const path = router.currentRoute.value.fullPath;
 const problem_id = ref(
     path.toString().split("/")[1] == "competition"
         ? parseInt(path.toString().split("/")[2]) +
@@ -383,7 +357,7 @@ const problem_id = ref(
 const languages_options = useStore.languages_options;
 const themes_options = useStore.themes_options;
 const languages_content = useStore.languages_content;
-const current_language = ref(localStorage.getItem("current_language") == null ? languages_options[0] : localStorage.getItem("current_language"));
+const current_language = ref(localStorage.getItem("current_language") == null ? languages_options[1] : localStorage.getItem("current_language"));
 const current_theme: Ref<any> = ref(
     localStorage.getItem("theme-" + useStore.loginUser.uuid) == null
         ? themes_options[0] ?? "github"
@@ -399,7 +373,7 @@ const content: Ref<any> = ref(
         "-" +
         current_language.value
     ) == null
-        ? languages_content[0]
+        ? languages_content[1]
         : localStorage.getItem(
             problem_id.value +
             "-" +
@@ -870,21 +844,14 @@ const judgeTest = async () => {
 
   code_message.value = "";
   code_time.value = 0;
-  correctOutput.value = undefined; // 清除标准答案，避免误导学生
 
   let temp_language = "";
   if (current_language.value == "C/C++") {
     temp_language = "cpp";
-  } else if (current_language.value == "C") {
-    temp_language = "c";
   } else if (current_language.value == "Python3") {
     temp_language = "python";
   } else if (current_language.value == "Java") {
     temp_language = "java";
-  } else if (current_language.value == "Go") {
-    temp_language = "go";
-  } else if (current_language.value == "JavaScript"){
-    temp_language = "javascript";
   }
   isLoading.value = true;
   if (problem_index == "") {
@@ -934,431 +901,84 @@ const judgeTest = async () => {
     }
   }
 };
-// ============================================
-// 你的前端代码 - 优化版本
-// 主要改动：复用 WebSocket 连接，支持快速连续提交
-// ============================================
-
-import { Client } from '@stomp/stompjs';  // 使用 Client 类（新 API）
-// 🔥 已移除 SockJS，改为纯 WebSocket
-import { useRoute } from "vue-router";
-import { onUnmounted } from 'vue';  // 添加 ref 和 onUnmounted
-
-// ============================================
-// WebSocket 全局状态（改为 ref）
-// ============================================
-const route = useRoute();
-
-const stompClient = ref(null);           // WS 客户端
-const isConnected = ref(false);          // 连接状态
-const subscriptions = ref(new Map());    // 存储所有订阅
-const messageQueue = ref(new Map());     // 消息缓存队列（用于处理订阅前到达的消息）
-const MAX_QUEUE_SIZE = 10;               // 每个任务最多缓存10条消息
-
-// ============================================
-// 消息缓存管理
-// ============================================
-
-/**
- * 缓存消息（如果订阅还未建立）
- */
-const cacheMessage = (taskId, message) => {
-  if (!subscriptions.value.has(taskId)) {
-    // 还未订阅，缓存消息
-    if (!messageQueue.value.has(taskId)) {
-      messageQueue.value.set(taskId, []);
-    }
-    const queue = messageQueue.value.get(taskId);
-    if (queue.length < MAX_QUEUE_SIZE) {
-      queue.push(message);
-      console.log(`[消息缓存] 任务 ${taskId} 缓存消息，当前队列: ${queue.length}`);
-    }
-    return true;  // 已缓存
-  }
-  return false;  // 已订阅，不需要缓存
-};
-
-/**
- * 消费缓存的消息
- */
-const consumeCachedMessages = (taskId, onMessage) => {
-  const queue = messageQueue.value.get(taskId);
-  if (queue && queue.length > 0) {
-    console.log(`[消息缓存] 任务 ${taskId} 消费 ${queue.length} 条缓存消息`);
-    queue.forEach(message => {
-      onMessage(message);
-    });
-    messageQueue.value.delete(taskId);
-  }
-};
-
-// ============================================
-// WebSocket 连接管理（新增）
-// ============================================
-
-/**
- * 初始化 WebSocket 连接（全局只连接一次）
- */
-const initWebSocketConnection = () => {
-  // 如果已经连接，直接返回
-  if (isConnected.value && stompClient.value) {
-    console.log('[WebSocket] 已连接，复用现有连接');
-    return Promise.resolve();
-  }
-
-  // 如果正在连接中，等待连接完成
-  if (stompClient.value && !isConnected.value) {
-    return new Promise((resolve) => {
-      const checkInterval = setInterval(() => {
-        if (isConnected.value) {
-          clearInterval(checkInterval);
-          resolve();
-        }
-      }, 100);
-    });
-  }
-
-  console.log('[WebSocket] 开始建立连接...');
-
-  return new Promise((resolve, reject) => {
-    try {
-      // 动态获取 WebSocket URL（根据当前协议和域名）
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname;
-      const port = process.env.NODE_ENV === 'production' ? '' : ':7091';
-      const wsUrl = `${protocol}//${host}${port}/api/ws/judge`;
-
-      console.log('[WebSocket] 连接地址:', wsUrl);
-
-      const client = new Client({
-        // 🔥 使用纯 WebSocket，移除 SockJS
-        brokerURL: wsUrl,
-
-        // 心跳配置
-        heartbeatIncoming: 20000,
-        heartbeatOutgoing: 20000,
-
-        // 自动重连
-        reconnectDelay: 3000,
-
-        // 调试日志（生产环境可关闭）
-        debug: (str) => {
-          // console.log('[STOMP]', str);
-        },
-
-        // 连接成功
-        onConnect: (frame) => {
-          console.log('[WebSocket] ✅ 连接成功');
-          isConnected.value = true;
-
-          // 🔥 订阅全局主题，缓存所有判题消息（用于处理订阅前到达的消息）
-          // stompClient.value.subscribe('/topic/judge/*', (message) => {
-          //   try {
-          //     const result = JSON.parse(message.body);
-          //     const taskId = result.taskId;
-          //
-          //     // 如果该任务还未订阅，缓存消息
-          //     if (taskId && !subscriptions.value.has(taskId)) {
-          //       cacheMessage(taskId, result);
-          //     }
-          //   } catch (e) {
-          //     // 忽略解析错误
-          //   }
-          // });
-
-          resolve();
-        },
-
-        // STOMP 错误
-        onStompError: (frame) => {
-          console.error('[WebSocket] ❌ STOMP 错误:', frame);
-          isConnected.value = false;
-          reject(new Error('STOMP 连接失败'));
-        },
-
-        // WebSocket 错误
-        onWebSocketError: (event) => {
-          console.error('[WebSocket] ❌ 连接错误:', event);
-          isConnected.value = false;
-          reject(new Error('WebSocket 连接失败'));
-        },
-
-        // 断开连接
-        onDisconnect: () => {
-          console.warn('[WebSocket] ⚠️ 连接已断开');
-          isConnected.value = false;
-          subscriptions.value.clear();
-        }
-      });
-
-      // 激活连接
-      client.activate();
-      stompClient.value = client;
-
-    } catch (error) {
-      console.error('[WebSocket] ❌ 初始化失败:', error);
-      reject(error);
-    }
-  });
-};
-
-/**
- * 订阅判题结果（新增）
- */
-const subscribeJudgeResult = async (taskId, onMessage) => {
-  try {
-    // 确保 WebSocket 已连接
-    await initWebSocketConnection();
-
-    // 避免重复订阅
-    if (subscriptions.value.has(taskId)) {
-      console.warn(`[WebSocket] 任务 ${taskId} 已订阅`);
-      return;
-    }
-
-    console.log(`[WebSocket] 📡 订阅任务: ${taskId}`);
-
-    // 先消费缓存的消息（处理订阅前到达的消息）
-    consumeCachedMessages(taskId, onMessage);
-
-    // 订阅 topic
-    const subscription = stompClient.value.subscribe(
-        `/topic/judge/${taskId}`,
-        (message) => {
-          const result = JSON.parse(message.body);
-          console.log('[WebSocket] 📥 收到消息:', result);
-
-          // 调用回调函数
-          onMessage(result);
-        }
-    );
-
-    // 保存订阅
-    subscriptions.value.set(taskId, subscription);
-
-  } catch (error) {
-    console.error('[WebSocket] ❌ 订阅失败:', error);
-    throw error;
-  }
-};
-
-/**
- * 取消订阅（新增）
- */
-const unsubscribeJudgeResult = (taskId) => {
-  const subscription = subscriptions.value.get(taskId);
-  if (subscription) {
-    subscription.unsubscribe();
-    subscriptions.value.delete(taskId);
-    console.log(`[WebSocket] 🚫 取消订阅: ${taskId}`);
-  }
-};
-
-// ============================================
-// 你原有的 submitJudge 函数（优化版）
-// ============================================
-
-// ... existing code ...
 
 const submitJudge = async () => {
-  const competition_id = parseInt(route.path.split("/")[2]);
-  const problem_index = route.path.split("/")[4] ?? "";
+  let competition_id = ref(parseInt(path.toString().split("/")[2]));
+  let problem_index = path.toString().split("/")[4] ?? "";
 
   isShow_1.value = true;
   isShow_2.value = true;
+
   input.value = "";
   code_message.value = "";
+  code_time.value = 0;
 
-  // 语言映射
   let temp_language = "";
   if (current_language.value == "C/C++") {
     temp_language = "cpp";
-  } else if (current_language.value == "C") {
-    temp_language = "c";
-  } else if (current_language.value == "Python3") {
+  }else if (current_language.value == "Python3") {
     temp_language = "python";
   } else if (current_language.value == "Java") {
     temp_language = "java";
-  } else if (current_language.value == "Go") {
-    temp_language = "go";
-  } else if (current_language.value == "JavaScript"){
-    temp_language = "javascript";
   }
-
   isLoading.value = true;
-
-  try {
-    // 🔥 关键改动1:先建立WebSocket连接(不等待订阅完成)
-    await initWebSocketConnection();
-
-    let res;
-
-    // 提交代码
-    if (problem_index == "") {
-      res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost({
-        problem_id: problem_id.value,
-        language: temp_language,
-        source_code: content.value,
-      });
-    } else {
-      res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost({
-        competition_id: competition_id,
-        index: problem_index,
-        language: temp_language,
-        source_code: content.value,
-      });
-    }
-
-    // 检查提交结果
-    if (res.code !== 0) {
-      code_message.value = res.message || "提交失败";
+  if (problem_index == "") {
+    const res =
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
+            {
+              problem_id: problem_id.value,
+              language: temp_language,
+              source_code: content.value,
+            }
+        );
+    if (res.code === 0) {
+      code_status.value = res.data.status;
+      if (code_status.value == "Wrong Answer") {
+        input.value = res.data.input;
+        code_message.value = res.data.output;
+        correctOutput.value = res.data.correctOutput;
+      } else if (code_status.value == "Nonzero Exit Status") {
+        code_message.value = res.data.fileId;
+      } else if (code_status.value == "Accepted") {
+        audioClick.value.volume = 1;
+        audioClick.value?.play();
+      }
       isLoading.value = false;
-      return;
+      await modify();
+
+      isShow_1.value = false;
+      isShow_2.value = false;
     }
+  } else {
+    const res =
+        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
+            {
+              competition_id: competition_id.value,
+              index: problem_index,
+              language: temp_language,
+              source_code: content.value,
+            }
+        );
+    if (res.code === 0) {
+      code_status.value = res.data.status;
+      if (code_status.value == "Wrong Answer") {
+        input.value = res.data.input;
+        code_message.value = res.data.output;
+        correctOutput.value = res.data.correctOutput;
+      } else if (code_status.value == "Nonzero Exit Status") {
+        code_message.value = res.data.fileId;
+      } else if (code_status.value == "Accepted") {
+        audioClick.value.volume = 1;
+        audioClick.value?.play();
+      }
+      isLoading.value = false;
+      await modify();
 
-    // 获取 taskId
-    const taskId = res.data.taskId;
-    code_status.value = res.data.status || "Pending";
-    code_message.value = "提交成功，等待判题中...";
-
-    console.log('[提交] ✅ 任务ID:', taskId);
-
-    // 🔥 关键改动2:提交后立即订阅(此时HTTP连接已建立,WebSocket也已就绪)
-    await subscribeJudgeResult(taskId, (result) => {
-      handleJudgeResult(taskId, result);
-    });
-
-  } catch (error) {
-    console.error('[提交] ❌ 出错:', error);
-    code_message.value = "提交失败: " + (error.message || '未知错误');
-  } finally {
-    isLoading.value = false;
+      isShow_1.value = false;
+      isShow_2.value = false;
+    }
   }
 };
-
-// ... existing code ...
-// ============================================
-// 处理判题结果（整合你原有的逻辑）
-// ============================================
-
-const handleJudgeResult = (taskId, result) => {
-  console.log('[判题结果]', result);
-
-  // 更新状态
-  code_status.value = result.status;
-
-  // 根据不同状态处理（保留你原有的逻辑）
-  if (result.status === "Pending") {
-    code_message.value = "任务排队中...";
-  }
-  else if (result.status === "Running" || result.status === "running") {
-    code_message.value = "";  // 不显示输出内容
-  }
-  else if (result.status === "Retrying") {
-    code_message.value = result.message || "判题失败，正在重试...";
-  }
-  else if (result.status === "Wrong Answer") {
-    input.value = result.input || "";
-    code_message.value = result.message || result.output || "";
-    correctOutput.value = result.correctOutput || "";
-
-    // 判题完成
-    finishJudge(taskId);
-  }
-  else if (result.status === "Nonzero Exit Status") {
-    code_message.value = result.message || result.fileId || "";
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Accepted" || result.status === "Success") {
-    // 播放成功音效
-    audioClick.value.volume = 1;
-    audioClick.value?.play();
-    code_message.value = "";  // 不显示输出内容
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Time Limit Exceeded") {
-    input.value = result.input || "";
-    code_message.value = result.message || result.output || "";
-    correctOutput.value = result.correctOutput || "";
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Memory Limit Exceeded") {
-    input.value = result.input || "";
-    code_message.value = result.message || result.output || "";
-    correctOutput.value = result.correctOutput || "";
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Runtime Error") {
-    input.value = result.input || "";
-    code_message.value = result.message || result.output || result.fileId || "";
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Compile Error") {
-    code_message.value = result.message || result.fileId || "";
-
-    finishJudge(taskId);
-  }
-  else if (result.status === "Failed" || result.status === "failed") {
-    code_message.value = result.message || "判题失败";
-
-    finishJudge(taskId);
-  }
-  else {
-    // 其他未知状态，也需要完成判题
-    code_message.value = result.message || result.output || "";
-
-    finishJudge(taskId);
-  }
-};
-
-// ============================================
-// 判题完成后的处理
-// ============================================
-
-const finishJudge = (taskId) => {
-  // 调用原有的 modify 函数
-  modify();
-
-  // 隐藏 UI
-  isShow_1.value = false;
-  isShow_2.value = false;
-
-  // 取消订阅（释放资源）
-  setTimeout(() => {
-    unsubscribeJudgeResult(taskId);
-  }, 1000);
-};
-
-// ============================================
-// 组件生命周期
-// ============================================
-
-// 组件卸载时断开连接
-onUnmounted(() => {
-  console.log('[组件] 卸载，清理 WebSocket');
-
-  // 取消所有订阅
-  subscriptions.value.forEach((sub) => {
-    sub.unsubscribe();
-  });
-  subscriptions.value.clear();
-
-  // 断开连接
-  if (stompClient.value && isConnected.value) {
-    stompClient.value.deactivate();
-    isConnected.value = false;
-  }
-});
-
-// ============================================
-// 导出（如果需要在其他地方使用）
-// ============================================
-
 
 const getCurrentSelected = (keyId: string) => {
   let selectDiv: any = document.getElementById(keyId);
@@ -1415,39 +1035,6 @@ const clearContent = () => {
     timestamp: timestamp
   };
   saveOperation(record);
-};
-
-const formatCode = () => {
-  if (!content.value || content.value.trim() === '') {
-    alert('没有可格式化的代码！');
-    return;
-  }
-
-  // 只对 C/C++ 代码进行格式化
-  if (current_language.value !== 'C' && current_language.value !== 'C++' && current_language.value !== 'C/C++') {
-    alert('格式化功能目前仅支持 C/C++ 代码！');
-    return;
-  }
-
-  try {
-    const formattedCode = normalizeIndentation(content.value);
-    content.value = formattedCode;
-
-    // 保存格式化后的代码到 localStorage
-    localStorage.setItem(
-        problem_id.value +
-        "-" +
-        useStore.loginUser.uuid +
-        "-" +
-        current_language.value,
-        content.value
-    );
-
-    console.log('代码格式化成功！');
-  } catch (error) {
-    console.error('格式化代码失败:', error);
-    alert('格式化代码失败，请检查代码语法！');
-  }
 };
 
 const transformEditor = () => {
@@ -1535,106 +1122,7 @@ const triggerEnterEvent = (element: HTMLTextAreaElement) => {
   element.dispatchEvent(event);
 };
 
-const normalizeIndentation = (code:string) => {
-  let result = [];
-  let indentLevel = 0;
-  let parenLevel = 0;
-  let inExpression = false;
-  let lastWasInclude = false;
-  let i = 0;
-  let current = '';
-
-  function pushLine(line) {
-    let trimmed = line.trim();
-    if (trimmed && trimmed.startsWith('#include')) {
-      lastWasInclude = true;
-    } else {
-      if (lastWasInclude) {
-        result.push('');
-      }
-      lastWasInclude = false;
-    }
-    result.push(line);
-  }
-
-  while (i < code.length) {
-    let ch = code.charAt(i);
-    if (/\s/.test(ch)) {
-      if (ch === '\n') {
-        if (current.trim()) {
-          let appended = ' '.repeat(indentLevel * 4) + current.trim();
-          pushLine(appended);
-        }
-        current = '';
-        i++;
-        continue;
-      } else {
-        current += ' ';
-        i++;
-        continue;
-      }
-    }
-    // non-space
-    current += ch;
-    if (ch === '(') {
-      parenLevel++;
-    }
-    if (ch === ')') {
-      parenLevel--;
-    }
-    if (ch === '{') {
-      let trimmed = current.trim();
-      if (trimmed.endsWith('={')) {
-        inExpression = true;
-      } else {
-        let appended = ' '.repeat(indentLevel * 4) + trimmed;
-        pushLine(appended);
-        current = '';
-        indentLevel++;
-      }
-      i++;
-      continue;
-    }
-    if (ch === '}') {
-      if (inExpression) {
-        inExpression = false;
-      } else {
-        indentLevel--;
-        let appended = ' '.repeat(indentLevel * 4) + current.trim();
-        pushLine(appended);
-        current = '';
-      }
-      i++;
-      continue;
-    }
-    if (ch === ';') {
-      if (parenLevel === 0) {
-        let appended = ' '.repeat(indentLevel * 4) + current.trim();
-        pushLine(appended);
-        current = '';
-      }
-      // else: keep ; in current for inner expressions
-      i++;
-      continue;
-    }
-    i++;
-  }
-  if (current.trim()) {
-    let appended = ' '.repeat(indentLevel * 4) + current.trim();
-    pushLine(appended);
-  }
-  return result.join('\n');
-}
 onMounted(() => {
-  if (route.query.problem_id != null) {
-    problem_id.value = route.query.problem_id;
-    content.value = localStorage.getItem(
-        problem_id.value +
-        "-" +
-        useStore.loginUser.uuid +
-        "-" +
-        current_language.value);
-  }
   const textarea1 = document.getElementById(
       "auto-expand-textarea_1"
   ) as HTMLTextAreaElement;
@@ -1736,13 +1224,6 @@ const removeWindow = () => {
     fill: #2aabd2;
   }
 }
-
-.formatHover:hover {
-  path {
-    fill: #2aabd2;
-  }
-}
-
 .reverseEditorHover:hover {
   path {
     fill: #2aabd2;

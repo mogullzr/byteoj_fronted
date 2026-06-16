@@ -452,7 +452,7 @@ const startChat = async () => {
         status: props.status ?? 0,
       } as any;
     }
-    const response: any = await fetch("https://www.byteoj.com/api/ai/ask", {
+    const response: any = await fetch("http://localhost:7091/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

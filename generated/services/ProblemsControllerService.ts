@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_List_ProblemExamSheetVo_ } from '../models/BaseResponse_List_ProblemExamSheetVo_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
 import type { BaseResponse_List_ProblemSimilarityVo_ } from '../models/BaseResponse_List_ProblemSimilarityVo_';
 import type { BaseResponse_ProblemExamSubmitVo_ } from '../models/BaseResponse_ProblemExamSubmitVo_';
@@ -11,9 +12,9 @@ import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
 import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
 import type { ProblemRequest } from '../models/ProblemRequest';
-import type { CancelablePromise } from '../../../generated/core/CancelablePromise';
-import { OpenAPI } from '../../../generated/core/OpenAPI';
-import { request as __request } from '../../../generated/core/request';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class ProblemsControllerService {
     /**
      * ProblemSearchExamId
@@ -59,6 +60,28 @@ export class ProblemsControllerService {
         });
     }
     /**
+     * ProblemExamJoin
+     * @param examId exam_id
+     * @returns BaseResponse_boolean_ OK
+     * @throws ApiError
+     */
+    public static problemExamJoinUsingGet(
+        examId?: number,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/join',
+            query: {
+                'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * ProblemExamSearchDetail
      * @param examId exam_id
      * @returns BaseResponse_List_ProblemMath408BankVo_ OK
@@ -72,6 +95,28 @@ export class ProblemsControllerService {
             url: '/api/problem/other/exam/problem',
             query: {
                 'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * ProblemExamSheet
+     * @param recordId recordId
+     * @returns BaseResponse_List_ProblemExamSheetVo_ OK
+     * @throws ApiError
+     */
+    public static problemExamSheetUsingGet(
+        recordId?: number,
+    ): CancelablePromise<BaseResponse_List_ProblemExamSheetVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/sheet',
+            query: {
+                'recordId': recordId,
             },
             errors: {
                 401: `Unauthorized`,

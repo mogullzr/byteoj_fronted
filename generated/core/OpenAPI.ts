@@ -20,8 +20,9 @@ export type OpenAPIConfig = {
 };
 
 export const OpenAPI: OpenAPIConfig = {
-   // BASE: "https://www.byteoj.com",
-  BASE: "http://localhost:7091",
+   BASE: "https://www.byteoj.com",
+  // BASE: "http://localhost:7091",
+  // BASE: "http://192.168.137.54:7092",
   VERSION: "1.0",
   WITH_CREDENTIALS: true,
   CREDENTIALS: "include",
