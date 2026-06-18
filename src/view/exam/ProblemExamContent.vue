@@ -117,26 +117,8 @@
       </div>
       <div class="q-content">
         <!-- 情况1: 算法题 (status === 3) -->
-        <div v-if="isAlgorithmQuestion(currentQuestion)" class="algorithm-answer-area">
-          <div class="algorithm-toolbar">
-            <label>编程语言</label>
-            <select
-                v-model="languageAnswers[currentQuestion.problem_id]"
-                class="algorithm-language"
-                @change="ensureAlgorithmAnswer(currentQuestion.problem_id)"
-            >
-              <option v-for="language in algorithmLanguages" :key="language" :value="language">
-                {{ language }}
-              </option>
-            </select>
-          </div>
-          <textarea
-              v-model="answers[currentQuestion.problem_id]"
-              class="algorithm-code"
-              placeholder="请在这里填写算法题代码..."
-              rows="18"
-              @input="ensureAlgorithmLanguage(currentQuestion.problem_id)"
-          ></textarea>
+        <div v-if="currentQuestion.status === 3">
+          <MarkdownEditorView status="1"/>
         </div>
 
         <!-- 情况2: 有选项的题目 -->
@@ -260,7 +242,7 @@
                   :class="{
             answered: isAnswered(q.problem_id),
             current: questions.indexOf(q) === currentIndex,
-            'is-algo': isAlgorithmQuestion(q)
+            'is-algo': q.status === 3
           }"
                   @click="currentIndexChange(questions.indexOf(q), q.status, q.problem_id)"
               >
@@ -313,6 +295,7 @@ import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 // 假设你的服务文件路径如下，请根据实际项目结构调整
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
+import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import router from "@/router";
 import Router from "@/router";
 import {ProblemsControllerService} from "../../../generated/services/ProblemsControllerService";
@@ -343,14 +326,6 @@ const examData = ref<ExamInfo | null>(null)
 const questions = ref<ProblemItem[]>([])
 const currentIndex = ref(0)
 const answers = ref<Record<number, any>>({}) // key: problem_id
-const languageAnswers = ref<Record<number, string>>({})
-const algorithmLanguages = ['C/C++', 'Java', 'Python3']
-const defaultAlgorithmLanguage = 'C/C++'
-const algorithmLanguageMap: Record<string, string> = {
-  'C/C++': 'cpp',
-  Java: 'java',
-  Python3: 'python',
-}
 const remaining = ref(3600) // 默认1小时，后续可从 examData.time 获取
 let timerInterval: number | null = null
 // ==================== 新增的状态 ====================
@@ -363,10 +338,6 @@ const textAnswers = ref<Record<number, string>>({})
 const storageKey = computed(() => {
   const examId = examData.value?.exam_id
   return examId ? `exam-${examId}-answers` : null
-})
-const languageStorageKey = computed(() => {
-  const examId = examData.value?.exam_id
-  return examId ? `exam-${examId}-languages` : null
 })
 const { success, error, warning } = useMessageBox();
 
@@ -472,22 +443,17 @@ const confirmSubmit = async () => {
 
   const answerList = []
 
-  for (const q of questions.value) {
-    const pid = q.problem_id
-    const val = answers.value[pid]
+  for (const [pidStr, val] of Object.entries(answers.value)) {
+    const pid = Number(pidStr)
+    const q = questions.value.find(qq => qq.problem_id === pid)
+    if (!q) continue
 
     let finalAnswer = ""
-    let language = ""
-    let submitStatus = getSubmitStatus(q)
 
-    if (isAlgorithmQuestion(q)) {
-      finalAnswer = typeof val === 'string' ? val : ''
-      language = toJudgeLanguage(languageAnswers.value[pid] || defaultAlgorithmLanguage)
-    } else {
-      // 根据题型（q.option_type）决定 answer 格式
-      switch (q.option_type) {
+    // 根据题型（q.status）决定 answer 格式
+    switch (q.option_type) {
       case 1: // 单选
-        finalAnswer = val ? `['${val}']` : ''
+        finalAnswer = `['${val}']`
         break
 
       case 2: // 多选
@@ -518,15 +484,14 @@ const confirmSubmit = async () => {
 
       default:
         finalAnswer = String(val || "").trim()
-      }
     }
 
     // 无论是否作答，都包含这条记录，并带上真实的题型 status
     answerList.push({
       problem_id: pid,
       answer: finalAnswer,
-      language,
-      status: submitStatus
+      language: "",
+      status: q.option_type
     })
   }
 
@@ -608,31 +573,6 @@ const getQuestionTypeLabel = (type: number | null, status: number) => {
 
 const getLetter = (i: number) => String.fromCharCode(65 + i)
 
-const isAlgorithmQuestion = (q: Partial<ProblemItem>) => {
-  return q.status === 3 || q.option_type === 4
-}
-
-const getSubmitStatus = (q: ProblemItem) => {
-  return isAlgorithmQuestion(q) ? 4 : (q.option_type ?? q.status)
-}
-
-const toJudgeLanguage = (language: string) => {
-  return algorithmLanguageMap[language] || language || 'cpp'
-}
-
-const ensureAlgorithmLanguage = (problemId: number) => {
-  if (!languageAnswers.value[problemId]) {
-    languageAnswers.value[problemId] = defaultAlgorithmLanguage
-  }
-}
-
-const ensureAlgorithmAnswer = (problemId: number) => {
-  ensureAlgorithmLanguage(problemId)
-  if (answers.value[problemId] === undefined || answers.value[problemId] === null) {
-    answers.value[problemId] = ''
-  }
-}
-
 // 判断是否选中 (兼容单选字符串和多选数组)
 const isSelected = (id: number, letter: string) => {
   const ans = answers.value[id]
@@ -663,20 +603,10 @@ watch(
     },
     { deep: true, debounce: 800 }  // 防抖 800ms，避免频繁写入
 )
-watch(
-    languageAnswers,
-    (newLanguages) => {
-      if (!languageStorageKey.value) return
-      localStorage.setItem(languageStorageKey.value, JSON.stringify(newLanguages))
-    },
-    { deep: true, debounce: 800 }
-)
 const currentIndexChange = (index: number, status: number, problem_id: number) => {
   currentIndex.value = index;
   localStorage.setItem(examData.value?.exam_id + "-currentIndex", index);
-  const question = questions.value[index]
-  if (isAlgorithmQuestion(question)) {
-    ensureAlgorithmAnswer(problem_id)
+  if (status === 3) {
     router.replace({
       name: route.name,
       query: {
@@ -748,7 +678,7 @@ const groupedQuestions = computed(() => {
 
 // 获取显示用的类型名称
 const getGroupTypeName = (q: ProblemItem) => {
-  if (isAlgorithmQuestion(q)) return '算法题'
+  if (q.status === 3) return '算法题'
   switch (q.option_type) {
     case 0: return '简答题'
     case 1: return '单选题'
@@ -770,7 +700,7 @@ const numberToChinese = (n: number) => {
 
 // 统一获取“类型”，方便分组（因为算法题用 status=3 判断）
 const getEffectiveType = (q: ProblemItem) => {
-  if (isAlgorithmQuestion(q)) return -1   // 用一个特殊值代表算法题
+  if (q.status === 3) return -1   // 用一个特殊值代表算法题
   return q.option_type
 }
 // --- 生命周期 ---
@@ -799,14 +729,8 @@ onMounted(async () => {
 
     if (res.code === 0 && Array.isArray(res.data)) {
       questions.value = res.data
-      questions.value.forEach((question) => {
-        if (isAlgorithmQuestion(question)) {
-          ensureAlgorithmLanguage(question.problem_id)
-        }
-      })
       if (questions.value.length > 0) {
-        if (isAlgorithmQuestion(questions.value[currentIndex.value])) {
-          ensureAlgorithmAnswer(questions.value[currentIndex.value].problem_id)
+        if (questions.value[currentIndex.value]?.status == 3) {
           router.replace({
             name: route.name,
             query: {
@@ -816,8 +740,8 @@ onMounted(async () => {
           });
         }
       }
-      // 初始化计时器 (假设默认3小时，或者从 infoRes 中获取)
-      remaining.value = 3 * 3600
+      // 初始化计时器 (假设默认2小时，或者从 infoRes 中获取)
+      remaining.value = 2 * 3600
       startTimer()
     } else {
       error('获取题目失败：' + res.message)
@@ -837,17 +761,6 @@ onMounted(async () => {
         console.log('已从 localStorage 恢复答案')
       } catch (e) {
         console.warn('localStorage 答案解析失败，已忽略', e)
-      }
-    }
-  }
-
-  if (languageStorageKey.value) {
-    const savedLanguages = localStorage.getItem(languageStorageKey.value)
-    if (savedLanguages) {
-      try {
-        languageAnswers.value = JSON.parse(savedLanguages)
-      } catch (e) {
-        console.warn('localStorage 语言解析失败，已忽略', e)
       }
     }
   }
@@ -1920,47 +1833,5 @@ input[type="checkbox"] {
 /* 让分组之间的间距更明显一点 */
 .group-nav + .group-title {
   margin-top: 20px;
-}
-
-.algorithm-answer-area {
-  border: 1px solid #dbe3ef;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #ffffff;
-}
-
-.algorithm-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 12px 16px;
-  background: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
-  color: #475569;
-  font-weight: 600;
-}
-
-.algorithm-language {
-  min-width: 150px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #ffffff;
-  padding: 9px 12px;
-  outline: none;
-}
-
-.algorithm-code {
-  width: 100%;
-  min-height: 460px;
-  padding: 18px;
-  border: none;
-  outline: none;
-  resize: vertical;
-  background: #0f172a;
-  color: #e2e8f0;
-  font-family: Consolas, Monaco, 'Courier New', monospace;
-  font-size: 15px;
-  line-height: 1.7;
 }
 </style>
