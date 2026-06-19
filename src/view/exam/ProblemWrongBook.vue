@@ -115,7 +115,40 @@
     </section>
 
     <section v-else class="wrong-list">
+      <div class="batch-toolbar">
+        <label class="select-control">
+          <input
+            type="checkbox"
+            :checked="allCurrentPageSelected"
+            @change="toggleCurrentPageSelection(($event.target as HTMLInputElement).checked)"
+          />
+          <span>{{ allCurrentPageSelected ? "取消本页全选" : "本页全选" }}</span>
+        </label>
+        <span class="batch-count">已选择 {{ selectedCount }} 题</span>
+        <button
+          class="ghost-btn small"
+          :disabled="selectedCount === 0 || batchLoading"
+          @click="batchMarkMastery"
+        >
+          批量标记掌握
+        </button>
+        <button
+          class="danger-btn small"
+          :disabled="selectedCount === 0 || batchLoading"
+          @click="batchRemoveWrongBooks"
+        >
+          批量移除
+        </button>
+      </div>
+
       <article v-for="item in wrongBooks" :key="item.id" class="wrong-card">
+        <label class="select-check">
+          <input
+            type="checkbox"
+            :checked="isSelected(item)"
+            @change="toggleSelected(item, ($event.target as HTMLInputElement).checked)"
+          />
+        </label>
         <div class="card-main">
           <div class="title-line">
             <span class="question-badge">{{ typeLabel(item.option_type, item.problem_status) }}</span>
@@ -139,14 +172,14 @@
           <button class="ghost-btn small" @click="showAsPractice(item)">练这一题</button>
           <button
             class="ghost-btn small"
-            :disabled="actionLoadingId === item.id"
+            :disabled="batchLoading || actionLoadingId === item.id"
             @click="markMastery(item, item.mastery_status === 1 ? 0 : 1)"
           >
             {{ item.mastery_status === 1 ? "标为待复习" : "标为已掌握" }}
           </button>
           <button
             class="danger-btn small"
-            :disabled="actionLoadingId === item.id"
+            :disabled="batchLoading || actionLoadingId === item.id"
             @click="removeWrongBook(item)"
           >
             移除
@@ -169,7 +202,7 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import { useMessageBox } from "@/view/components/alert/useMessageBox";
@@ -216,9 +249,11 @@ http.interceptors.request.use((config) => {
 
 const loading = ref(false);
 const randomLoading = ref(false);
+const batchLoading = ref(false);
 const actionLoadingId = ref<number | null>(null);
 const wrongBooks = ref<WrongBookItem[]>([]);
 const practiceItem = ref<WrongBookItem | null>(null);
+const selectedWrongBookIds = ref<number[]>([]);
 
 const query = reactive({
   pageNum: 1,
@@ -231,6 +266,19 @@ const query = reactive({
 const pageInfo = reactive({
   total: 0,
   pages: 1,
+});
+
+const selectableWrongBookIds = computed(() =>
+    wrongBooks.value
+        .map((item) => item.id)
+        .filter((id): id is number => typeof id === "number")
+);
+
+const selectedCount = computed(() => selectedWrongBookIds.value.length);
+
+const allCurrentPageSelected = computed(() => {
+  const ids = selectableWrongBookIds.value;
+  return ids.length > 0 && ids.every((id) => selectedWrongBookIds.value.includes(id));
 });
 
 const masteryTabs = [
@@ -347,6 +395,8 @@ const fetchWrongBooks = async (page = query.pageNum, syncRoute = true) => {
   try {
     const data = unwrap(await http.post("/api/problem/wrong-book/list", requestBody()));
     wrongBooks.value = data?.records || [];
+    const visibleIds = new Set(selectableWrongBookIds.value);
+    selectedWrongBookIds.value = selectedWrongBookIds.value.filter((id) => visibleIds.has(id));
     pageInfo.total = Number(data?.total || 0);
     pageInfo.pages = Number(data?.pages || 1);
   } catch (err: any) {
@@ -406,6 +456,67 @@ const removeWrongBook = async (item: WrongBookItem) => {
     error(err?.message || "移除失败");
   } finally {
     actionLoadingId.value = null;
+  }
+};
+
+const isSelected = (item: WrongBookItem) => {
+  return typeof item.id === "number" && selectedWrongBookIds.value.includes(item.id);
+};
+
+const toggleSelected = (item: WrongBookItem, checked: boolean) => {
+  if (typeof item.id !== "number") return;
+  if (checked) {
+    if (!selectedWrongBookIds.value.includes(item.id)) {
+      selectedWrongBookIds.value = [...selectedWrongBookIds.value, item.id];
+    }
+    return;
+  }
+  selectedWrongBookIds.value = selectedWrongBookIds.value.filter((id) => id !== item.id);
+};
+
+const toggleCurrentPageSelection = (checked: boolean) => {
+  selectedWrongBookIds.value = checked ? [...selectableWrongBookIds.value] : [];
+};
+
+const batchMarkMastery = async () => {
+  const ids = [...selectedWrongBookIds.value];
+  if (ids.length === 0) return;
+  batchLoading.value = true;
+  try {
+    await Promise.all(ids.map((id) =>
+        http.post("/api/problem/wrong-book/mastery", {
+          id,
+          mastery_status: 1,
+        }).then(unwrap)
+    ));
+    success(`已批量标记 ${ids.length} 题为掌握`);
+    selectedWrongBookIds.value = [];
+    await fetchWrongBooks(query.pageNum);
+  } catch (err: any) {
+    console.error(err);
+    error(err?.message || "批量标记失败");
+  } finally {
+    batchLoading.value = false;
+  }
+};
+
+const batchRemoveWrongBooks = async () => {
+  const ids = [...selectedWrongBookIds.value];
+  if (ids.length === 0) return;
+  if (!window.confirm(`确定从错题本移除选中的 ${ids.length} 道题吗？`)) return;
+  batchLoading.value = true;
+  try {
+    await Promise.all(ids.map((id) =>
+        http.delete("/api/problem/wrong-book/delete", { params: { id } }).then(unwrap)
+    ));
+    success(`已批量移除 ${ids.length} 道题`);
+    selectedWrongBookIds.value = [];
+    await fetchWrongBooks(query.pageNum);
+  } catch (err: any) {
+    console.error(err);
+    error(err?.message || "批量移除失败");
+  } finally {
+    batchLoading.value = false;
   }
 };
 
@@ -849,11 +960,49 @@ button:not(:disabled):active {
   gap: 18px;
 }
 
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.select-control,
+.select-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #334155;
+  font-weight: 700;
+}
+
+.select-control input,
+.select-check input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0f172a;
+}
+
+.batch-count {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.select-check {
+  align-self: start;
+  padding-top: 4px;
+}
+
 .wrong-card {
   width: 100%;
   box-sizing: border-box;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 20px;
   padding: 22px;
   border-radius: 24px;
