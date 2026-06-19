@@ -24,13 +24,37 @@
       </div>
     </transition>
 
-    <!-- 提交中加载遮罩 -->
+    <!-- 提交中加载遮罩 - 代码终端风格 -->
     <transition name="fade">
       <div v-if="submitting" class="loading-overlay">
-        <div class="loading-spinner">
-          <div class="spinner"></div>
-          <p>正在提交试卷...</p>
-          <small>请勿关闭或刷新页面</small>
+        <div class="loading-terminal">
+          <div class="terminal-header">
+            <span class="term-dot red"></span>
+            <span class="term-dot yellow"></span>
+            <span class="term-dot green"></span>
+            <span class="term-title">submit.sh — exam #{{ examData?.exam_id }}</span>
+          </div>
+          <div class="terminal-body">
+            <div class="term-line">
+              <span class="prompt">$</span>
+              <span class="log-text">submit --exam {{ examData?.exam_id }} --answers {{ questions.length }}</span>
+            </div>
+            <div v-for="(log, i) in visibleLogs" :key="i" class="term-line">
+              <span :class="log.tag === 'OK' ? 'log-ok' : 'log-info'">[{{ log.tag }}]</span>
+              <span class="log-text"> {{ log.text }}</span>
+            </div>
+            <div class="progress-block">
+              <div class="progress-track">
+                <div class="progress-fill" :style="{ width: submitProgress + '%' }"></div>
+              </div>
+              <span class="progress-percent">{{ Math.floor(submitProgress) }}%</span>
+            </div>
+            <div class="term-line">
+              <span class="prompt">&gt;</span>
+              <span class="log-text">please wait, do not close or refresh the page</span>
+              <span class="term-cursor">█</span>
+            </div>
+          </div>
         </div>
       </div>
     </transition>
@@ -385,6 +409,69 @@ const resultData = ref({
 const showConfirmModal = ref(false)
 const submitting = ref(false)
 
+// 提交假进度条：约 60s 匀速走完，提前完成则快速补满到 100%
+const submitProgress = ref(0)
+let progressTimer: number | null = null
+
+const visibleLogs = computed(() => {
+  const p = submitProgress.value
+  const logs: { tag: string; text: string }[] = []
+  if (p >= 2)  logs.push({ tag: 'INFO', text: 'connecting to exam server...' })
+  if (p >= 14) logs.push({ tag: 'INFO', text: 'authenticating user session...' })
+  if (p >= 30) logs.push({ tag: 'INFO', text: 'serializing answers payload...' })
+  if (p >= 50) logs.push({ tag: 'INFO', text: 'encrypting and uploading data...' })
+  if (p >= 72) logs.push({ tag: 'INFO', text: 'awaiting server response...' })
+  if (p >= 100) logs.push({ tag: 'OK', text: 'submission accepted successfully' })
+  return logs
+})
+
+const startProgress = () => {
+  submitProgress.value = 0
+  if (progressTimer) clearInterval(progressTimer)
+  const duration = 120000
+  const interval = 80
+  const increment = 100 / (duration / interval)
+  progressTimer = window.setInterval(() => {
+    if (submitProgress.value < 100) {
+      submitProgress.value = Math.min(submitProgress.value + increment, 100)
+    }
+  }, interval)
+}
+
+const finishProgress = () => {
+  return new Promise<void>((resolve) => {
+    if (progressTimer) {
+      clearInterval(progressTimer)
+      progressTimer = null
+    }
+    if (submitProgress.value >= 100) {
+      resolve()
+      return
+    }
+    const start = submitProgress.value
+    const startTime = performance.now()
+    const animDuration = 450
+    const step = () => {
+      const t = Math.min((performance.now() - startTime) / animDuration, 1)
+      submitProgress.value = start + (100 - start) * t
+      if (t < 1) {
+        requestAnimationFrame(step)
+      } else {
+        submitProgress.value = 100
+        resolve()
+      }
+    }
+    requestAnimationFrame(step)
+  })
+}
+
+const stopProgress = () => {
+  if (progressTimer) {
+    clearInterval(progressTimer)
+    progressTimer = null
+  }
+}
+
 // 统一从 answers 里取图片链接的辅助函数
 const getAnswerImages = (problemId: number) => {
   const ans = answers.value[problemId]
@@ -468,7 +555,7 @@ const handleSubmit = async () => {
 const confirmSubmit = async () => {
   showConfirmModal.value = false
   submitting.value = true
-
+  startProgress()
 
   const answerList = []
 
@@ -542,6 +629,8 @@ const confirmSubmit = async () => {
     const res = await ProblemsControllerService.problemExamSubmitUsingPost(request)
     if (res.code === 0) {
       resultData.value = res.data
+      await finishProgress()
+      await new Promise(r => setTimeout(r, 350))
       showResult.value = true
     } else {
       error("提交失败：" + (res.message || "未知错误"))
@@ -549,6 +638,7 @@ const confirmSubmit = async () => {
   } catch (err) {
     error("网络错误，提交失败")
   } finally {
+    stopProgress()
     submitting.value = false
   }
 }
@@ -1808,46 +1898,159 @@ input[type="checkbox"] {
   cursor: not-allowed;
 }
 
-/* 提交中加载 */
+/* 提交中加载 - 代码终端风格 */
 .loading-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(6px);
+  background: rgba(13, 17, 23, 0.88);
+  backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1800;
 }
 
-.loading-spinner {
-  text-align: center;
+.loading-terminal {
+  width: 90%;
+  max-width: 540px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55),
+              0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  overflow: hidden;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  animation: termIn 0.4s ease;
 }
 
-.spinner {
-  width: 60px;
-  height: 60px;
-  border: 6px solid #e2e8f0;
-  border-top: 6px solid #6366f1;
+@keyframes termIn {
+  from { transform: translateY(20px) scale(0.96); opacity: 0; }
+  to   { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #161b22;
+  border-bottom: 1px solid #30363d;
+}
+
+.term-dot {
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto 20px;
+}
+.term-dot.red    { background: #ff5f56; }
+.term-dot.yellow { background: #ffbd2e; }
+.term-dot.green  { background: #27c93f; }
+
+.term-title {
+  margin-left: 10px;
+  color: #8b949e;
+  font-size: 0.8rem;
+  letter-spacing: 0.3px;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.terminal-body {
+  padding: 20px 22px;
+  color: #c9d1d9;
+  font-size: 0.88rem;
+  line-height: 1.85;
 }
 
-.loading-spinner p {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #1e293b;
-  margin: 0 0 8px;
+.term-line {
+  white-space: nowrap;
+  overflow: hidden;
 }
 
-.loading-spinner small {
-  color: #64748b;
+.prompt {
+  color: #3fb950;
+  margin-right: 8px;
+  font-weight: 700;
+}
+
+.log-info { color: #58a6ff; font-weight: 700; }
+.log-ok   { color: #3fb950; font-weight: 700; }
+.log-text { color: #c9d1d9; }
+
+/* 进度条 */
+.progress-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 12px;
+}
+
+.progress-track {
+  flex: 1;
+  height: 10px;
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1f6feb 0%, #3fb950 100%);
+  border-radius: 3px;
+  transition: width 0.12s linear;
+  box-shadow: 0 0 14px rgba(63, 185, 80, 0.45);
+  position: relative;
+}
+
+/* 进度条流光扫描 */
+.progress-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  background-size: 60px 100%;
+  background-repeat: no-repeat;
+  animation: progScan 1.2s linear infinite;
+}
+
+@keyframes progScan {
+  from { background-position: -60px 0; }
+  to   { background-position: calc(100% + 60px) 0; }
+}
+
+.progress-percent {
+  color: #3fb950;
+  font-weight: 700;
+  min-width: 52px;
+  text-align: right;
+  font-size: 0.9rem;
+}
+
+/* 闪烁光标 */
+.term-cursor {
+  color: #3fb950;
+  margin-left: 4px;
+  animation: termBlink 1s step-end infinite;
+}
+
+@keyframes termBlink {
+  0%, 50%   { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* 扫描线效果 */
+.terminal-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 255, 255, 0.02) 0px,
+    rgba(255, 255, 255, 0.02) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
 }
 
 /* 动画过渡 */

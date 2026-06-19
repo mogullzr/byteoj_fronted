@@ -36,7 +36,7 @@ const isAddingWrongBook = ref<boolean>(false);
 const problemId = ref<number>(Number(route.path.split('/')[3]));
 
 const wrongBookHttp = axios.create({
-  baseURL: "http://localhost:7091",
+  baseURL: "https://www.byteoj.com",
   withCredentials: true,
 });
 
