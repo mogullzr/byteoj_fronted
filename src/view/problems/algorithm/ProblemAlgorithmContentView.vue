@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import axios from "axios";
 import { onMounted, ref } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import showdown from "showdown";
@@ -11,6 +12,7 @@ import {
 import UserStore from "@/store/user";
 import MarkdownEditorView from "@/view/problems/algorithm/AceEditorView.vue";
 import { Ref } from "vue/dist/vue";
+import { useMessageBox } from "@/view/components/alert/useMessageBox";
 
 let converter = new showdown.Converter();
 // 是否显示AI问答页面
@@ -27,6 +29,21 @@ const color_list = useStore.color_list;
 const flag = ref(0);
 const problem_url: Ref<string> = ref("");
 const problem_name: Ref<string> = ref("");
+const isAddingWrongBook = ref(false);
+const { success, error } = useMessageBox();
+
+const wrongBookHttp = axios.create({
+  baseURL: "http://localhost:7091",
+  withCredentials: true,
+});
+
+wrongBookHttp.interceptors.request.use((config) => {
+  const sessionId = localStorage.getItem("sessionId");
+  if (sessionId) {
+    config.headers["X-Session-Id"] = sessionId;
+  }
+  return config;
+});
 
 onMounted(async () => {
   if (problem_id?.value != "problem") {
@@ -98,6 +115,31 @@ const showBot = () => {
   isBot.value = !isBot.value;
   localStorage.setItem("isBot", String(isBot.value));
 };
+
+const addToWrongBook = async () => {
+  if (!problem.value?.problem_id || isAddingWrongBook.value) return;
+  isAddingWrongBook.value = true;
+  try {
+    const res = await wrongBookHttp.post("/api/problem/wrong-book/add", {
+      problem_id: problem.value.problem_id,
+      problem_status: 3,
+      option_type: 4,
+      answer: "",
+      score: 100,
+      total_score: 100,
+      ai_advise: "手动收藏到错题本。",
+    });
+    if (res?.data?.code !== 0) {
+      throw new Error(res?.data?.message || "加入错题本失败");
+    }
+    success("已加入错题本");
+  } catch (err: any) {
+    console.error(err);
+    error(err?.message || "加入错题本失败");
+  } finally {
+    isAddingWrongBook.value = false;
+  }
+};
 </script>
 
 <template>
@@ -105,9 +147,15 @@ const showBot = () => {
     <div>
       <div class="rounded-box p-8 my-8 w-full">
         <div>
-          <h1>
-            {{ problem.problem_id ?? problem.index }}.{{ problem.chinese_name }}
-          </h1>
+          <div class="problem-title-row">
+            <h1>
+              {{ problem.problem_id ?? problem.index }}.{{ problem.chinese_name }}
+            </h1>
+            <button class="wrong-book-btn" :disabled="isAddingWrongBook" @click="addToWrongBook">
+              <i class="fas fa-bookmark"></i>
+              {{ isAddingWrongBook ? "加入中..." : "加入错题本" }}
+            </button>
+          </div>
           <div class="flex">
             <div class="w-full" style="width: 800px">
               <MarkdownView :generateData="problem.description" />
@@ -227,5 +275,37 @@ const showBot = () => {
 h1 {
   font-size: 32px;
   font-weight: bold;
+}
+
+.problem-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wrong-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #fde68a;
+  background: #f59e0b;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.2);
+  transition: all 0.2s;
+}
+
+.wrong-book-btn:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.wrong-book-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 </style>

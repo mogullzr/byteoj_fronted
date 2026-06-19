@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import axios from "axios";
 import { ref, onMounted, watch } from "vue";
 import { ProblemsControllerService } from "../../../../generated/services/ProblemsControllerService";
 import { UsageControllerService } from "../../../../generated/services/UsageControllerService";
@@ -31,7 +32,21 @@ const userTextAnswer = ref<string>("");
 const showAnswer = ref<boolean>(false);
 const showAnalysis = ref<boolean>(false);
 const isCorrect = ref<boolean | null>(null);
+const isAddingWrongBook = ref<boolean>(false);
 const problemId = ref<number>(Number(route.path.split('/')[3]));
+
+const wrongBookHttp = axios.create({
+  baseURL: "http://localhost:7091",
+  withCredentials: true,
+});
+
+wrongBookHttp.interceptors.request.use((config) => {
+  const sessionId = localStorage.getItem("sessionId");
+  if (sessionId) {
+    config.headers["X-Session-Id"] = sessionId;
+  }
+  return config;
+});
 
 // 剩余使用次数
 const remainingUsage = ref<number | null>(null);
@@ -228,6 +243,45 @@ const parsedCorrectAnswer = () => parseStringArray(problem.value?.correct_answer
 
 const getOptionLetter = (index: number): string => String.fromCharCode(65 + index);
 
+const getManualTotalScore = () => {
+  if (!problem.value) return 5;
+  if (problem.value.option_type === 1 || problem.value.option_type === 2) return 5;
+  return 10;
+};
+
+const getCurrentAnswer = () => {
+  if (!problem.value) return "";
+  if (problem.value.option_type === 1) return userSingleAnswer.value ? JSON.stringify([userSingleAnswer.value]) : "";
+  if (problem.value.option_type === 2) return JSON.stringify(userMultiAnswer.value || []);
+  return userTextAnswer.value || "";
+};
+
+const addToWrongBook = async () => {
+  if (!problem.value || isAddingWrongBook.value) return;
+  const totalScore = getManualTotalScore();
+  const score = showAnswer.value && isCorrect.value === false ? 0 : totalScore;
+  isAddingWrongBook.value = true;
+  try {
+    const res = await wrongBookHttp.post("/api/problem/wrong-book/add", {
+      problem_id: problem.value.problem_id,
+      option_type: problem.value.option_type,
+      answer: getCurrentAnswer(),
+      score,
+      total_score: totalScore,
+      ai_advise: score < totalScore ? "手动加入错题本：本次练习作答错误。" : "手动收藏到错题本。",
+    });
+    if (res?.data?.code !== 0) {
+      throw new Error(res?.data?.message || "加入错题本失败");
+    }
+    success("已加入错题本");
+  } catch (err: any) {
+    console.error(err);
+    error(err?.message || "加入错题本失败");
+  } finally {
+    isAddingWrongBook.value = false;
+  }
+};
+
 const getOptionClass = (letter: string): string => {
   if (!showAnswer.value || !problem.value || (problem.value.option_type !== 1 && problem.value.option_type !== 2)) return '';
 
@@ -297,6 +351,12 @@ const nextProblem = () => {
       <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-5">
         <h1 class="problem-name">{{ problem.problem_name }}</h1>
 
+        <div class="flex flex-wrap items-center gap-3">
+          <button class="manual-wrong-book-btn" :disabled="isAddingWrongBook" @click="addToWrongBook">
+            <i class="fas fa-bookmark"></i>
+            {{ isAddingWrongBook ? "加入中..." : "加入错题本" }}
+          </button>
+
         <div class="usage-display flex items-center gap-3 px-4 py-2 rounded-xl bg-amber-50/80 border border-amber-200 text-sm shadow-sm">
           <i class="fas fa-bolt text-amber-500"></i>
           <span class="font-medium text-amber-800">剩余次数：</span>
@@ -320,6 +380,7 @@ const nextProblem = () => {
           >
             <i class="fas fa-sync-alt text-base" :class="{ 'fa-spin': isLoadingUsage }"></i>
           </button>
+        </div>
         </div>
       </div>
 
@@ -489,7 +550,9 @@ const nextProblem = () => {
           <button @click="showAnalysis = !showAnalysis" class="toggle-btn">
             {{ showAnalysis ? '隐藏答案与解析' : '查看答案与解析' }}
           </button>
-          <button class="favorite-btn"><i class="fas fa-bookmark"></i> 收藏</button>
+          <button class="favorite-btn" :disabled="isAddingWrongBook" @click="addToWrongBook">
+            <i class="fas fa-bookmark"></i> {{ isAddingWrongBook ? "加入中..." : "加入错题本" }}
+          </button>
         </div>
 
         <div v-if="showAnalysis" class="analysis-box">
@@ -551,6 +614,30 @@ const nextProblem = () => {
   background: #fefce8;
   border: 1px solid #fef08a;
   transition: all 0.2s;
+}
+
+.manual-wrong-book-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  background: #f59e0b;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(245, 158, 11, 0.2);
+  transition: all 0.2s;
+}
+
+.manual-wrong-book-btn:hover:not(:disabled) {
+  background: #d97706;
+  transform: translateY(-1px);
+}
+
+.manual-wrong-book-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .usage-display .loading-dots::after {

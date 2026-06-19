@@ -46,8 +46,63 @@
       </div>
 
       <div v-else class="space-y-8">
+        <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-semibold text-slate-900">筛选答题卡</div>
+              <div class="mt-1 text-xs text-slate-500">
+                当前显示 {{ filteredQuestions.length }} / {{ questions.length }} 题
+              </div>
+            </div>
+            <button
+                class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                @click="resetFilters"
+            >
+              重置筛选
+            </button>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <div class="mb-2 text-xs font-semibold text-slate-500">按题型筛选</div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                    v-for="item in questionTypeFilters"
+                    :key="item.value"
+                    class="rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                    :class="typeFilter === item.value ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'"
+                    @click="typeFilter = item.value"
+                >
+                  {{ item.label }}
+                  <span class="ml-1 text-xs opacity-70">{{ getTypeFilterCount(item.value) }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div class="mb-2 text-xs font-semibold text-slate-500">按结果筛选</div>
+              <div class="flex flex-wrap gap-2">
+                <button
+                    v-for="item in resultFilters"
+                    :key="item.value"
+                    class="rounded-full border px-4 py-2 text-sm font-semibold transition-colors"
+                    :class="resultFilter === item.value ? getActiveResultFilterClass(item.value) : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'"
+                    @click="resultFilter = item.value"
+                >
+                  {{ item.label }}
+                  <span class="ml-1 text-xs opacity-70">{{ getResultFilterCount(item.value) }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section v-if="filteredQuestions.length === 0" class="rounded-2xl border border-slate-200 bg-white py-16 text-center shadow-sm">
+          <Markdown :generate-data="'**当前筛选条件下没有题目**'" />
+        </section>
+
         <section
-            v-for="(question, index) in questions"
+            v-for="(question, index) in filteredQuestions"
             :key="question.problem_id || index"
             class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
         >
@@ -341,6 +396,9 @@ type StructuredGradingResult = {
   rubric_used?: GradingRubric[]
 }
 
+type QuestionTypeFilter = 'all' | 'single' | 'multiple' | 'fill' | 'short' | 'algorithm'
+type ResultFilter = 'all' | 'correct' | 'wrong' | 'unanswered'
+
 const route = useRoute()
 const router = useRouter()
 const { error } = useMessageBox()
@@ -348,6 +406,24 @@ const { error } = useMessageBox()
 const loading = ref(false)
 const questions = ref<ProblemMath408BankVo[]>([])
 const sheets = ref<ProblemExamSheetVo[]>([])
+const typeFilter = ref<QuestionTypeFilter>('all')
+const resultFilter = ref<ResultFilter>('all')
+
+const questionTypeFilters: Array<{ label: string; value: QuestionTypeFilter }> = [
+  { label: '全部题型', value: 'all' },
+  { label: '单选题', value: 'single' },
+  { label: '多选题', value: 'multiple' },
+  { label: '填空题', value: 'fill' },
+  { label: '简答题', value: 'short' },
+  { label: '算法题', value: 'algorithm' },
+]
+
+const resultFilters: Array<{ label: string; value: ResultFilter }> = [
+  { label: '全部结果', value: 'all' },
+  { label: '正确', value: 'correct' },
+  { label: '错误', value: 'wrong' },
+  { label: '未作答', value: 'unanswered' },
+]
 
 const examId = Number(route.query.exam_id)
 const recordId = Number(route.query.recordId)
@@ -384,6 +460,31 @@ const totalAwardedScore = computed(() => {
 
 const totalExamScore = computed(() => {
   return questions.value.reduce((sum, question) => sum + (question.score || 0), 0)
+})
+
+const filteredQuestions = computed(() => {
+  return questions.value.filter((question) => {
+    const typeMatched = typeFilter.value === 'all' || getQuestionTypeKey(question) === typeFilter.value
+    if (!typeMatched) return false
+
+    if (resultFilter.value === 'all') return true
+    if (resultFilter.value === 'correct') return isQuestionCorrect(question)
+    if (resultFilter.value === 'wrong') return isQuestionWrong(question)
+    if (resultFilter.value === 'unanswered') return !hasAnswered(question)
+    return true
+  })
+})
+
+const filteredAnsweredCount = computed(() => {
+  return filteredQuestions.value.filter((question) => hasAnswered(question)).length
+})
+
+const filteredAwardedScore = computed(() => {
+  return filteredQuestions.value.reduce((sum, question) => sum + (getSheet(question)?.score || 0), 0)
+})
+
+const filteredExamScore = computed(() => {
+  return filteredQuestions.value.reduce((sum, question) => sum + (question.score || 0), 0)
 })
 
 onMounted(() => {
@@ -457,6 +558,48 @@ const getNeedsManualReview = (question: ProblemMath408BankVo) => {
   const sheet = getSheet(question)
   const result = getStructuredResult(question)
   return sheet?.person === true || result?.needs_manual_review === true
+}
+
+const hasAnswered = (question: ProblemMath408BankVo) => {
+  return Boolean(getSheet(question)?.answer)
+}
+
+const getMaxScore = (question: ProblemMath408BankVo) => {
+  return question.score || getStructuredResult(question)?.total_score || 0
+}
+
+const getQuestionTypeKey = (question: ProblemMath408BankVo): QuestionTypeFilter => {
+  if (isAlgorithmQuestion(question)) return 'algorithm'
+  if (question.option_type === 1) return 'single'
+  if (question.option_type === 2) return 'multiple'
+  if (question.option_type === 3) return 'fill'
+  return 'short'
+}
+
+const resetFilters = () => {
+  typeFilter.value = 'all'
+  resultFilter.value = 'all'
+}
+
+const getTypeFilterCount = (value: QuestionTypeFilter) => {
+  return questions.value.filter((question) => value === 'all' || getQuestionTypeKey(question) === value).length
+}
+
+const getResultFilterCount = (value: ResultFilter) => {
+  return questions.value.filter((question) => {
+    if (value === 'all') return true
+    if (value === 'correct') return isQuestionCorrect(question)
+    if (value === 'wrong') return isQuestionWrong(question)
+    if (value === 'unanswered') return !hasAnswered(question)
+    return true
+  }).length
+}
+
+const getActiveResultFilterClass = (value: ResultFilter) => {
+  if (value === 'correct') return 'border-emerald-600 bg-emerald-600 text-white'
+  if (value === 'wrong') return 'border-rose-600 bg-rose-600 text-white'
+  if (value === 'unanswered') return 'border-amber-600 bg-amber-600 text-white'
+  return 'border-slate-900 bg-slate-900 text-white'
 }
 
 const getQuestionTypeLabel = (question: ProblemMath408BankVo) => {
@@ -536,8 +679,14 @@ const getChoiceOptionClass = (question: ProblemMath408BankVo, letter: string) =>
 
 const isQuestionWrong = (question: ProblemMath408BankVo) => {
   const sheet = getSheet(question)
-  const maxScore = question.score || getStructuredResult(question)?.total_score || 0
-  return Boolean(sheet?.answer) && (sheet?.score || 0) < maxScore
+  const maxScore = getMaxScore(question)
+  return hasAnswered(question) && (sheet?.score || 0) < maxScore
+}
+
+const isQuestionCorrect = (question: ProblemMath408BankVo) => {
+  const sheet = getSheet(question)
+  const maxScore = getMaxScore(question)
+  return hasAnswered(question) && maxScore > 0 && (sheet?.score || 0) >= maxScore
 }
 
 const isAlgorithmAccepted = (question: ProblemMath408BankVo) => {
