@@ -1,6 +1,5 @@
 <template>
   <div class="min-h-screen bg-[#f9fafb] pt-16 pb-24 px-4 sm:px-6 lg:px-8">
-    <!-- 搜索栏 -->
     <div class="max-w-5xl mx-auto mb-12">
       <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         <div class="flex items-center">
@@ -22,7 +21,6 @@
       </div>
     </div>
 
-    <!-- 结果列表 -->
     <div class="max-w-5xl mx-auto space-y-8">
       <div v-if="loading" class="text-center py-20">
         <div class="animate-spin w-12 h-12 border-4 border-slate-300 border-t-slate-500 rounded-full mx-auto mb-4"></div>
@@ -44,7 +42,6 @@
             class="group bg-white mt-8 rounded-3xl shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 overflow-hidden border border-slate-200"
         >
           <div class="flex flex-col md:flex-row">
-            <!-- 左侧图片 + 标签 -->
             <div class="relative md:w-80 lg:w-96 h-64 md:h-auto flex-shrink-0">
               <img
                   :src="exam.picture"
@@ -54,7 +51,6 @@
               />
               <div class="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none"></div>
 
-              <!-- 右上标签 -->
               <div class="absolute top-4 right-4 flex flex-col items-end gap-2.5">
                 <div
                     class="px-4 py-1.5 text-xs font-medium rounded-full shadow-sm border"
@@ -73,7 +69,6 @@
               </div>
             </div>
 
-            <!-- 右侧信息 -->
             <div class="flex-1 p-7 lg:p-9 flex flex-col">
               <h3 class="text-2xl font-bold text-slate-800 mb-4 group-hover:text-slate-900 transition-colors line-clamp-2">
                 {{ exam.exam_name }}
@@ -113,19 +108,28 @@
                 </div>
               </div>
 
-              <div class="mt-8 flex gap-4">
-                <button class="px-7 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm active:scale-[0.98]" @click="routerToExam(exam.exam_id)">
-                  查看详情
+              <div class="mt-8 flex flex-wrap gap-4">
+                <button class="px-7 py-3 bg-slate-700 text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm active:scale-[0.98]" @click="routerToExam(exam)">
+                  进入考试
                 </button>
-                <button class="px-7 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors shadow-sm active:scale-[0.98]">
-                  加入收藏
+                <button
+                    class="px-7 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors shadow-sm active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
+                    :disabled="isJoined(exam) || joiningExamId === exam.exam_id"
+                    @click="joinExam(exam)"
+                >
+                  {{ isJoined(exam) ? '已报名' : joiningExamId === exam.exam_id ? '报名中...' : '报名' }}
+                </button>
+                <button
+                    class="px-7 py-3 bg-white border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors shadow-sm active:scale-[0.98]"
+                    @click="routerToExamRecords(exam)"
+                >
+                  查看记录
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- 分页 -->
         <div class="mt-12 flex justify-center items-center gap-6">
           <button
               :disabled="searchRequest.pageNum <= 1 || loading"
@@ -136,13 +140,13 @@
           </button>
 
           <span class="px-8 py-3 bg-slate-100 text-slate-700 rounded-xl font-medium shadow-sm">
-            第 {{ searchRequest.pageNum }} 页
+            第 {{ searchRequest.pageNum }} / {{ totalPages }} 页
           </span>
 
           <button
-              :disabled="loading"
+              :disabled="loading || searchRequest.pageNum >= totalPages"
               @click="changePage(searchRequest.pageNum + 1)"
-              class="px-8 py-3 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition shadow-sm"
+              class="px-8 py-3 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 disabled:opacity-50 transition shadow-sm"
           >
             下一页
           </button>
@@ -153,13 +157,29 @@
 </template>
 
 <script setup lang="ts">
-// script 部分保持不变
-import { ref, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import {SearchControllerService, SearchRequest} from "../../../generated";
+import { SearchControllerService, SearchRequest } from '../../../generated'
+import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
+import { useMessageBox } from '@/view/components/alert/useMessageBox'
+
+type ExamItem = {
+  exam_id?: number
+  exam_name?: string
+  author?: string
+  picture?: string
+  joins?: number
+  start_time?: string
+  end_time?: string
+  status?: number
+  time?: number
+  pages?: number
+  join?: boolean
+}
 
 const route = useRoute()
 const router = useRouter()
+const { success, error, warning } = useMessageBox()
 
 const searchRequest = ref<SearchRequest>({
   category: 'exam',
@@ -167,10 +187,22 @@ const searchRequest = ref<SearchRequest>({
   pageNum: Number(route.query.pageNum) || 1,
 })
 
-const examList = ref<any[]>([])
+const examList = ref<ExamItem[]>([])
 const loading = ref(false)
+const joiningExamId = ref<number | null>(null)
+const pageSize = 10
+const totalPages = computed(() => {
+  const totalCount = examList.value[0]?.pages
+  return typeof totalCount === 'number' && totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1
+})
 
-onMounted(() => doSearch())
+onMounted(() => {
+  doSearch()
+})
+
+const isJoined = (exam?: ExamItem) => {
+  return exam?.join === true
+}
 
 const doSearch = async () => {
   loading.value = true
@@ -178,13 +210,16 @@ const doSearch = async () => {
     router.replace({
       query: {
         keyword: searchRequest.value.keyword || undefined,
-        pageNum: searchRequest.value.pageNum > 1 ? searchRequest.value.pageNum : undefined
-      }
+        pageNum: searchRequest.value.pageNum > 1 ? searchRequest.value.pageNum : undefined,
+      },
     })
 
     const res = await SearchControllerService.searchAllUsingPost(searchRequest.value)
     if (res.code === 0 && res.data) {
       examList.value = res.data.dataList || []
+      if (searchRequest.value.pageNum > totalPages.value) {
+        searchRequest.value.pageNum = totalPages.value
+      }
     }
   } catch (err) {
     console.error(err)
@@ -194,17 +229,17 @@ const doSearch = async () => {
 }
 
 const changePage = (page: number) => {
-  if (page < 1 || loading.value) return
+  if (page < 1 || page > totalPages.value || loading.value) return
   searchRequest.value.pageNum = page
   doSearch()
 }
 
 const formatDate = (iso?: string) => {
-  if (!iso) return '—'
+  if (!iso) return '-'
   try {
     return new Date(iso).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
   } catch {
-    return '—'
+    return '-'
   }
 }
 
@@ -215,10 +250,48 @@ const statusText = (status?: number) => {
   return '未知状态'
 }
 
-const routerToExam = (exam_id?: number) => {
-  router.push("/exam/content?exam_id=" + exam_id)
+const joinExam = async (exam?: ExamItem) => {
+  const examId = exam?.exam_id
+  if (!examId || joiningExamId.value) return
+
+  joiningExamId.value = examId
+  try {
+    const res = await ProblemsControllerService.problemExamJoinUsingGet(examId)
+    if (res.code === 0 && res.data) {
+      if (exam) {
+        exam.join = true
+        exam.joins = (exam.joins || 0) + 1
+      }
+      success('报名成功')
+      return
+    }
+
+    error(res.message || '报名失败')
+  } catch (err) {
+    console.error(err)
+    error('报名失败，请稍后重试')
+  } finally {
+    joiningExamId.value = null
+  }
 }
+
+const routerToExam = (exam?: ExamItem) => {
+  const examId = exam?.exam_id
+  if (!examId) return
+  if (!isJoined(exam)) {
+    warning('请先报名后再进入考试')
+    return
+  }
+  router.push('/exam/content?exam_id=' + examId)
+}
+
+const routerToExamRecords = (exam?: ExamItem) => {
+  if (!exam?.exam_id) return
+  router.push('/exam/records?exam_id=' + exam.exam_id)
+}
+
 const handleImageError = (e: Event) => {
-  (e.target as HTMLImageElement).src = 'http://mogullzr001.oss-cn-beijing.aliyuncs.com/2025/11/2c75468abcf44ef9be887216dd21b0e1.jpg'
+  ;(e.target as HTMLImageElement).src =
+      'http://mogullzr001.oss-cn-beijing.aliyuncs.com/2025/11/2c75468abcf44ef9be887216dd21b0e1.jpg'
 }
 </script>

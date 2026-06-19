@@ -7,6 +7,7 @@ export type ProblemExamVo = {
     end_time?: string;
     exam_id?: number;
     exam_name?: string;
+    join?: boolean;
     joins?: number;
     pages?: number;
     picture?: string;

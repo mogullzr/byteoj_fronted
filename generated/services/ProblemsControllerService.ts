@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_List_ProblemExamSheetPaperVo_ } from '../models/BaseResponse_List_ProblemExamSheetPaperVo_';
+import type { BaseResponse_List_ProblemExamSheetVo_ } from '../models/BaseResponse_List_ProblemExamSheetVo_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
 import type { BaseResponse_List_ProblemSimilarityVo_ } from '../models/BaseResponse_List_ProblemSimilarityVo_';
 import type { BaseResponse_ProblemExamSubmitVo_ } from '../models/BaseResponse_ProblemExamSubmitVo_';
@@ -59,6 +61,28 @@ export class ProblemsControllerService {
         });
     }
     /**
+     * ProblemExamJoin
+     * @param examId exam_id
+     * @returns BaseResponse_boolean_ OK
+     * @throws ApiError
+     */
+    public static problemExamJoinUsingGet(
+        examId?: number,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/join',
+            query: {
+                'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * ProblemExamSearchDetail
      * @param examId exam_id
      * @returns BaseResponse_List_ProblemMath408BankVo_ OK
@@ -72,6 +96,53 @@ export class ProblemsControllerService {
             url: '/api/problem/other/exam/problem',
             query: {
                 'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * ProblemExamRecords
+     * @param examId exam_id
+     * @param pageNum pageNum
+     * @returns BaseResponse_List_ProblemExamSheetPaperVo_ OK
+     * @throws ApiError
+     */
+    public static problemExamRecordsUsingGet(
+        examId?: number,
+        pageNum?: number,
+    ): CancelablePromise<BaseResponse_List_ProblemExamSheetPaperVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/records',
+            query: {
+                'exam_id': examId,
+                'pageNum': pageNum,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * ProblemExamSheet
+     * @param recordId recordId
+     * @returns BaseResponse_List_ProblemExamSheetVo_ OK
+     * @throws ApiError
+     */
+    public static problemExamSheetUsingGet(
+        recordId?: number,
+    ): CancelablePromise<BaseResponse_List_ProblemExamSheetVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/sheet',
+            query: {
+                'recordId': recordId,
             },
             errors: {
                 401: `Unauthorized`,

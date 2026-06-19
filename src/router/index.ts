@@ -142,9 +142,9 @@ const routes: Array<RouteRecordRaw> = [
               title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmInfoUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmInfoUserAdd.vue"
+                    ),
           },
           {
             path: "select",
@@ -154,9 +154,9 @@ const routes: Array<RouteRecordRaw> = [
               title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSelectUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSelectUserAdd.vue"
+                    ),
           },
           {
             path: "show",
@@ -166,9 +166,9 @@ const routes: Array<RouteRecordRaw> = [
               title: "创建变成比赛 - ByteOJ",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmProblemUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmProblemUserAdd.vue"
+                    ),
           },
           {
             path: "success",
@@ -178,9 +178,9 @@ const routes: Array<RouteRecordRaw> = [
               title: "恭喜O(∩_∩)O哈哈~创建竞赛成功 - ByteOJ",
             },
             component: () =>
-              import(
-                "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSuccessUserAdd.vue"
-              ),
+                import(
+                    "@/view/competitions/Algorithm/CompetitionAdd/CompetitionAlgorithmSuccessUserAdd.vue"
+                    ),
           },
         ],
         meta: {
@@ -195,7 +195,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import("@/view/competitions/CompetitionMath408UserAdd.vue"),
+            import("@/view/competitions/CompetitionMath408UserAdd.vue"),
       },
       {
         path: "3",
@@ -204,7 +204,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import("@/view/competitions/CompetitionMath408UserAdd.vue"),
+            import("@/view/competitions/CompetitionMath408UserAdd.vue"),
       },
     ],
     meta: {
@@ -236,9 +236,9 @@ const routes: Array<RouteRecordRaw> = [
               title: "提交记录 - ByteOJ",
             },
             component: () =>
-              import(
-                "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
-              ),
+                import(
+                    "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
+                    ),
           },
           {
             path: "problem/:problem_order",
@@ -248,7 +248,7 @@ const routes: Array<RouteRecordRaw> = [
               title: "题目信息 - ByteOJ",
             },
             component: () =>
-              import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
+                import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
           },
           {
             path: "",
@@ -258,7 +258,7 @@ const routes: Array<RouteRecordRaw> = [
               title: "ByteOJ - 竞赛",
             },
             component: () =>
-              import("@/view/competitions/CompeletionContentView.vue"),
+                import("@/view/competitions/CompeletionContentView.vue"),
           },
         ],
         meta: {
@@ -274,7 +274,7 @@ const routes: Array<RouteRecordRaw> = [
           title: "ByteOJ - 巅峰排名",
         },
         component: () =>
-          import("@/view/competitions/CompetitionRankListView.vue"),
+            import("@/view/competitions/CompetitionRankListView.vue"),
       },
       {
         path: "",
@@ -353,7 +353,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "0",
         },
         component: () =>
-          import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
+            import("@/view/problems/algorithm/ProblemAlgorithmView.vue"),
       },
       {
         path: "other/:problem_id",
@@ -362,7 +362,7 @@ const routes: Array<RouteRecordRaw> = [
           access: "0",
         },
         component: () =>
-          import("@/view/problems/math/ProblemMath408Content.vue"),
+            import("@/view/problems/math/ProblemMath408Content.vue"),
       },
       {
         path: ":problem_id/records/:submission_id",
@@ -371,9 +371,9 @@ const routes: Array<RouteRecordRaw> = [
           access: "1",
         },
         component: () =>
-          import(
-            "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
-          ),
+            import(
+                "@/view/problems/algorithm/ProblemAlgorithmRecordsContent.vue"
+                ),
       },
       {
         path: "",
@@ -462,6 +462,24 @@ const routes: Array<RouteRecordRaw> = [
           title: "ByteOJ - 考试内容"
         },
         component: () => import("@/view/exam/ProblemExamContent.vue")
+      },
+      {
+        path: "records",
+        name: "examRecords",
+        meta: {
+          access: "1",
+          title: "ByteOJ - Exam Records"
+        },
+        component: () => import("@/view/exam/ProblemExamRecords.vue")
+      },
+      {
+        path: "sheet",
+        name: "examSheet",
+        meta: {
+          access: "1",
+          title: "ByteOJ - Exam Sheet"
+        },
+        component: () => import("@/view/exam/ProblemExamSheet.vue")
       },
       {
         path: "",
@@ -622,7 +640,7 @@ router.beforeEach(async (to, from, next) => {
   // 4. 清理competition相关存储
   try {
     const isLeavingCompetition =
-      from.path.includes("/competition") && !to.path.includes("/competition");
+        from.path.includes("/competition") && !to.path.includes("/competition");
     if (isLeavingCompetition) {
       const competitionId = from.params.competition_id;
       if (competitionId) {
@@ -644,7 +662,7 @@ router.beforeEach(async (to, from, next) => {
 
   // 5. 获取目标路由所需权限
   const needAccess: string =
-    (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
+      (to.meta?.access as string) ?? ACCESS_ENUM.NOT_LOGIN;
 
   // 6. 权限检查流程
   // 6.1 检查是否被封禁
@@ -688,7 +706,7 @@ router.onError((error) => {
   if (error.message.includes("Failed to fetch dynamically imported module")) {
     // 处理组件加载失败
     window.location.href = `/404?from=${encodeURIComponent(
-      window.location.pathname
+        window.location.pathname
     )}`;
   }
 });
