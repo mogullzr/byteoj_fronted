@@ -1,5 +1,13 @@
 <template>
   <div class="min-h-screen bg-[#f9fafb] pt-16 pb-24 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto mb-6 flex justify-end">
+      <button
+          class="rounded-xl bg-emerald-700 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-emerald-800 active:scale-[0.98]"
+          @click="router.push('/exam/wrong-book')"
+      >
+        进入我的错题本
+      </button>
+    </div>
     <div class="max-w-5xl mx-auto mb-12">
       <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         <div class="flex items-center">

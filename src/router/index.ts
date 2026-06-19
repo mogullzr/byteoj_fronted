@@ -482,6 +482,15 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import("@/view/exam/ProblemExamSheet.vue")
       },
       {
+        path: "wrong-book",
+        name: "错题本",
+        meta: {
+          access: "1",
+          title: "ByteOJ - 我的错题本"
+        },
+        component: () => import("@/view/exam/ProblemWrongBook.vue")
+      },
+      {
         path: "",
         name: "考试查找",
         meta: {
