@@ -34,6 +34,55 @@
         <span v-for="tag in practiceItem.tagsList" :key="tag" class="tag-chip">{{ tag }}</span>
       </div>
 
+      <details v-if="practiceItem.answerRecords?.length" class="answer-history">
+        <summary>历史作答（{{ practiceItem.answerRecords.length }} 次）</summary>
+        <div class="answer-record-list">
+          <article v-for="record in practiceItem.answerRecords" :key="record.id" class="answer-record-card">
+            <div class="record-meta">
+              <span>{{ formatDate(record.create_date) }}</span>
+              <strong>{{ answerRecordScoreLabel(record) }}</strong>
+            </div>
+            <div v-if="record.answer" class="record-section">
+              <h4>{{ isChoiceQuestion(practiceItem) ? "作答选项" : "我的作答" }}</h4>
+              <div v-if="isChoiceQuestion(practiceItem)" class="choice-answer-block">
+                <div class="choice-summary">
+                  <span>我的选择：{{ answerLettersLabel(record.answer) }}</span>
+                  <strong>标准答案：{{ answerLettersLabel(practiceItem.correct_answer) }}</strong>
+                </div>
+                <div v-if="parseOptions(practiceItem.options).length" class="choice-option-list">
+                  <div
+                    v-for="(option, optionIndex) in parseOptions(practiceItem.options)"
+                    :key="`practice-record-${record.id}-${optionIndex}`"
+                    class="choice-option-card"
+                    :class="choiceOptionClass(practiceItem, record, optionIndex)"
+                  >
+                    <strong>{{ optionLetter(optionIndex) }}.</strong>
+                    <MarkdownView :generate-data="normalizeText(option)" />
+                    <span class="choice-mark-list">
+                      <em v-if="isUserChoice(record.answer, optionIndex)" class="choice-mark user">我的选择</em>
+                      <em v-if="isCorrectChoice(practiceItem.correct_answer, optionIndex)" class="choice-mark correct">标准答案</em>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="answerImageUrls(record.answer).length" class="answer-image-list">
+                <img
+                  v-for="url in answerImageUrls(record.answer)"
+                  :key="url"
+                  :src="url"
+                  alt="作答图片"
+                />
+              </div>
+              <MarkdownView v-else :generate-data="normalizeText(record.answer)" />
+            </div>
+            <div v-if="record.ai_advise" class="record-section advise">
+              <h4>判题建议</h4>
+              <MarkdownView :generate-data="formatAiAdvise(record.ai_advise)" />
+            </div>
+          </article>
+        </div>
+      </details>
+
       <div v-if="practiceItem.description" class="content-block">
         <h3>题目描述</h3>
         <MarkdownView :generate-data="normalizeText(practiceItem.description)" />
@@ -211,6 +260,55 @@
             <span v-for="tag in item.tagsList" :key="`${item.id}-${tag}`" class="tag-chip">{{ tag }}</span>
           </div>
 
+          <details v-if="item.answerRecords?.length" class="answer-history compact">
+            <summary>历史作答（{{ item.answerRecords.length }} 次）</summary>
+            <div class="answer-record-list">
+              <article v-for="record in item.answerRecords" :key="record.id" class="answer-record-card">
+                <div class="record-meta">
+                  <span>{{ formatDate(record.create_date) }}</span>
+                  <strong>{{ answerRecordScoreLabel(record) }}</strong>
+                </div>
+                <div v-if="record.answer" class="record-section">
+                  <h4>{{ isChoiceQuestion(item) ? "作答选项" : "我的作答" }}</h4>
+                  <div v-if="isChoiceQuestion(item)" class="choice-answer-block">
+                    <div class="choice-summary">
+                      <span>我的选择：{{ answerLettersLabel(record.answer) }}</span>
+                      <strong>标准答案：{{ answerLettersLabel(item.correct_answer) }}</strong>
+                    </div>
+                    <div v-if="parseOptions(item.options).length" class="choice-option-list">
+                      <div
+                        v-for="(option, optionIndex) in parseOptions(item.options)"
+                        :key="`${item.id}-record-${record.id}-${optionIndex}`"
+                        class="choice-option-card"
+                        :class="choiceOptionClass(item, record, optionIndex)"
+                      >
+                        <strong>{{ optionLetter(optionIndex) }}.</strong>
+                        <MarkdownView :generate-data="normalizeText(option)" />
+                        <span class="choice-mark-list">
+                          <em v-if="isUserChoice(record.answer, optionIndex)" class="choice-mark user">我的选择</em>
+                          <em v-if="isCorrectChoice(item.correct_answer, optionIndex)" class="choice-mark correct">标准答案</em>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else-if="answerImageUrls(record.answer).length" class="answer-image-list">
+                    <img
+                      v-for="url in answerImageUrls(record.answer)"
+                      :key="url"
+                      :src="url"
+                      alt="作答图片"
+                    />
+                  </div>
+                  <MarkdownView v-else :generate-data="normalizeText(record.answer)" />
+                </div>
+                <div v-if="record.ai_advise" class="record-section advise">
+                  <h4>判题建议</h4>
+                  <MarkdownView :generate-data="formatAiAdvise(record.ai_advise)" />
+                </div>
+              </article>
+            </div>
+          </details>
+
           <div v-if="item.description" class="description-preview">
             <MarkdownView :generate-data="shortText(item.description)" />
           </div>
@@ -257,6 +355,55 @@ import { useRoute, useRouter } from "vue-router";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import { useMessageBox } from "@/view/components/alert/useMessageBox";
 
+type WrongBookAnswerRecord = {
+  id?: number;
+  exam_user_id?: number;
+  problem_id?: number;
+  answer?: string;
+  score?: number;
+  total_score?: number;
+  ai_advise?: string;
+  confidence?: string;
+  person?: boolean;
+  create_date?: string;
+  update_date?: string;
+};
+
+type GradingMistake = {
+  type?: string;
+  description?: string;
+  severity?: string;
+  related_rubric_item_id?: string;
+};
+
+type GradingRubric = {
+  id?: string;
+  name?: string;
+  reason?: string;
+  evidence?: string;
+  confidence?: number;
+  max_score?: number;
+  awarded_score?: number;
+};
+
+type StructuredGradingResult = {
+  confidence?: number;
+  mistakes?: GradingMistake[];
+  summary?: string;
+  advice?: string;
+  question_type?: string;
+  total_score?: number;
+  awarded_score?: number;
+  score_rate?: number;
+  is_correct?: boolean;
+  is_partially_correct?: boolean;
+  needs_manual_review?: boolean;
+  grading_mode?: string;
+  accepted_answers?: string[];
+  student_normalized_answer?: string;
+  rubric_used?: GradingRubric[];
+};
+
 type WrongBookItem = {
   id?: number;
   problem_id?: number;
@@ -270,8 +417,10 @@ type WrongBookItem = {
   correct_answer?: string;
   analysis?: string;
   tagsList?: string[];
+  answerRecords?: WrongBookAnswerRecord[];
   exam_id?: number;
   exam_user_id?: number;
+  answer?: string;
   latest_answer?: string;
   latest_score?: number;
   total_score?: number;
@@ -815,6 +964,52 @@ const formatDate = (date?: string) => {
 
 const optionLetter = (index: number) => String.fromCharCode(65 + index);
 
+const isChoiceQuestion = (item?: WrongBookItem | null) => item?.option_type === 1 || item?.option_type === 2;
+
+const parseAnswerLetters = (answer?: string) => {
+  if (!answer) return [];
+  const text = normalizeText(answer).trim();
+  if (!text) return [];
+
+  const values: string[] = [];
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) {
+      parsed.forEach((item) => values.push(String(item)));
+    } else if (parsed && typeof parsed === "object") {
+      Object.values(parsed).forEach((item) => values.push(String(item)));
+    }
+  } catch {
+    values.push(text);
+  }
+
+  const letters = values
+      .flatMap((item) => String(item).toUpperCase().match(/[A-H]/g) || [])
+      .filter(Boolean);
+  return [...new Set(letters)];
+};
+
+const answerLettersLabel = (answer?: string) => {
+  const letters = parseAnswerLetters(answer);
+  return letters.length > 0 ? letters.join("、") : "未作答";
+};
+
+const isUserChoice = (answer: string | undefined, optionIndex: number) =>
+    parseAnswerLetters(answer).includes(optionLetter(optionIndex));
+
+const isCorrectChoice = (answer: string | undefined, optionIndex: number) =>
+    parseAnswerLetters(answer).includes(optionLetter(optionIndex));
+
+const choiceOptionClass = (item: WrongBookItem | null | undefined, record: WrongBookAnswerRecord, optionIndex: number) => {
+  const selected = isUserChoice(record.answer, optionIndex);
+  const correct = isCorrectChoice(item?.correct_answer, optionIndex);
+  return {
+    selected,
+    correct,
+    wrong: selected && !correct,
+  };
+};
+
 const parseOptions = (options?: string) => {
   if (!options) return [];
   const text = options.trim();
@@ -893,6 +1088,147 @@ const parseSingleQuotedArray = (text: string) => {
     result.push(current.trim());
   }
   return result;
+};
+
+const answerRecordScoreLabel = (record: WrongBookAnswerRecord) => {
+  const score = typeof record.score === "number" ? record.score : 0;
+  if (typeof record.total_score === "number" && record.total_score > 0) {
+    return `得分 ${score} / ${record.total_score}`;
+  }
+  return `得分 ${score}`;
+};
+
+const parseStructuredGradingResult = (aiAdvise?: string): StructuredGradingResult | undefined => {
+  if (!aiAdvise) return undefined;
+  const text = normalizeText(aiAdvise);
+  const marker = "【结构化结果】";
+  const markerIndex = text.indexOf(marker);
+  const jsonPart = markerIndex >= 0 ? text.slice(markerIndex + marker.length) : text;
+  const firstBrace = jsonPart.indexOf("{");
+  const lastBrace = jsonPart.lastIndexOf("}");
+  if (firstBrace < 0 || lastBrace <= firstBrace) return undefined;
+
+  try {
+    return JSON.parse(jsonPart.slice(firstBrace, lastBrace + 1)) as StructuredGradingResult;
+  } catch (err) {
+    console.warn("结构化判题结果解析失败", err);
+    return undefined;
+  }
+};
+
+const formatPercent = (value?: number) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return "-";
+  return `${Math.round(value * 100)}%`;
+};
+
+const formatManualReview = (value?: boolean) => value ? "需要" : "不需要";
+
+const formatAiAdvise = (aiAdvise?: string) => {
+  if (!aiAdvise) return "";
+  const result = parseStructuredGradingResult(aiAdvise);
+  if (!result) return normalizeText(aiAdvise);
+
+  const lines: string[] = [];
+  lines.push("**判题速览**");
+  lines.push(`- 得分：${result.awarded_score ?? "-"} / ${result.total_score ?? "-"}`);
+  lines.push(`- 得分率：${formatPercent(result.score_rate)}`);
+  lines.push(`- 置信度：${formatPercent(result.confidence)}`);
+  lines.push(`- 判题模式：${result.grading_mode || "-"}`);
+  lines.push(`- 人工复查：${formatManualReview(result.needs_manual_review)}`);
+
+  if (result.summary) {
+    lines.push("");
+    lines.push("**总结**");
+    lines.push(result.summary);
+  }
+
+  if (result.advice) {
+    lines.push("");
+    lines.push("**改进建议**");
+    lines.push(result.advice);
+  }
+
+  lines.push("");
+  lines.push("**识别作答**");
+  lines.push(result.student_normalized_answer || "未识别到有效作答");
+
+  lines.push("");
+  lines.push("**可接受答案**");
+  if ((result.accepted_answers || []).length) {
+    result.accepted_answers!.forEach((answer, index) => {
+      lines.push(`${index + 1}. ${answer}`);
+    });
+  } else {
+    lines.push("无");
+  }
+
+  lines.push("");
+  lines.push("**错误点**");
+  if ((result.mistakes || []).length) {
+    result.mistakes!.forEach((mistake, index) => {
+      lines.push(`${index + 1}. ${mistake.type || "错误"} · ${mistake.severity || "unknown"}`);
+      if (mistake.description) lines.push(`   - ${mistake.description}`);
+      if (mistake.related_rubric_item_id) lines.push(`   - 关联细则：${mistake.related_rubric_item_id}`);
+    });
+  } else {
+    lines.push("无");
+  }
+
+  lines.push("");
+  lines.push("**评分细则**");
+  if ((result.rubric_used || []).length) {
+    result.rubric_used!.forEach((rubric, index) => {
+      lines.push(`### ${rubric.name || rubric.id || `细则 ${index + 1}`}`);
+      lines.push(`- 得分：${rubric.awarded_score ?? 0} / ${rubric.max_score ?? 0} 分`);
+      lines.push(`- 置信度：${formatPercent(rubric.confidence)}`);
+      if (rubric.reason) lines.push(`- 原因：${rubric.reason}`);
+      if (rubric.evidence) lines.push(`- 依据：${rubric.evidence}`);
+      lines.push("");
+    });
+  } else {
+    lines.push("无");
+  }
+
+  return lines.join("\n");
+};
+
+const isLikelyImageUrl = (url: string) => {
+  const cleanUrl = url.split("?")[0].toLowerCase();
+  return /\.(png|jpe?g|gif|webp|bmp|svg)$/.test(cleanUrl)
+      || cleanUrl.includes("oss-cn-")
+      || cleanUrl.includes("/image/");
+};
+
+const answerImageUrls = (answer?: string) => {
+  if (!answer) return [];
+  const text = normalizeText(answer).trim();
+  if (!text) return [];
+
+  const candidates: string[] = [];
+  const addCandidate = (value: unknown) => {
+    if (typeof value === "string") {
+      candidates.push(value);
+      return;
+    }
+    if (value && typeof value === "object") {
+      const obj = value as Record<string, unknown>;
+      ["url", "src", "path", "image", "imageUrl"].forEach((key) => addCandidate(obj[key]));
+    }
+  };
+
+  try {
+    const parsed = JSON.parse(text);
+    if (Array.isArray(parsed)) {
+      parsed.forEach(addCandidate);
+    } else {
+      addCandidate(parsed);
+    }
+  } catch {
+    candidates.push(text);
+  }
+
+  const urls = candidates.flatMap((item) => item.match(/https?:\/\/[^\s"'<>)]*/g) || []);
+  return [...new Set(urls.map((url) => url.replace(/[，。,.;；]+$/, "")).filter(isLikelyImageUrl))];
 };
 
 const normalizeText = (text?: string) => {
@@ -1303,6 +1639,159 @@ button:not(:disabled):active {
 .answer-block {
   background: #f0fdf4;
   border-color: #bbf7d0;
+}
+
+.answer-history {
+  margin-top: 16px;
+  border: 1px solid #dbeafe;
+  border-radius: 18px;
+  background: #f8fbff;
+  padding: 14px 16px;
+}
+
+.answer-history.compact {
+  margin-top: 14px;
+}
+
+.answer-history summary {
+  cursor: pointer;
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.answer-record-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.answer-record-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  padding: 14px;
+}
+
+.record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.record-meta strong {
+  color: #0f172a;
+}
+
+.record-section {
+  margin-top: 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+  padding: 12px;
+}
+
+.record-section.advise {
+  background: #f0fdf4;
+}
+
+.record-section h4 {
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 13px;
+}
+
+.choice-answer-block {
+  display: grid;
+  gap: 12px;
+}
+
+.choice-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  color: #475569;
+  font-weight: 700;
+}
+
+.choice-summary strong {
+  color: #166534;
+}
+
+.choice-option-list {
+  display: grid;
+  gap: 10px;
+}
+
+.choice-option-card {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+}
+
+.choice-option-card.selected {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.choice-option-card.correct {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.choice-option-card.wrong {
+  border-color: #fca5a5;
+}
+
+.choice-mark-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.choice-mark {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.choice-mark.user {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.choice-mark.correct {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.answer-image-list {
+  display: grid;
+  gap: 12px;
+}
+
+.answer-image-list img {
+  max-width: 100%;
+  max-height: 520px;
+  object-fit: contain;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
 }
 
 .option-grid {
