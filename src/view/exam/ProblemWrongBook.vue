@@ -30,6 +30,9 @@
         <span>最近得分 {{ practiceItem.latest_score ?? 0 }} / {{ practiceItem.total_score ?? 0 }}</span>
         <span>累计失分 {{ practiceItem.wrong_count ?? 0 }} 次</span>
       </div>
+      <div v-if="practiceItem.tagsList?.length" class="tag-row">
+        <span v-for="tag in practiceItem.tagsList" :key="tag" class="tag-chip">{{ tag }}</span>
+      </div>
 
       <div v-if="practiceItem.description" class="content-block">
         <h3>题目描述</h3>
@@ -104,6 +107,49 @@
       </div>
     </section>
 
+    <section class="insight-card">
+      <div class="insight-header">
+        <div>
+          <p class="eyebrow">错题薄弱点</p>
+          <h2>错题标签统计</h2>
+          <p class="insight-desc">{{ weaknessSummary }}</p>
+        </div>
+        <div class="chart-switch">
+          <button class="chip" :class="{ active: chartMode === 'bar' }" @click="setChartMode('bar')">
+            柱状图
+          </button>
+          <button class="chip" :class="{ active: chartMode === 'pie' }" @click="setChartMode('pie')">
+            饼图
+          </button>
+        </div>
+      </div>
+      <div v-if="tagStatsLoading" class="chart-state">正在分析错题数据...</div>
+      <div v-else-if="tagStats.length === 0" class="chart-state">
+        暂无可统计的错题数据，先加入或提交一些错题后再查看薄弱点。
+      </div>
+      <div v-else class="chart-layout">
+        <div class="chart-panel">
+          <div ref="weaknessChartRef" class="weakness-chart"></div>
+          <div v-if="chartRenderFailed" class="fallback-bars">
+            <div v-for="item in chartTagStats" :key="`fallback-${item.name}`" class="fallback-row">
+              <span>{{ item.name }}</span>
+              <div class="fallback-track">
+                <i :style="{ width: `${fallbackPercent(item.value)}%` }"></i>
+              </div>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+        </div>
+        <div class="weakness-rank">
+          <div v-for="(item, index) in rankTagStats" :key="item.name" class="rank-item">
+            <span class="rank-index">{{ index + 1 }}</span>
+            <span class="rank-name">{{ item.name }}</span>
+            <strong>{{ item.value }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section v-if="loading" class="state-card">
       <div class="spinner"></div>
       <p>正在加载错题...</p>
@@ -161,6 +207,9 @@
             <span>{{ item.mastery_status === 1 ? "已掌握" : "待复习" }}</span>
             <span>{{ formatDate(item.update_date) }}</span>
           </div>
+          <div v-if="item.tagsList?.length" class="tag-row">
+            <span v-for="tag in item.tagsList" :key="`${item.id}-${tag}`" class="tag-chip">{{ tag }}</span>
+          </div>
 
           <div v-if="item.description" class="description-preview">
             <MarkdownView :generate-data="shortText(item.description)" />
@@ -202,7 +251,8 @@
 
 <script setup lang="ts">
 import axios from "axios";
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import * as echarts from "echarts";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
 import { useMessageBox } from "@/view/components/alert/useMessageBox";
@@ -219,6 +269,7 @@ type WrongBookItem = {
   options?: string;
   correct_answer?: string;
   analysis?: string;
+  tagsList?: string[];
   exam_id?: number;
   exam_user_id?: number;
   latest_answer?: string;
@@ -230,12 +281,20 @@ type WrongBookItem = {
   update_date?: string;
 };
 
+type TagStatItem = {
+  name: string;
+  value: number;
+};
+
 const route = useRoute();
 const router = useRouter();
 const { success, error, warning } = useMessageBox();
+const apiBaseURL = process.env.NODE_ENV === "production"
+    ? "https://www.byteoj.com"
+    : "http://localhost:7091";
 
 const http = axios.create({
-  baseURL: "https://www.byteoj.com",
+  baseURL: apiBaseURL,
   withCredentials: true,
 });
 
@@ -250,10 +309,19 @@ http.interceptors.request.use((config) => {
 const loading = ref(false);
 const randomLoading = ref(false);
 const batchLoading = ref(false);
+const tagStatsLoading = ref(false);
 const actionLoadingId = ref<number | null>(null);
 const wrongBooks = ref<WrongBookItem[]>([]);
 const practiceItem = ref<WrongBookItem | null>(null);
 const selectedWrongBookIds = ref<number[]>([]);
+const tagStats = ref<TagStatItem[]>([]);
+const chartMode = ref<"bar" | "pie">("bar");
+const chartRenderFailed = ref(false);
+const weaknessChartRef = ref<HTMLDivElement | null>(null);
+let weaknessChart: echarts.ECharts | null = null;
+
+const CHART_TAG_LIMIT = 10;
+const RANK_TAG_LIMIT = 30;
 
 const query = reactive({
   pageNum: 1,
@@ -281,6 +349,29 @@ const allCurrentPageSelected = computed(() => {
   return ids.length > 0 && ids.every((id) => selectedWrongBookIds.value.includes(id));
 });
 
+const chartTagStats = computed(() => {
+  if (tagStats.value.length <= CHART_TAG_LIMIT) {
+    return tagStats.value;
+  }
+  const topList = tagStats.value.slice(0, CHART_TAG_LIMIT);
+  const otherValue = tagStats.value
+      .slice(CHART_TAG_LIMIT)
+      .reduce((sum, item) => sum + item.value, 0);
+  return otherValue > 0 ? [...topList, { name: "其他", value: otherValue }] : topList;
+});
+
+const rankTagStats = computed(() => tagStats.value.slice(0, RANK_TAG_LIMIT));
+
+const maxTagStatValue = computed(() => Math.max(...chartTagStats.value.map((item) => item.value), 1));
+
+const weaknessSummary = computed(() => {
+  if (tagStatsLoading.value) return "正在根据你的错题记录计算薄弱点。";
+  if (tagStats.value.length === 0) return "当前筛选条件下还没有可统计的错题数据。";
+  const top = tagStats.value[0];
+  const tailText = tagStats.value.length > CHART_TAG_LIMIT ? `，图表已聚合其余 ${tagStats.value.length - CHART_TAG_LIMIT} 个标签为「其他」` : "";
+  return `当前最需要关注的是「${top.name}」，累计失分 ${top.value} 次${tailText}。`;
+});
+
 const masteryTabs = [
   { label: "待复习", value: 0 },
   { label: "已掌握", value: 1 },
@@ -300,6 +391,13 @@ let syncingRoute = false;
 onMounted(() => {
   restoreQueryFromRoute();
   fetchWrongBooks(query.pageNum, false);
+  window.addEventListener("resize", resizeWeaknessChart);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("resize", resizeWeaknessChart);
+  weaknessChart?.dispose();
+  weaknessChart = null;
 });
 
 watch(
@@ -321,6 +419,13 @@ const unwrap = (res: any) => {
 const requestBody = () => ({
   pageNum: query.pageNum,
   pageSize: query.pageSize,
+  keyword: query.keyword || undefined,
+  mastery_status: query.mastery_status,
+  option_type: query.option_type,
+});
+
+const statsRequestBody = () => ({
+  stat_type: "tag",
   keyword: query.keyword || undefined,
   mastery_status: query.mastery_status,
   option_type: query.option_type,
@@ -399,11 +504,145 @@ const fetchWrongBooks = async (page = query.pageNum, syncRoute = true) => {
     selectedWrongBookIds.value = selectedWrongBookIds.value.filter((id) => visibleIds.has(id));
     pageInfo.total = Number(data?.total || 0);
     pageInfo.pages = Number(data?.pages || 1);
+    fetchWrongBookTagStats();
   } catch (err: any) {
     console.error(err);
     error(err?.message || "加载错题本失败");
   } finally {
     loading.value = false;
+  }
+};
+
+const fetchWrongBookTagStats = async () => {
+  tagStatsLoading.value = true;
+  try {
+    const data = unwrap(await http.post("/api/problem/wrong-book/stats", statsRequestBody()));
+    tagStats.value = Array.isArray(data)
+        ? data
+            .map((item) => ({
+              name: String(item?.name || "未命名标签"),
+              value: Number(item?.value || 0),
+            }))
+            .filter((item) => item.value > 0)
+        : [];
+  } catch (err: any) {
+    console.error(err);
+    tagStats.value = [];
+  } finally {
+    tagStatsLoading.value = false;
+    await nextTick();
+    renderWeaknessChart();
+  }
+};
+
+const setChartMode = (mode: "bar" | "pie") => {
+  chartMode.value = mode;
+  nextTick(renderWeaknessChart);
+};
+
+const fallbackPercent = (value: number) => Math.max(8, Math.round((value / maxTagStatValue.value) * 100));
+
+const resizeWeaknessChart = () => {
+  weaknessChart?.resize();
+};
+
+const renderWeaknessChart = (retryCount = 0) => {
+  if (!weaknessChartRef.value || tagStats.value.length === 0) {
+    weaknessChart?.dispose();
+    weaknessChart = null;
+    chartRenderFailed.value = tagStats.value.length > 0;
+    return;
+  }
+
+  const chartEl = weaknessChartRef.value;
+  if ((chartEl.clientWidth === 0 || chartEl.clientHeight === 0) && retryCount < 5) {
+    window.setTimeout(() => renderWeaknessChart(retryCount + 1), 80);
+    return;
+  }
+
+  if (chartEl.clientWidth === 0 || chartEl.clientHeight === 0) {
+    chartRenderFailed.value = true;
+    return;
+  }
+
+  chartRenderFailed.value = false;
+  const chartData = chartTagStats.value;
+  const commonOption = {
+    tooltip: {
+      trigger: "item",
+      formatter: "{b}: {c}",
+    },
+    color: ["#0f172a", "#166534", "#0369a1", "#b45309", "#be123c", "#6d28d9", "#0f766e", "#475569"],
+  };
+
+  try {
+    if (!weaknessChart) {
+      weaknessChart = echarts.init(chartEl);
+    }
+
+    if (chartMode.value === "pie") {
+      weaknessChart.setOption({
+        ...commonOption,
+        legend: {
+          bottom: 0,
+          type: "scroll",
+        },
+        series: [
+          {
+            name: "错题标签",
+            type: "pie",
+            radius: ["42%", "68%"],
+            center: ["50%", "43%"],
+            avoidLabelOverlap: true,
+            label: {
+              formatter: "{b}\n{c}",
+            },
+            data: chartData,
+          },
+        ],
+      }, true);
+      weaknessChart.resize();
+      return;
+    }
+
+    weaknessChart.setOption({
+      ...commonOption,
+      grid: {
+        top: 14,
+        right: 18,
+        bottom: 18,
+        left: 96,
+        containLabel: true,
+      },
+      xAxis: {
+        type: "value",
+        minInterval: 1,
+      },
+      yAxis: {
+        type: "category",
+        inverse: true,
+        data: chartData.map((item) => item.name),
+        axisLabel: {
+          width: 86,
+          overflow: "truncate",
+        },
+      },
+      series: [
+        {
+          name: "累计失分",
+          type: "bar",
+          data: chartData.map((item) => item.value),
+          barMaxWidth: 22,
+          itemStyle: {
+            borderRadius: [0, 8, 8, 0],
+          },
+        },
+      ],
+    }, true);
+    weaknessChart.resize();
+  } catch (err) {
+    console.error("ECharts render failed", err);
+    chartRenderFailed.value = true;
   }
 };
 
@@ -689,7 +928,8 @@ const shortText = (text?: string) => {
 .filter-card,
 .practice-card,
 .wrong-card,
-.state-card {
+.state-card,
+.insight-card {
   width: 100%;
   max-width: 1180px;
   margin: 0 auto;
@@ -804,7 +1044,8 @@ button:not(:disabled):active {
 }
 
 .filter-card,
-.practice-card {
+.practice-card,
+.insight-card {
   margin-top: 22px;
   padding: 22px;
   border-radius: 24px;
@@ -878,6 +1119,163 @@ button:not(:disabled):active {
   color: #475569;
   padding: 6px 10px;
   font-size: 13px;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tag-chip {
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.insight-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.insight-header h2 {
+  color: #0f172a;
+  font-size: 26px;
+}
+
+.insight-desc {
+  margin: 10px 0 0;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.chart-switch {
+  display: flex;
+  gap: 10px;
+  flex: none;
+}
+
+.chart-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: stretch;
+  margin-top: 18px;
+}
+
+.chart-panel {
+  position: relative;
+  min-width: 0;
+}
+
+.weakness-chart {
+  min-width: 0;
+  height: 340px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+}
+
+.fallback-bars {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  overflow-y: auto;
+}
+
+.fallback-row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr) 38px;
+  gap: 10px;
+  align-items: center;
+  color: #334155;
+  font-weight: 700;
+}
+
+.fallback-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fallback-track {
+  height: 12px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.fallback-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #0f172a, #166534);
+}
+
+.weakness-rank {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  max-height: 340px;
+  min-width: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  scrollbar-width: thin;
+}
+
+.rank-item {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #f8fafc;
+}
+
+.rank-index {
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.rank-name {
+  min-width: 0;
+  color: #334155;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chart-state {
+  margin-top: 18px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 18px;
+  padding: 30px 18px;
+  color: #64748b;
+  text-align: center;
+  background: #f8fafc;
 }
 
 .question-badge {
@@ -1065,7 +1463,9 @@ button:not(:disabled):active {
   .hero-card,
   .wrong-card,
   .practice-top,
-  .title-line {
+  .title-line,
+  .insight-header,
+  .chart-layout {
     display: block;
   }
 
@@ -1081,6 +1481,27 @@ button:not(:disabled):active {
 
   .search-box {
     flex-direction: column;
+  }
+
+  .chart-switch,
+  .weakness-rank {
+    margin-top: 16px;
+  }
+
+  .fallback-row {
+    grid-template-columns: minmax(0, 1fr) 54px;
+  }
+
+  .fallback-row span {
+    grid-column: 1 / -1;
+  }
+
+  .weakness-chart {
+    height: 300px;
+  }
+
+  .weakness-rank {
+    max-height: 360px;
   }
 }
 </style>
