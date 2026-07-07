@@ -336,8 +336,8 @@ const exportExamPdf = async (exam?: ExamItem) => {
     }
 
     const paperInfo = (examRes.code === 0 && examRes.data ? examRes.data : exam) as ProblemExamVo | ExamItem
-    if (!isMathExam(paperInfo) && !is408Exam(paperInfo)) {
-      warning('当前 PDF 模板仅支持数学和 408 试卷，其他类型试卷模板后续再接入')
+    if (!isMathExam(paperInfo) && !is408Exam(paperInfo) && !isPoliticsExam(paperInfo)) {
+      warning('当前 PDF 模板仅支持数学、408 和政治试卷，其他类型试卷模板后续再接入')
       return
     }
 
@@ -1142,6 +1142,314 @@ const buildExamPrintHtml = (exam: ProblemExamVo | ExamItem, questions: ProblemMa
       height: 100%;
       border: 0;
     }
+    .sheet-politics-page {
+      page: answerSheet;
+      width: 297mm;
+      height: 210mm;
+      padding: 7mm 8mm;
+      color: #222;
+      font-family: "SimSun", "Songti SC", serif;
+      position: relative;
+      overflow: hidden;
+      --sheet-pink: #ff3aa0;
+    }
+    .sheet-politics-page::before,
+    .sheet-politics-page::after,
+    .sheet-politics-mark-left-bottom,
+    .sheet-politics-mark-right-bottom {
+      content: "";
+      position: absolute;
+      width: 4mm;
+      height: 2.4mm;
+      background: #222;
+    }
+    .sheet-politics-page::before {
+      left: 6mm;
+      top: 6mm;
+    }
+    .sheet-politics-page::after {
+      right: 6mm;
+      top: 6mm;
+    }
+    .sheet-politics-mark-left-bottom {
+      left: 6mm;
+      bottom: 6mm;
+    }
+    .sheet-politics-mark-right-bottom {
+      right: 6mm;
+      bottom: 6mm;
+    }
+    .sheet-politics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12mm;
+      height: 196mm;
+      position: relative;
+    }
+    .sheet-politics-grid::before {
+      content: "请  勿  折  叠";
+      position: absolute;
+      left: 50%;
+      top: 8mm;
+      bottom: 8mm;
+      transform: translateX(-50%);
+      width: 0;
+      border-left: 1px dashed var(--sheet-pink);
+      color: var(--sheet-pink);
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      letter-spacing: 8mm;
+      padding-left: 1.5mm;
+    }
+    .sheet-politics-side {
+      height: 100%;
+      position: relative;
+    }
+    .sheet-politics-info-side {
+      padding: 0 2mm 0 4mm;
+    }
+    .sheet-politics-info-compact {
+      display: flex;
+      flex-direction: column;
+      padding: 0 2mm 0 4mm;
+    }
+    .sheet-politics-info-compact .sheet-politics-top {
+      margin-bottom: 3mm;
+    }
+    .sheet-politics-info-answer {
+      flex: 1;
+      min-height: 0;
+    }
+    .sheet-politics-answer-side {
+      padding: 5mm 2mm 0 2mm;
+    }
+    .sheet-politics-header {
+      text-align: center;
+      margin: 0 0 3mm;
+      line-height: 1.3;
+    }
+    .sheet-politics-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .sheet-politics-subtitle {
+      color: var(--sheet-pink);
+      font-size: 12px;
+      font-weight: 700;
+      margin-top: 1mm;
+    }
+    .sheet-politics-top {
+      display: grid;
+      grid-template-columns: 68mm 1fr;
+      gap: 3mm;
+      margin-bottom: 2mm;
+    }
+    .sheet-politics-basic {
+      border: 1px solid var(--sheet-pink);
+      font-size: 11px;
+    }
+    .sheet-politics-basic-row {
+      display: grid;
+      grid-template-columns: 20mm 1fr;
+      min-height: 17mm;
+      border-bottom: 1px solid var(--sheet-pink);
+    }
+    .sheet-politics-basic-row:last-child {
+      border-bottom: 0;
+    }
+    .sheet-politics-basic-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid var(--sheet-pink);
+      font-weight: 700;
+    }
+    .sheet-politics-ticket {
+      border: 1px solid var(--sheet-pink);
+      padding: 1.5mm;
+      color: var(--sheet-pink);
+      font-size: 7px;
+    }
+    .sheet-politics-ticket .sheet-ticket-title {
+      color: #333;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 1mm;
+    }
+    .sheet-politics-notice {
+      border: 1px solid var(--sheet-pink);
+      font-size: 7.5px;
+      line-height: 1.35;
+      margin-bottom: 3mm;
+    }
+    .sheet-politics-notice-title {
+      color: var(--sheet-pink);
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 6mm;
+      border-bottom: 1px solid var(--sheet-pink);
+    }
+    .sheet-politics-notice-body {
+      padding: 2mm;
+    }
+    .sheet-politics-example {
+      display: grid;
+      grid-template-columns: 26mm 1fr;
+      border-top: 1px solid var(--sheet-pink);
+      color: var(--sheet-pink);
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .sheet-politics-example > div {
+      min-height: 6mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2mm;
+      border-right: 1px solid var(--sheet-pink);
+    }
+    .sheet-politics-example > div:last-child {
+      border-right: 0;
+    }
+    .sheet-politics-choice-card {
+      border: 1px solid var(--sheet-pink);
+      border-radius: 1.5mm;
+      overflow: hidden;
+    }
+    .sheet-politics-choice-section {
+      display: grid;
+      grid-template-columns: 9mm 7mm 1fr;
+      border-bottom: 1px solid var(--sheet-pink);
+    }
+    .sheet-politics-choice-section:last-child {
+      border-bottom: 0;
+    }
+    .sheet-politics-choice-label,
+    .sheet-politics-choice-type {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+      font-size: 10px;
+      font-weight: 700;
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      border-right: 1px solid var(--sheet-pink);
+    }
+    .sheet-politics-choice-rows {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 1.4mm 2mm;
+      padding: 3mm;
+    }
+    .sheet-politics-choice-row {
+      display: flex;
+      align-items: center;
+      gap: 0.7mm;
+      font-size: 7px;
+      white-space: nowrap;
+    }
+    .sheet-politics-choice-row strong {
+      width: 5mm;
+      color: #333;
+      font-size: 8px;
+    }
+    .sheet-politics-bubble {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 3.8mm;
+      height: 2.6mm;
+      border: 1px solid var(--sheet-pink);
+      color: var(--sheet-pink);
+      line-height: 1;
+    }
+    .sheet-politics-forbidden {
+      height: 48mm;
+      border: 1px solid var(--sheet-pink);
+      background: #ffd8e8;
+      color: var(--sheet-pink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-top: 3mm;
+    }
+    .sheet-politics-answer-box {
+      border: 1px solid var(--sheet-pink);
+      border-radius: 2mm;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    .sheet-politics-answer-box::before,
+    .sheet-politics-answer-box::after {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: var(--sheet-pink);
+      font-size: 9px;
+      line-height: 1;
+    }
+    .sheet-politics-answer-box::before {
+      content: "请在各题目的答题区域内作答，超出答题区域的答案无效";
+      top: 1.2mm;
+    }
+    .sheet-politics-answer-box::after {
+      content: "请在各题目的答题区域内作答，超出答题区域的答案无效";
+      bottom: 1.2mm;
+    }
+    .sheet-politics-answer-inner {
+      position: absolute;
+      inset: 5mm 1.2mm;
+      border: 1px solid #777;
+      padding: 4mm;
+      font-size: 12px;
+    }
+    .sheet-politics-answer-title {
+      position: absolute;
+      left: 7mm;
+      top: -6mm;
+      color: #222;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .sheet-politics-student-line {
+      font-size: 12px;
+      font-weight: 700;
+      margin: -2mm 0 2mm 6mm;
+    }
+    .sheet-politics-sticker-row {
+      display: flex;
+      justify-content: flex-end;
+      gap: 24mm;
+      margin: 1mm 10mm 2mm 0;
+    }
+    .sheet-politics-sticker {
+      width: 36mm;
+      height: 14mm;
+      border: 1px solid var(--sheet-pink);
+      border-radius: 2mm;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+    }
+    .sheet-politics-empty {
+      height: 100%;
+      border: 0;
+    }
     @media print {
       body {
         background: #fff;
@@ -1166,6 +1474,11 @@ const buildExamPrintHtml = (exam: ProblemExamVo | ExamItem, questions: ProblemMa
         width: 297mm;
         height: 210mm;
         padding: 8mm 10mm;
+      }
+      .sheet-politics-page {
+        width: 297mm;
+        height: 210mm;
+        padding: 7mm 8mm;
       }
       .paper-page:last-child {
         page-break-after: auto;
@@ -1228,6 +1541,10 @@ const buildCoverPage = (exam: ProblemExamVo | ExamItem) => {
 }
 
 const buildAnswerSheetPage = (exam: ProblemExamVo | ExamItem, questions: ProblemMath408BankVo[]) => {
+  if (isPoliticsExam(exam)) {
+    return buildPoliticsAnswerSheetPage(questions)
+  }
+
   if (is408Exam(exam)) {
     return build408AnswerSheetPage(questions)
   }
@@ -1374,6 +1691,217 @@ const render408AnswerBox = (question?: SheetQuestion) => {
       <span class="sheet-answer-no">${question.displayNo}.</span>
     </div>
   </div>`
+}
+
+const buildPoliticsAnswerSheetPage = (questions: ProblemMath408BankVo[]) => {
+  const sheetQuestions = questions.map((question, index) => ({
+    ...question,
+    displayNo: resolveQuestionNo(question, index),
+  }))
+  const choiceQuestions = resolvePoliticsChoiceQuestions(sheetQuestions)
+  const writtenQuestions = resolvePoliticsWrittenQuestions(sheetQuestions)
+  const extraWrittenPages = chunkQuestions(writtenQuestions.filter((question) => question.displayNo > 38), 2)
+
+  return [
+    `<section class="paper-page sheet-politics-page">
+      ${renderPoliticsPageMarks()}
+      <div class="sheet-politics-grid">
+        ${renderPoliticsInfoPanel(choiceQuestions)}
+        <div class="sheet-politics-side sheet-politics-answer-side">
+          ${renderPoliticsStickerRow()}
+          ${renderPoliticsAnswerBox(resolveSheetQuestionByNo(writtenQuestions, 34), '第三题 分析题')}
+        </div>
+      </div>
+    </section>`,
+    `<section class="paper-page sheet-politics-page">
+      ${renderPoliticsPageMarks()}
+      <div class="sheet-politics-grid">
+        <div class="sheet-politics-side sheet-politics-answer-side">
+          <div class="sheet-politics-student-line">考生姓名：____________________</div>
+          ${renderPoliticsAnswerBox(resolveSheetQuestionByNo(writtenQuestions, 35))}
+        </div>
+        <div class="sheet-politics-side sheet-politics-answer-side">
+          ${renderPoliticsAnswerBox(resolveSheetQuestionByNo(writtenQuestions, 36))}
+        </div>
+      </div>
+    </section>`,
+    `<section class="paper-page sheet-politics-page">
+      ${renderPoliticsPageMarks()}
+      <div class="sheet-politics-grid">
+        ${renderPoliticsCompactInfoPanel(resolveSheetQuestionByNo(writtenQuestions, 37))}
+        <div class="sheet-politics-side sheet-politics-answer-side">
+          ${renderPoliticsStickerRow()}
+          ${renderPoliticsAnswerBox(resolveSheetQuestionByNo(writtenQuestions, 38))}
+        </div>
+      </div>
+    </section>`,
+    ...extraWrittenPages.map((pageQuestions) => `<section class="paper-page sheet-politics-page">
+      ${renderPoliticsPageMarks()}
+      <div class="sheet-politics-grid">
+        ${pageQuestions.map((question) => `<div class="sheet-politics-side sheet-politics-answer-side">${renderPoliticsAnswerBox(question)}</div>`).join('')}
+        ${pageQuestions.length < 2 ? '<div class="sheet-politics-empty"></div>' : ''}
+      </div>
+    </section>`),
+  ].join('')
+}
+
+const renderPoliticsPageMarks = () => {
+  return `<span class="sheet-politics-mark-left-bottom"></span>
+    <span class="sheet-politics-mark-right-bottom"></span>`
+}
+
+const renderPoliticsInfoPanel = (choiceQuestions: SheetQuestion[]) => {
+  return `<aside class="sheet-politics-side sheet-politics-info-side">
+    <div class="sheet-politics-header">
+      <div class="sheet-politics-title">全国硕士研究生入学统一考试</div>
+      <div class="sheet-politics-subtitle">思想政治理论试题答题卡1</div>
+    </div>
+    <div class="sheet-politics-top">
+      ${renderPoliticsBasicInfo()}
+      <div class="sheet-politics-ticket">
+        <div class="sheet-ticket-title">准考证号（左对齐）</div>
+        ${renderAdmissionGrid()}
+      </div>
+    </div>
+    ${renderPoliticsNotice()}
+    ${renderPoliticsChoiceCard(choiceQuestions)}
+    <div class="sheet-politics-forbidden">阴影部分请勿作答或做任何标记</div>
+  </aside>`
+}
+
+const renderPoliticsCompactInfoPanel = (writtenQuestion?: SheetQuestion) => {
+  return `<aside class="sheet-politics-side sheet-politics-info-compact">
+    <div class="sheet-politics-header">
+      <div class="sheet-politics-title">全国硕士研究生统一考试答题卡</div>
+      <div class="sheet-politics-subtitle">思想政治理论试题答题卡2</div>
+    </div>
+    <div class="sheet-politics-top">
+      ${renderPoliticsBasicInfo()}
+      <div class="sheet-politics-ticket">
+        <div class="sheet-ticket-title">准考证号（左对齐）</div>
+        ${renderAdmissionGrid()}
+      </div>
+    </div>
+    <div class="sheet-politics-info-answer">
+      ${renderPoliticsAnswerBox(writtenQuestion)}
+    </div>
+  </aside>`
+}
+
+const renderPoliticsBasicInfo = () => {
+  return `<div class="sheet-politics-basic">
+    <div class="sheet-politics-basic-row">
+      <div class="sheet-politics-basic-label">报考单位</div>
+      <div></div>
+    </div>
+    <div class="sheet-politics-basic-row">
+      <div class="sheet-politics-basic-label">考生姓名</div>
+      <div></div>
+    </div>
+  </div>`
+}
+
+const renderPoliticsNotice = () => {
+  return `<div class="sheet-politics-notice">
+    <div class="sheet-politics-notice-title">注意事项</div>
+    <div class="sheet-politics-notice-body">
+      1、填（书）写部分须使用黑色字迹签字笔，笔迹工整，字迹清楚；选择题须用 2B 铅笔填涂。<br />
+      2、选择题答案必须用 2B 铅笔在答题卡相应题号内填涂，非选择题答案必须书写在各题卡指定位置的边框区域内。<br />
+      3、保持答题卡整洁，不要折叠、严禁在图像卡上做任何标记，否则按无效答卷处理。<br />
+      4、考生须填涂缺考标记并粘贴条形码。
+    </div>
+    <div class="sheet-politics-example">
+      <div>正确涂卡 <span class="sheet-politics-bubble">■</span></div>
+      <div>错误涂卡 <span class="sheet-politics-bubble">√</span><span class="sheet-politics-bubble">×</span><span class="sheet-politics-bubble">●</span><span class="sheet-politics-bubble">－</span></div>
+    </div>
+    <div class="sheet-politics-example">
+      <div>缺考标记 <span class="sheet-politics-bubble"></span></div>
+      <div>缺考考生由监考员粘贴条码，并用 2B 铅笔填涂缺考标记。</div>
+    </div>
+  </div>`
+}
+
+const renderPoliticsChoiceCard = (choiceQuestions: SheetQuestion[]) => {
+  const singleChoices = resolvePoliticsChoiceRange(choiceQuestions, 1, 16)
+  const multipleChoices = resolvePoliticsChoiceRange(choiceQuestions, 17, 33)
+
+  return `<div class="sheet-politics-choice-card">
+    <div class="sheet-politics-choice-section">
+      <div class="sheet-politics-choice-label">第一题</div>
+      <div class="sheet-politics-choice-type">单项选择题</div>
+      <div class="sheet-politics-choice-rows">
+        ${singleChoices.map(renderPoliticsChoiceRow).join('')}
+      </div>
+    </div>
+    <div class="sheet-politics-choice-section">
+      <div class="sheet-politics-choice-label">第二题</div>
+      <div class="sheet-politics-choice-type">多项选择题</div>
+      <div class="sheet-politics-choice-rows">
+        ${multipleChoices.map(renderPoliticsChoiceRow).join('')}
+      </div>
+    </div>
+  </div>`
+}
+
+const renderPoliticsChoiceRow = (question: SheetQuestion) => {
+  const optionCount = Math.max(parseOptions(question.options).length, 4)
+  const labels = ['A', 'B', 'C', 'D', 'E', 'F'].slice(0, optionCount)
+
+  return `<div class="sheet-politics-choice-row">
+    <strong>${question.displayNo}</strong>
+    ${labels.map((label) => `<span class="sheet-politics-bubble">${label}</span>`).join('')}
+  </div>`
+}
+
+const renderPoliticsStickerRow = () => {
+  return `<div class="sheet-politics-sticker-row">
+    <div class="sheet-politics-sticker">考生信息条形码粘贴位置</div>
+    <div class="sheet-politics-sticker">试卷条形码粘贴位置</div>
+  </div>`
+}
+
+const renderPoliticsAnswerBox = (question?: SheetQuestion, title?: string) => {
+  if (!question) return '<div class="sheet-politics-empty"></div>'
+
+  return `<div class="sheet-politics-answer-box">
+    ${title ? `<div class="sheet-politics-answer-title">${title}</div>` : ''}
+    <div class="sheet-politics-answer-inner">
+      <span class="sheet-answer-no">${question.displayNo}.</span>
+    </div>
+  </div>`
+}
+
+const resolvePoliticsChoiceQuestions = (questions: SheetQuestion[]) => {
+  const choiceQuestions = questions.filter((question) => {
+    const kind = resolveQuestionKind(question)
+    return (kind === 'choice' || question.displayNo <= 33) && question.displayNo <= 33
+  })
+
+  return choiceQuestions.length ? choiceQuestions : questions.slice(0, 33)
+}
+
+const resolvePoliticsWrittenQuestions = (questions: SheetQuestion[]) => {
+  const writtenQuestions = questions.filter((question) => question.displayNo >= 34)
+  if (writtenQuestions.length) return writtenQuestions
+
+  return questions.slice(33).map((question, index) => ({
+    ...question,
+    displayNo: 34 + index,
+  }))
+}
+
+const resolvePoliticsChoiceRange = (questions: SheetQuestion[], start: number, end: number) => {
+  return Array.from({ length: end - start + 1 }).map((_, index) => {
+    const displayNo = start + index
+    return resolveSheetQuestionByNo(questions, displayNo) || ({
+      displayNo,
+      options: '["A","B","C","D"]',
+    } as SheetQuestion)
+  })
+}
+
+const resolveSheetQuestionByNo = (questions: SheetQuestion[], displayNo: number) => {
+  return questions.find((question) => question.displayNo === displayNo)
 }
 
 const renderMathSheetLeftPanel = (
@@ -1651,6 +2179,11 @@ const isMathExam = (exam: ProblemExamVo | ExamItem) => {
 const is408Exam = (exam: ProblemExamVo | ExamItem) => {
   const examName = normalizeExamText(exam.exam_name)
   return examName.includes('408') || examName.includes('计算机')
+}
+
+const isPoliticsExam = (exam: ProblemExamVo | ExamItem) => {
+  const examName = normalizeExamText(exam.exam_name)
+  return examName.includes('政治') || examName.includes('思想政治')
 }
 
 const chunkQuestions = <T,>(items: T[], size: number) => {
