@@ -10,6 +10,7 @@ import UserStore from "@/store/user";
 import Pagination from "@/view/components/Pagination.vue";
 import TagSelector from "@/view/components/TagSelector.vue";
 import OtherTagSelector from "@/view/components/OtherTagSelector.vue";
+import { ClockIcon } from "@heroicons/vue/24/outline";
 
 const route = useRoute();
 const router = useRouter();
@@ -269,8 +270,14 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
 </script>
 <template>
   <div class="card-body mt-4 h-30 bg-base-100 shadow-xl rounded-box">
+    <div class="library-title-row">
+      <h1 class="font-bold text-center text-4xl">ByteOJ编程题库</h1>
+      <router-link to="/submissions" class="submission-records-link">
+        <ClockIcon aria-hidden="true" />
+        <span>全站提交记录</span>
+      </router-link>
+    </div>
     <div class="w-7/12 m-auto">
-      <div class="font-bold text-center text-4xl">ByteOJ编程题库</div>
       <div class="w-full my-4 flex">
         <input
           v-model="searchRequest.keyword"
@@ -490,6 +497,48 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
 </template>
 
 <style scoped>
+.library-title-row {
+  position: relative;
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.library-title-row h1 {
+  margin: 0;
+  letter-spacing: 0;
+}
+
+.submission-records-link {
+  position: absolute;
+  right: 0;
+  display: inline-flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color .15s ease, color .15s ease, background-color .15s ease;
+}
+
+.submission-records-link svg {
+  width: 19px;
+  height: 19px;
+}
+
+.submission-records-link:hover {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
 .svg-hover:hover {
   path {
     fill: rgba(2, 132, 199, 0.99);
@@ -498,5 +547,17 @@ const handleSourceSelectedTags = (sourceList: string[]) => {
 
 .problemBody tr:nth-child(odd) {
   background-color: #f9f9f9;
+}
+
+@media (max-width: 860px) {
+  .library-title-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .submission-records-link {
+    position: static;
+    align-self: flex-end;
+  }
 }
 </style>

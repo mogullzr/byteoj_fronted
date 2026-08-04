@@ -360,21 +360,13 @@ const goBack = () => {
         </div>
         <div class="flex my-6 font-bold text-lg">
           <div class="flex-1">评测状态</div>
-          <div
-              :class="
-              record.result === 'Accepted' ? 'text-lime-500' : 'text-error'
-            "
-          >
+          <div :class="record.result === 'Accepted' ? 'text-lime-500' : record.result === 'Pending' || record.result === 'Running' ? 'text-blue-600' : 'text-error'">
             {{ record.result }}
           </div>
         </div>
         <div class="flex my-6 font-bold text-lg">
           <div class="flex-1">评测分数</div>
-          <div
-              :class="
-              record.result === 'Accepted' ? 'text-lime-500' : 'text-error'
-            "
-          >
+          <div :class="record.result === 'Accepted' ? 'text-lime-500' : record.result === 'Pending' || record.result === 'Running' ? 'text-blue-600' : 'text-error'">
             {{ record == null ? "未知？？" : record.score }}
           </div>
         </div>

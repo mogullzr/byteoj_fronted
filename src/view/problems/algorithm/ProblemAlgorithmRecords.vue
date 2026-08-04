@@ -26,6 +26,13 @@ const PageSum = ref(1);
 const currentPage = ref(1);
 let TimeStamp = ref();
 
+const getResultClass = (result: string) => {
+  if (result === "Accepted") return "status-accepted";
+  if (result === "Pending") return "status-pending";
+  if (result === "Running") return "status-running";
+  return "status-error";
+};
+
 onMounted(async () => {
   if (problem_id.value === "problem") {
   }
@@ -192,17 +199,7 @@ const PageClick = async (Page: number) => {
         <tr v-for="record in problem_records" :key="record">
           <th>{{ record.submit_time }}{{ record.pattern }}</th>
 
-          <th class="text-green-500" v-if="record.result === 'Accepted'">
-            <a
-              class="link link-hover"
-              :href="
-                '/problems/' + problem_id + '/records/' + record.submission_id
-              "
-            >
-              {{ record.result }}
-            </a>
-          </th>
-          <th class="text-red-500" v-else>
+          <th :class="getResultClass(record.result)">
             <a
               class="link link-hover"
               :href="
@@ -276,4 +273,9 @@ const PageClick = async (Page: number) => {
 .problemBody tr:nth-child(odd) {
   background-color: #f9f9f9;
 }
+
+.status-accepted { color: #16a34a; }
+.status-pending { color: #b45309; }
+.status-running { color: #2563eb; }
+.status-error { color: #dc2626; }
 </style>

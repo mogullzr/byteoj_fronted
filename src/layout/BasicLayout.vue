@@ -27,6 +27,7 @@
         || (route.path.split('/')[1] == 'studyPath')
         || (route.path.split('/')[2] == 'blog')
         || (route.path.split('/')[1] == 'exam')
+        || (route.path.split('/')[1] == 'submissions')
           ? ''
           : ' pb-32')
       "

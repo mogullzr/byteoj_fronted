@@ -31,7 +31,7 @@ const filterParams = ref({
 // 表头选项
 const headerOptions = [
   { label: "题号", key: "idx", options: ["A", "B", "C"] },
-  { label: "运行结果", key: "results", options: ["答案正确", "答案错误", "运行超时", "内存超限", "输出超限", "未知错误"] },
+  { label: "运行结果", key: "results", options: ["等待队列", "答案正确", "答案错误", "编译错误", "运行超时", "内存超限", "输出超限", "运行错误", "未知错误"] },
   { label: "使用语言", key: "languages", options: ["C", "C++", "Python", "Java", "JavaScript", "Go"] },
   { label: "代码长度", key: "is_code_length", options: [{ value: 1, label: "从短到长" }, { value: 2, label: "从长到短" }] },
   { label: "提交时间", key: "is_submit_time", options: [{ value: 1, label: "从早到晚" }, { value: 2, label: "从晚到早" }] },
@@ -121,8 +121,8 @@ const fetchRecords = async (page: number) => {
     const res = await SearchControllerService.searchAllUsingPost(searchRequest.value);
     if (res.code === 0) {
       records.value = res.data.dataList;
-      pageSum.value = res.data.dataList[0].page_num;
-      idx_num.value = res.data.dataList[0]?.test_num;
+      pageSum.value = res.data.dataList[0]?.page_num || 1;
+      idx_num.value = res.data.dataList[0]?.test_num || 0;
       headerOptions[0].options = [];
       for (let item = 0; item < idx_num.value; item++) {
         headerOptions[0].options.push(String.fromCharCode('A'.charCodeAt(0) + item));
@@ -178,7 +178,11 @@ const selectOption = (key: string, value: any) => {
 // 获取结果对应的CSS类
 const getResultClass = (result: string) => {
   switch(result) {
+    case 'Pending': return 'pending';
+    case 'Running': return 'running';
     case 'Accepted': return 'accepted';
+    case 'Wrong Answer': return 'rejected';
+    case 'Compile Error': return 'compile-error';
     case 'Time Limit Exceeded': return 'timeout';
     case 'Memory Limit Exceeded': return 'memory-limit';
     case 'Output Limit Exceeded': return 'output-limit';
@@ -190,14 +194,27 @@ const getResultClass = (result: string) => {
 // 获取结果对应的中文描述
 const getResultText = (result: string) => {
   switch(result) {
+    case 'Pending': return '等待沙箱队列';
+    case 'Running': return '正在评测';
     case 'Accepted': return '答案正确';
+    case 'Wrong Answer': return '答案错误';
+    case 'Compile Error': return '编译错误';
     case 'Time Limit Exceeded': return '运行超时';
     case 'Memory Limit Exceeded': return '内存超限';
     case 'Output Limit Exceeded': return '输出超限';
-    case 'Runtime Error': return '未知错误';
-    default: return '答案错误';
+    case 'Runtime Error': return '运行错误';
+    case 'Segmentation Fault': return '段错误';
+    case 'Signalled': return '进程被终止';
+    case 'Internal Error': return '内部错误';
+    case 'BYTEOJ_SYSTEM_ERROR': return '系统错误';
+    case 'NOT_FOUND_ERROR': return '配置缺失';
+    case 'Failed': return '评测失败';
+    default: return result || '未知状态';
   }
 };
+
+const canViewRecord = (record: any) => Number(record.uuid) === Number(useStore.loginUser.uuid);
+const recordPath = (record: any) => `/competition/${competition_id.value}/records/${record.submission_id}`;
 </script>
 
 <template>
@@ -273,22 +290,23 @@ const getResultText = (result: string) => {
         </span>
 
           <span class="submission-id">
-          <router-link
-              :to="`/competition/${competition_id}/records/${record.submission_id}`"
-              class="record-link"
-          >
+          <router-link v-if="canViewRecord(record)" :to="recordPath(record)" class="record-link">
             #{{ record.submission_id }}
           </router-link>
+          <span v-else class="record-link locked-record" title="仅提交者本人可以查看详情">
+            #{{ record.submission_id }}
+          </span>
         </span>
         </div>
 
         <div class="card-content">
           <div class="result-status" :class="getResultClass(record.result)">
-            <router-link
-                :to="`/competition/${competition_id}/records/${record.submission_id}`"
-            >
+            <router-link v-if="canViewRecord(record)" :to="recordPath(record)">
               {{ getResultText(record.result) }}
             </router-link>
+            <span v-else class="locked-record" title="仅提交者本人可以查看详情">
+              {{ getResultText(record.result) }}
+            </span>
           </div>
 
           <div class="stats-grid">
@@ -624,6 +642,11 @@ const getResultText = (result: string) => {
   color: #3498db;
 }
 
+.locked-record {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
 .card-content {
   padding: 1rem;
 }
@@ -680,6 +703,33 @@ const getResultText = (result: string) => {
 
 .accepted .result-status a {
   color: #27ae60;
+}
+
+.pending {
+  border-left: 4px solid #d97706;
+}
+
+.pending .result-status,
+.pending .result-status a {
+  color: #b45309;
+}
+
+.running {
+  border-left: 4px solid #2563eb;
+}
+
+.running .result-status,
+.running .result-status a {
+  color: #1d4ed8;
+}
+
+.compile-error {
+  border-left: 4px solid #c2410c;
+}
+
+.compile-error .result-status,
+.compile-error .result-status a {
+  color: #c2410c;
 }
 
 .rejected {

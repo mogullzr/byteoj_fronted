@@ -313,6 +313,9 @@ onUnmounted(() => {
             <a @click.prevent="handleNavigation('/problems')" href="/problems">题库</a>
           </li>
           <li>
+            <a @click.prevent="handleNavigation('/submissions')" href="/submissions">提交记录</a>
+          </li>
+          <li>
             <a @click.prevent="handleNavigation('/study')" href="/study">学习</a>
           </li>
           <li>

@@ -10,11 +10,15 @@ export type SubmissionsAlgorithmRecordsVo = {
     language?: any;
     memory_used?: number;
     page_num?: number;
+    /** 仅 Pending 状态返回，范围为 0-9。 */
+    sandbox_index?: number;
     rated?: number;
     result?: any;
     score?: number;
     source_code?: string;
     submission_id?: number;
+    problem_id?: number;
+    competition_id?: number;
     submission_list?: Array<SubmissionAlgorithmDetailRecordVo>;
     submit_time?: string;
     test_num?: number;

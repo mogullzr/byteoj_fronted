@@ -11,6 +11,12 @@ export type JudgeTask = {
     status?: string;
     submitTime?: string;
     taskId?: string;
+    taskType?: string;
+    submissionId?: number;
+    sandboxIndex?: number;
     userUuid?: number;
+    fileId?: string;
+    time?: number;
+    memory?: number;
 };
 

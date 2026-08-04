@@ -3373,6 +3373,13 @@ export const UserStore = defineStore("user", {
       InternalError: "IE",
       ParamsError: "PE",
       Pending: "PD",
+      Running: "RUN",
+      Failed: "IE",
+      "Runtime Error": "RE",
+      "Segmentation Fault": "SE",
+      "Internal Error": "IE",
+      NOT_FOUND_ERROR: "IE",
+      BYTEOJ_SYSTEM_ERROR: "IE",
     },
     status_color_list: {
       AC: "#52c41a",
@@ -3384,6 +3391,9 @@ export const UserStore = defineStore("user", {
       MLE: "#2E468C",
       Sign: "#1E1F22",
       PD: "#BFBFBF",
+      RUN: "#2563EB",
+      RE: "#DC2626",
+      SE: "#DC2626",
       IE: "#AE00AA",
     },
     rated_color_list: [

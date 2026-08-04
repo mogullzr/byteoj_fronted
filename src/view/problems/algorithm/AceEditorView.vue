@@ -247,7 +247,7 @@
     >
       <div>代码运行状态：</div>
       <div class="text-2xl text-sky-600" v-if="isLoading">
-        <span class="">Running</span>
+        <span class="">{{ code_status || "Running" }}</span>
         <span class="loading loading-spinner ml-3"></span>
       </div>
       <span
@@ -301,13 +301,15 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onBeforeUpdate, onMounted, ref, Ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, onBeforeUpdate, onMounted, ref, Ref, watch } from "vue";
 import { debounce } from "lodash";
 import { VAceEditor } from "vue3-ace-editor";
 import "@/plugins/aceConfig.js";
 import UserStore from "@/store/user";
 import router from "@/router";
-import { ProblemAlgorithmControllerService } from "../../../../generated";
+import { OpenAPI, ProblemAlgorithmControllerService, type JudgeTask } from "../../../../generated";
+import { Client, type StompSubscription } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 import ace from "ace-builds";
 import ChatBoxView from "@/view/AI/ChatBoxView.vue";
 import DraggableWindowView from "@/components/Card/DraggableWindowView.vue";
@@ -390,6 +392,213 @@ const code_time = ref(0);
 const isLoading: Ref<boolean | undefined> = ref(undefined);
 const isShow_1: Ref<Boolean> = ref(false);
 const isShow_2: Ref<Boolean> = ref(false);
+
+type JudgeTaskHandler = (result: JudgeTask) => void;
+let judgeSocket: Client | null = null;
+let judgeSocketConnected = false;
+let judgeSocketConnecting: Promise<void> | null = null;
+let resolveJudgeSocketConnection: (() => void) | null = null;
+let rejectJudgeSocketConnection: ((reason?: any) => void) | null = null;
+const judgeTaskHandlers = new Map<string, JudgeTaskHandler>();
+const judgeSubscriptions = new Map<string, StompSubscription>();
+const judgePollingTimers = new Map<string, ReturnType<typeof setInterval>>();
+const judgePollingBusy = new Set<string>();
+
+const getJudgeSocketEndpoint = () => {
+  const base = process.env.NODE_ENV === "production"
+      ? window.location.origin
+      : (OpenAPI.BASE || window.location.origin);
+  const url = new URL(base, window.location.origin);
+  const rootPath = url.pathname.replace(/\/$/, "").replace(/\/api$/, "");
+  return url.origin + rootPath + "/api/ws/judge";
+};
+
+const subscribeTaskNow = (taskId: string) => {
+  if (!judgeSocketConnected || !judgeSocket || judgeSubscriptions.has(taskId)) return;
+  const subscription = judgeSocket.subscribe("/topic/judge/" + taskId, (message) => {
+    try {
+      const result = JSON.parse(message.body) as JudgeTask;
+      judgeTaskHandlers.get(taskId)?.(result);
+    } catch (error) {
+      console.error("[判题 WebSocket] 无法解析消息", error);
+    }
+  });
+  judgeSubscriptions.set(taskId, subscription);
+};
+
+const connectJudgeSocket = async () => {
+  if (judgeSocketConnected && judgeSocket) return;
+  if (judgeSocketConnecting) return judgeSocketConnecting;
+
+  judgeSocketConnecting = new Promise<void>((resolve, reject) => {
+    resolveJudgeSocketConnection = resolve;
+    rejectJudgeSocketConnection = reject;
+  });
+  const connection = judgeSocketConnecting;
+
+  // STOMP 自带重连时沿用同一个 Client，等待它下一次 onConnect 即可。
+  if (judgeSocket?.active) return connection;
+
+  let hasConnected = false;
+  const client = new Client({
+    webSocketFactory: () => new SockJS(getJudgeSocketEndpoint()),
+    reconnectDelay: 2000,
+    heartbeatIncoming: 10000,
+    heartbeatOutgoing: 10000,
+    connectionTimeout: 10000,
+    onConnect: () => {
+      if (judgeSocket !== client) return;
+      hasConnected = true;
+      judgeSocketConnected = true;
+      const resolve = resolveJudgeSocketConnection;
+      judgeSocketConnecting = null;
+      resolveJudgeSocketConnection = null;
+      rejectJudgeSocketConnection = null;
+      judgeSubscriptions.clear();
+      judgeTaskHandlers.forEach((_handler, taskId) => subscribeTaskNow(taskId));
+      resolve?.();
+    },
+    onStompError: (frame) => {
+      if (judgeSocket !== client) return;
+      judgeSocketConnected = false;
+      const reject = rejectJudgeSocketConnection;
+      judgeSocketConnecting = null;
+      resolveJudgeSocketConnection = null;
+      rejectJudgeSocketConnection = null;
+      reject?.(new Error(frame.headers.message || "判题 WebSocket 连接失败"));
+    },
+    onWebSocketClose: () => {
+      if (judgeSocket !== client) return;
+      judgeSocketConnected = false;
+      judgeSubscriptions.clear();
+      if (!hasConnected) {
+        const reject = rejectJudgeSocketConnection;
+        judgeSocketConnecting = null;
+        resolveJudgeSocketConnection = null;
+        rejectJudgeSocketConnection = null;
+        judgeSocket = null;
+        reject?.(new Error("判题 WebSocket 连接已关闭"));
+        void client.deactivate();
+      }
+    },
+    onWebSocketError: () => {
+      if (judgeSocket !== client) return;
+      judgeSocketConnected = false;
+      if (!hasConnected) {
+        const reject = rejectJudgeSocketConnection;
+        judgeSocketConnecting = null;
+        resolveJudgeSocketConnection = null;
+        rejectJudgeSocketConnection = null;
+        reject?.(new Error("判题 WebSocket 连接失败"));
+      }
+    },
+  });
+  judgeSocket = client;
+  client.activate();
+  return connection;
+};
+
+const unsubscribeJudgeTask = (taskId: string) => {
+  judgeSubscriptions.get(taskId)?.unsubscribe();
+  judgeSubscriptions.delete(taskId);
+  const pollingTimer = judgePollingTimers.get(taskId);
+  if (pollingTimer) clearInterval(pollingTimer);
+  judgePollingTimers.delete(taskId);
+  judgePollingBusy.delete(taskId);
+  judgeTaskHandlers.delete(taskId);
+};
+
+const refreshJudgeTask = async (taskId: string) => {
+  if (!judgeTaskHandlers.has(taskId) || judgePollingBusy.has(taskId)) return;
+  judgePollingBusy.add(taskId);
+  try {
+    const latest = await ProblemAlgorithmControllerService.getJudgeResultUsingGet(taskId);
+    if (latest.code === 0 && latest.data && judgeTaskHandlers.has(taskId)) {
+      judgeTaskHandlers.get(taskId)?.(latest.data);
+    }
+  } catch (error) {
+    console.warn("[判题状态补查] 暂未获取到任务状态", error);
+  } finally {
+    judgePollingBusy.delete(taskId);
+  }
+};
+
+const subscribeJudgeTask = async (taskId: string, handler: JudgeTaskHandler) => {
+  judgeTaskHandlers.set(taskId, handler);
+  void connectJudgeSocket()
+      .then(() => subscribeTaskNow(taskId))
+      .catch((error) => console.warn("[判题 WebSocket] 将使用状态补查兜底", error));
+
+  // WebSocket 断线、反向代理配置错误或多实例跨节点时，Redis 轮询仍能取回最终结果。
+  void refreshJudgeTask(taskId);
+  judgePollingTimers.set(taskId, setInterval(() => void refreshJudgeTask(taskId), 2000));
+};
+
+const currentJudgeLanguage = () => {
+  if (current_language.value === "C/C++") return "cpp";
+  if (current_language.value === "C") return "c";
+  if (current_language.value === "Python3") return "python";
+  if (current_language.value === "Java") return "java";
+  if (current_language.value === "Go") return "go";
+  if (current_language.value === "JavaScript") return "javascript";
+  return "cpp";
+};
+
+const createJudgeRequest = (debug: boolean) => {
+  const competitionId = Number(path.toString().split("/")[2]);
+  const problemIndex = path.toString().split("/")[4] ?? "";
+  const request: any = {
+    language: currentJudgeLanguage(),
+    source_code: content.value,
+  };
+  if (problemIndex) {
+    request.competition_id = competitionId;
+    request.index = problemIndex;
+  } else {
+    request.problem_id = Number(problem_id.value);
+  }
+  if (debug) request.input_list = [input.value];
+  return request;
+};
+
+const finishAsyncJudge = (taskId: string | undefined, status?: string, message?: string) => {
+  if (status) code_status.value = status;
+  if (message) code_message.value = message;
+  isLoading.value = false;
+  isShow_1.value = false;
+  isShow_2.value = false;
+  if (taskId) unsubscribeJudgeTask(taskId);
+  void modify();
+};
+
+const handleAsyncJudgeResult = (taskId: string, result: JudgeTask) => {
+  const status = result.status || "Failed";
+  code_status.value = status;
+  if (status === "Pending") {
+    code_message.value = result.message || "等待沙箱队列";
+    return;
+  }
+  if (status === "Running" || status === "Retrying") {
+    code_message.value = result.message || "沙箱执行中";
+    return;
+  }
+
+  code_time.value = result.time || 0;
+  if (status === "Wrong Answer") {
+    input.value = result.input || "";
+    code_message.value = result.output || result.message || "";
+    correctOutput.value = result.correctOutput || "";
+  } else if (status === "Nonzero Exit Status" || status === "Compile Error") {
+    code_message.value = result.fileId || result.output || result.message || "";
+  } else {
+    code_message.value = result.output || result.message || "";
+  }
+  if (status === "Accepted") {
+    audioClick.value.volume = 1;
+    void audioClick.value?.play();
+  }
+  finishAsyncJudge(taskId);
+};
 
 // Define operation types for recording (following Byteoj format)
 const OperationType = {
@@ -836,147 +1045,41 @@ const modify = async () => {
 };
 
 const judgeTest = async () => {
-  let competition_id = ref(parseInt(path.toString().split("/")[2]));
-  let problem_index = path.toString().split("/")[4] ?? "";
-
   isShow_1.value = true;
   isShow_2.value = true;
-
   code_message.value = "";
   code_time.value = 0;
-
-  let temp_language = "";
-  if (current_language.value == "C/C++") {
-    temp_language = "cpp";
-  } else if (current_language.value == "Python3") {
-    temp_language = "python";
-  } else if (current_language.value == "Java") {
-    temp_language = "java";
-  }
+  correctOutput.value = undefined;
+  code_status.value = "Pending";
   isLoading.value = true;
-  if (problem_index == "") {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
-          problem_id: problem_id.value,
-          language: temp_language,
-          source_code: content.value,
-          input_list: [input.value],
-        });
-
-    if (res.code === 0) {
-      code_status.value = res.data[0].status;
-      code_time.value = res.data[0].time;
-      if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data[0].fileId;
-      } else {
-        code_message.value = res.data[0].output;
-      }
-      isLoading.value = false;
-
-      isShow_1.value = false;
-      isShow_2.value = false;
-    }
-  } else {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost({
-          index: problem_index,
-          competition_id: competition_id.value,
-          language: temp_language,
-          source_code: content.value,
-          input_list: [input.value],
-        });
-
-    if (res.code === 0) {
-      code_status.value = res.data[0].status;
-      code_time.value = res.data[0].time;
-      if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data[0].fileId;
-      } else {
-        code_message.value = res.data[0].output;
-      }
-      isLoading.value = false;
-
-      isShow_1.value = false;
-      isShow_2.value = false;
-    }
+  code_message.value = "等待沙箱队列";
+  try {
+    const request = createJudgeRequest(true);
+    const res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeUsingPost(request);
+    if (res.code !== 0 || !res.data?.taskId) throw new Error(res.message || "创建调试任务失败");
+    await subscribeJudgeTask(res.data.taskId, (result) => handleAsyncJudgeResult(res.data.taskId!, result));
+  } catch (error: any) {
+    finishAsyncJudge(undefined, "Failed", error?.message || "创建调试任务失败");
   }
 };
 
 const submitJudge = async () => {
-  let competition_id = ref(parseInt(path.toString().split("/")[2]));
-  let problem_index = path.toString().split("/")[4] ?? "";
-
   isShow_1.value = true;
   isShow_2.value = true;
-
   input.value = "";
   code_message.value = "";
   code_time.value = 0;
-
-  let temp_language = "";
-  if (current_language.value == "C/C++") {
-    temp_language = "cpp";
-  }else if (current_language.value == "Python3") {
-    temp_language = "python";
-  } else if (current_language.value == "Java") {
-    temp_language = "java";
-  }
+  correctOutput.value = undefined;
+  code_status.value = "Pending";
   isLoading.value = true;
-  if (problem_index == "") {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-            {
-              problem_id: problem_id.value,
-              language: temp_language,
-              source_code: content.value,
-            }
-        );
-    if (res.code === 0) {
-      code_status.value = res.data.status;
-      if (code_status.value == "Wrong Answer") {
-        input.value = res.data.input;
-        code_message.value = res.data.output;
-        correctOutput.value = res.data.correctOutput;
-      } else if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data.fileId;
-      } else if (code_status.value == "Accepted") {
-        audioClick.value.volume = 1;
-        audioClick.value?.play();
-      }
-      isLoading.value = false;
-      await modify();
-
-      isShow_1.value = false;
-      isShow_2.value = false;
-    }
-  } else {
-    const res =
-        await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(
-            {
-              competition_id: competition_id.value,
-              index: problem_index,
-              language: temp_language,
-              source_code: content.value,
-            }
-        );
-    if (res.code === 0) {
-      code_status.value = res.data.status;
-      if (code_status.value == "Wrong Answer") {
-        input.value = res.data.input;
-        code_message.value = res.data.output;
-        correctOutput.value = res.data.correctOutput;
-      } else if (code_status.value == "Nonzero Exit Status") {
-        code_message.value = res.data.fileId;
-      } else if (code_status.value == "Accepted") {
-        audioClick.value.volume = 1;
-        audioClick.value?.play();
-      }
-      isLoading.value = false;
-      await modify();
-
-      isShow_1.value = false;
-      isShow_2.value = false;
-    }
+  code_message.value = "等待沙箱队列";
+  try {
+    const request = createJudgeRequest(false);
+    const res = await ProblemAlgorithmControllerService.problemAlgorithmJudgeSubmitUsingPost(request);
+    if (res.code !== 0 || !res.data?.taskId) throw new Error(res.message || "创建提交任务失败");
+    await subscribeJudgeTask(res.data.taskId, (result) => handleAsyncJudgeResult(res.data.taskId!, result));
+  } catch (error: any) {
+    finishAsyncJudge(undefined, "Failed", error?.message || "创建提交任务失败");
   }
 };
 
@@ -1142,6 +1245,23 @@ onMounted(() => {
   if (textarea3) {
     adjustHeight(textarea3);
     textarea3.addEventListener("keydown", preventInput);
+  }
+});
+
+onBeforeUnmount(() => {
+  judgeSubscriptions.forEach((subscription) => subscription.unsubscribe());
+  judgeSubscriptions.clear();
+  judgeTaskHandlers.clear();
+  judgePollingTimers.forEach((timer) => clearInterval(timer));
+  judgePollingTimers.clear();
+  judgePollingBusy.clear();
+  if (judgeSocket) {
+    void judgeSocket.deactivate();
+    judgeSocket = null;
+    judgeSocketConnected = false;
+    judgeSocketConnecting = null;
+    resolveJudgeSocketConnection = null;
+    rejectJudgeSocketConnection = null;
   }
 });
 

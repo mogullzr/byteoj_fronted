@@ -389,6 +389,15 @@ const routes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/submissions",
+    name: "全站提交记录",
+    meta: {
+      access: "1",
+      title: "全站提交记录 - ByteOJ",
+    },
+    component: () => import("@/view/problems/SubmissionRecordsvView.vue"),
+  },
+  {
     path: "/markdown",
     name: "markdown",
     component: () => import("@/view/problems/algorithm/AceEditorView.vue"),

@@ -338,13 +338,13 @@ export class ProblemAlgorithmControllerService {
   /**
    * problemAlgorithmJudge
    * @param judgeRequest judgeRequest
-   * @returns BaseResponse_List_Judge_ OK
+   * @returns BaseResponse_JudgeTask_ OK
    * @returns any Created
    * @throws ApiError
    */
   public static problemAlgorithmJudgeUsingPost(
       judgeRequest: JudgeRequest,
-  ): CancelablePromise<BaseResponse_List_Judge_ | any> {
+  ): CancelablePromise<BaseResponse_JudgeTask_ | any> {
     return __request(OpenAPI, {
       method: 'POST',
       url: '/api/problem/algorithm/judge/test',
@@ -489,6 +489,32 @@ export class ProblemAlgorithmControllerService {
         401: `Unauthorized`,
         403: `Forbidden`,
         404: `Not Found`,
+      },
+    });
+  }
+  /**
+   * problemAlgorithmRecordsGlobalByPage
+   * @param pageNum pageNum
+   * @param pageSize pageSize
+   * @param result result
+   * @returns BaseResponse_List_SubmissionsAlgorithmRecordsVo_ OK
+   */
+  public static problemAlgorithmRecordsGlobalByPageUsingPost(
+      pageNum: number = 1,
+      pageSize: number = 20,
+      result?: string,
+  ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
+    return __request(OpenAPI, {
+      method: 'POST',
+      url: '/api/problem/algorithm/records/global',
+      query: {
+        'pageNum': pageNum,
+        'pageSize': pageSize,
+        'result': result,
+      },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
       },
     });
   }
