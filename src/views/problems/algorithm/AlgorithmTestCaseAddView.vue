@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus';
+import { ElMessage, ElNotification } from 'element-plus';
 import { Delete, DocumentChecked, MagicStick, Plus, QuestionFilled, VideoPlay } from '@element-plus/icons-vue';
 import {
   AlgorithmTestGenerationControllerService,
@@ -27,12 +27,19 @@ const testCases = ref<ProblemAlgorithmTestCaseRequest[]>([]);
 const runCode = ref('');
 
 const models = [
-  { label: 'ChatGPT 5.4', value: 'gpt-5.4', hint: '通用推理，优先推荐' },
+  { label: 'ChatGPT 5.6-sol-pro', value: 'gpt-5.6-sol', hint: '通用推理，优先推荐' },
   { label: 'DeepSeek Chat', value: 'deepseek-chat', hint: '速度快，适合常规规模' },
   { label: 'DeepSeek V4 Flash', value: 'deepseek-ai/DeepSeek-V4-Flash', hint: '大规模生成' },
   { label: 'DeepSeek R1', value: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', hint: '复杂约束推理' },
 ];
 const scaleOptions = ['SMALL', 'MEDIUM', 'LARGE', 'EXTREME', 'CUSTOM'] as const;
+const scaleHints: Record<string, string> = {
+  SMALL: '合法边界与小数据',
+  MEDIUM: '中等规模与典型情况',
+  LARGE: '主要参数接近上限',
+  EXTREME: '尽量贴近上限，压测性能',
+  CUSTOM: '按自定义约束生成',
+};
 const generation = ref({
   model: models[0].value,
   writeMode: 'APPEND' as 'APPEND' | 'REPLACE',
@@ -55,6 +62,13 @@ const debugScale = ref({ scale: 'SMALL', code: '', seed: 1, startIndex: 0, count
 let pollTimer: ReturnType<typeof window.setInterval> | undefined;
 
 const isRunning = computed(() => !!job.value && !['SUCCEEDED', 'FAILED', 'CANCELLED'].includes(job.value.status ?? ''));
+const outputPreviewText = (row: GeneratedCasePreviewVO) => {
+  // outputSha256 在后端对真正的空字符串也会生成哈希，用它区分“空输出”和“尚未生成”。
+  if (row.outputSha256) return row.outputPreview || '（空输出）';
+  if (isRunning.value && job.value?.generateExpectedOutput) return '生成中...';
+  if (job.value?.generateExpectedOutput) return '未生成（任务失败或输出生成未完成）';
+  return '未启用标准输出';
+};
 const loadManualCases = async () => {
   const res = await ProblemAlgorithmControllerService.problemAlgorithmTestCaseGetUsingPost(problemId.value);
   testCases.value = res.data?.length ? res.data : [{ input: '', output: '', runCode: '' }];
@@ -63,6 +77,12 @@ const loadManualCases = async () => {
 const loadReferences = async () => {
   const res = await AlgorithmTestGenerationControllerService.listReferenceSolutions(problemId.value);
   references.value = res.data ?? [];
+  const verified = references.value.find((item) => item.status === 'VERIFIED' && item.id);
+  if (verified?.id && !generation.value.referenceSolutionId) {
+    generation.value.generateExpectedOutput = true;
+    generation.value.confirmEmptyOutput = false;
+    generation.value.referenceSolutionId = verified.id;
+  }
 };
 const loadJob = async (jobId: number) => {
   const res = await AlgorithmTestGenerationControllerService.getJob(jobId);
@@ -91,7 +111,7 @@ const createJob = async () => {
   if (!generation.value.scales.every((item) => item.constraints.trim() && item.count > 0)) return ElMessage.warning('请完整填写每种规模的数量和约束');
   if (generation.value.generateExpectedOutput && !generation.value.referenceSolutionId) return ElMessage.warning('生成标准输出前请选择已验证参考解');
   if (!generation.value.generateExpectedOutput && !generation.value.confirmEmptyOutput) {
-    await ElMessageBox.confirm('当前未生成标准输出。只有配置 checker 的题目适合此模式，确定继续吗？', '二次确认', { type: 'warning' });
+    return ElMessage.warning('请开启“生成标准输出”并选择已验证参考解；只有 checker 题才适合空输出');
   }
   const body: CreateTestGenerationJobRequest = { problemId: problemId.value, ...generation.value };
   loading.value = true;
@@ -126,11 +146,43 @@ const debugGenerator = async () => {
 };
 const saveReference = async () => {
   referenceForm.value.problemId = problemId.value;
-  const res = await AlgorithmTestGenerationControllerService.saveReferenceSolution(referenceForm.value);
-  if (res.code !== 0) return ElMessage.error(res.message || '保存失败');
-  ElMessage.success('参考解已保存为草稿'); await loadReferences();
+  try {
+    const res = await AlgorithmTestGenerationControllerService.saveReferenceSolution(referenceForm.value);
+    if (res.code !== 0) return ElMessage.error(res.message || '保存失败');
+    if (!res.data?.id) throw new Error('保存成功但未返回参考解 ID');
+    ElMessage.success('参考解已保存为草稿，请点击“保存并验证”或列表中的“验证”');
+    await loadReferences();
+  } catch (error: any) {
+    ElMessage.error(error?.body?.message || error?.message || '保存失败');
+  }
 };
-const validateReference = async (id?: number) => { if (!id) return; const res = await AlgorithmTestGenerationControllerService.validateReferenceSolution(id); if (res.code === 0) { ElMessage.success('参考解验证通过'); await loadReferences(); } else ElMessage.error(res.message || '验证失败'); };
+const validateReference = async (id?: number) => {
+  if (!id) return;
+  try {
+    const res = await AlgorithmTestGenerationControllerService.validateReferenceSolution(id);
+    if (res.code !== 0) throw new Error(res.message || '验证失败');
+    generation.value.generateExpectedOutput = true;
+    generation.value.confirmEmptyOutput = false;
+    generation.value.referenceSolutionId = id;
+    activeTab.value = 'generate';
+    ElNotification.success({ title: '参考解验证通过', message: '已自动开启标准输出生成并选中该参考解' });
+    await loadReferences();
+  } catch (error: any) {
+    ElMessage.error(error?.body?.message || error?.message || '验证失败');
+  }
+};
+const saveAndValidateReference = async () => {
+  referenceForm.value.problemId = problemId.value;
+  if (!referenceForm.value.sourceCode?.trim()) return ElMessage.warning('请先填写正确代码');
+  try {
+    const saved = await AlgorithmTestGenerationControllerService.saveReferenceSolution(referenceForm.value);
+    if (saved.code !== 0 || !saved.data?.id) throw new Error(saved.message || '保存失败');
+    await loadReferences();
+    await validateReference(saved.data.id);
+  } catch (error: any) {
+    ElMessage.error(error?.body?.message || error?.message || '保存并验证失败');
+  }
+};
 const debugReference = async () => {
   const inputs = referenceInputs.value.split(/\n---\n/).map((item) => item.trim()).filter(Boolean);
   if (!inputs.length) return ElMessage.warning('请按“---”分隔输入样例');
@@ -163,15 +215,15 @@ onBeforeUnmount(stopPolling);
         <el-tab-pane name="generate">
           <template #label><span class="tab-label"><el-icon><MagicStick /></el-icon>AI 批量生成</span></template>
           <div class="tool-heading"><div><h2>AI 测试数据生成</h2><p>每种规模生成一份 Python 程序，经过沙箱验证后分批生成样例。</p></div><el-tag type="warning" effect="plain">异步任务</el-tag></div>
-          <el-alert type="info" :closable="false" show-icon title="建议先在“参考解管理”中验证可信程序；默认不生成标准输出，适用于 checker 题。" />
+          <el-alert type="info" :closable="false" show-icon title="普通输出题请先验证参考解，再开启“生成标准输出”；只有 checker 题才适合空输出。" />
           <el-form label-width="150px" class="form generation-form">
             <el-form-item label="AI 模型"><el-select v-model="generation.model" style="width: 360px"><el-option v-for="item in models" :key="item.value" :label="item.label" :value="item.value"><template #default><div class="model-option"><span>{{ item.label }}</span><small>{{ item.hint }}</small></div></template></el-option></el-select></el-form-item>
             <el-form-item label="写入方式"><el-radio-group v-model="generation.writeMode"><el-radio-button label="APPEND">追加去重</el-radio-button><el-radio-button label="REPLACE">全部替换</el-radio-button></el-radio-group></el-form-item>
-            <el-form-item label="生成标准输出"><el-switch v-model="generation.generateExpectedOutput" active-text="使用已验证参考解" inactive-text="不生成" /><el-checkbox v-if="!generation.generateExpectedOutput" v-model="generation.confirmEmptyOutput" style="margin-left: 20px">我确认本题有 checker 或接受空输出</el-checkbox></el-form-item>
+            <el-form-item label="生成标准输出"><el-switch v-model="generation.generateExpectedOutput" active-text="使用已验证参考解" inactive-text="不生成" /><el-checkbox v-if="!generation.generateExpectedOutput && runCode.trim()" v-model="generation.confirmEmptyOutput" style="margin-left: 20px">本题使用 checker，允许空输出</el-checkbox></el-form-item>
           </el-form>
           <div class="section-title"><span>数据规模</span><el-button size="small" @click="addScale">添加规模</el-button></div>
           <el-table :data="generation.scales" border class="scale-table">
-            <el-table-column label="规模" width="150"><template #default="{ row }"><el-select v-model="row.scale"><el-option v-for="item in scaleOptions" :key="item" :label="item" :value="item" /></el-select></template></el-table-column>
+            <el-table-column label="规模" width="190"><template #default="{ row }"><el-select v-model="row.scale"><el-option v-for="item in scaleOptions" :key="item" :label="item + '（' + scaleHints[item] + '）'" :value="item" /></el-select></template></el-table-column>
             <el-table-column label="数量" width="120"><template #default="{ row }"><el-input-number v-model="row.count" :min="1" :max="1000" /></template></el-table-column>
             <el-table-column label="随机种子" width="150"><template #default="{ row }"><el-input-number v-model="row.seed" :controls="false" placeholder="自动生成" /></template></el-table-column>
             <el-table-column label="约束与覆盖范围"><template #default="{ row }"><el-input v-model="row.constraints" placeholder="例如 n 接近上限，包含边界和重复值" /></template></el-table-column>
@@ -180,12 +232,12 @@ onBeforeUnmount(stopPolling);
           <div class="reference-select" v-if="generation.generateExpectedOutput"><span>参考解：</span><el-select v-model="generation.referenceSolutionId" placeholder="请选择 VERIFIED 参考解" style="width: 360px"><el-option v-for="item in references.filter((item) => item.status === 'VERIFIED')" :key="item.id" :label="`${item.language} #${item.id}（${item.validatedCaseCount ?? 0} 条已验证）`" :value="item.id" /></el-select></div>
           <div class="actions"><el-button type="primary" :loading="loading" :disabled="isRunning" @click="createJob">创建生成任务</el-button></div>
 
-          <el-card v-if="job" class="job-card" shadow="never"><template #header><div class="job-header"><span>任务 #{{ job.jobId }} · {{ job.status }}</span><span><el-button v-if="isRunning" size="small" type="warning" @click="cancelJob">取消</el-button><el-button v-if="['FAILED','CANCELLED'].includes(job.status ?? '')" size="small" @click="retryJob">重试</el-button></span></div></template><el-progress :percentage="job.progressPercent ?? 0" /><p class="stage">{{ job.currentStage }}</p><el-alert v-if="job.errorMessage" type="error" :closable="false" :title="job.errorMessage" /><el-table v-if="previews.length" :data="previews" border size="small" class="preview-table"><el-table-column prop="index" label="序号" width="70" /><el-table-column prop="scale" label="规模" width="100" /><el-table-column label="输入预览"><template #default="{ row }"><pre>{{ row.inputPreview }}</pre></template></el-table-column><el-table-column label="输出预览"><template #default="{ row }"><pre>{{ row.outputPreview || '未生成' }}</pre></template></el-table-column></el-table></el-card>
+          <el-card v-if="job" class="job-card" shadow="never"><template #header><div class="job-header"><span>任务 #{{ job.jobId }} · {{ job.status }}</span><span><el-button v-if="isRunning" size="small" type="warning" @click="cancelJob">取消</el-button><el-button v-if="['FAILED','CANCELLED'].includes(job.status ?? '')" size="small" @click="retryJob">重试</el-button></span></div></template><el-progress :percentage="job.progressPercent ?? 0" /><p class="stage">{{ job.currentStage }}</p><el-alert v-if="job.errorMessage" type="error" :closable="false" :title="job.errorMessage" /><el-table v-if="previews.length" :data="previews" border size="small" class="preview-table"><el-table-column prop="index" label="序号" width="70" /><el-table-column prop="scale" label="规模" width="100" /><el-table-column label="输入预览"><template #default="{ row }"><pre>{{ row.inputPreview }}</pre></template></el-table-column><el-table-column label="输出预览"><template #default="{ row }"><pre>{{ outputPreviewText(row) }}</pre></template></el-table-column></el-table></el-card>
         </el-tab-pane>
 
         <el-tab-pane name="debug"><template #label><span class="tab-label"><el-icon><VideoPlay /></el-icon>生成器调试</span></template><div class="tool-heading"><div><h2>生成器调试</h2><p>先用少量数据检查协议和输出，再运行正式批量任务。</p></div></div><el-alert type="warning" :closable="false" title="生成器必须是 Python 3，stdin 读取 {seed,startIndex,count}，stdout 每行输出 {input: string} JSONL。" /><el-form label-width="120px" class="form"><el-form-item label="规模"><el-select v-model="debugScale.scale" style="width: 180px"><el-option v-for="item in scaleOptions" :key="item" :label="item" :value="item" /></el-select></el-form-item><el-form-item label="数量"><el-input-number v-model="debugScale.count" :min="1" :max="10" /></el-form-item><el-form-item label="生成器代码"><el-input v-model="debugScale.code" type="textarea" :rows="16" placeholder="粘贴 Python 生成器代码" /></el-form-item></el-form><el-button type="primary" @click="debugGenerator"><el-icon><VideoPlay /></el-icon>沙箱调试</el-button><el-table v-if="generatorDebug?.cases?.length" :data="generatorDebug.cases" border class="debug-table"><el-table-column prop="index" label="序号" width="80" /><el-table-column label="输入预览"><template #default="{ row }"><pre>{{ row.inputPreview }}</pre></template></el-table-column></el-table></el-tab-pane>
 
-        <el-tab-pane name="reference"><template #label><span class="tab-label"><el-icon><DocumentChecked /></el-icon>参考解管理</span></template><div class="tool-heading"><div><h2>参考解管理</h2><p>只有通过现有样例验证的程序，才能用于生成标准输出。</p></div></div><el-alert type="info" :closable="false" title="只有通过现有测试样例验证的参考解才会显示为 VERIFIED，并可用于批量生成标准输出。" /><el-form label-width="120px" class="form"><el-form-item label="语言"><el-select v-model="referenceForm.language" style="width: 180px"><el-option label="C++" value="cpp" /><el-option label="Python" value="python" /></el-select></el-form-item><el-form-item label="参考解代码"><el-input v-model="referenceForm.sourceCode" type="textarea" :rows="14" placeholder="粘贴管理员确认过的正确程序" /></el-form-item><el-form-item label="备注"><el-input v-model="referenceForm.note" /></el-form-item></el-form><div class="actions"><el-button type="primary" @click="saveReference"><el-icon><DocumentChecked /></el-icon>保存草稿</el-button></div><el-divider /><el-table :data="references" border><el-table-column prop="id" label="ID" width="80" /><el-table-column prop="language" label="语言" width="100" /><el-table-column prop="status" label="状态" width="140" /><el-table-column prop="validatedCaseCount" label="已验证数量" width="120" /><el-table-column prop="validationSummary" label="验证摘要" /><el-table-column label="操作" width="120"><template #default="{ row }"><el-button link type="success" :disabled="row.status === 'VERIFIED'" @click="validateReference(row.id)">验证</el-button></template></el-table-column></el-table><el-divider /><el-form label-width="120px"><el-form-item label="参考解快速调试"><el-input v-model="referenceInputs" type="textarea" :rows="6" placeholder="多个输入用单独一行 --- 分隔" /></el-form-item></el-form><el-button @click="debugReference"><el-icon><VideoPlay /></el-icon>调试参考解</el-button><el-table v-if="referenceDebug.length" :data="referenceDebug" border class="debug-table"><el-table-column prop="index" label="序号" width="80" /><el-table-column label="输入"><template #default="{ row }"><pre>{{ row.inputPreview }}</pre></template></el-table-column><el-table-column label="输出"><template #default="{ row }"><pre>{{ row.outputPreview }}</pre></template></el-table-column></el-table></el-tab-pane>
+        <el-tab-pane name="reference"><template #label><span class="tab-label"><el-icon><DocumentChecked /></el-icon>参考解管理</span></template><div class="tool-heading"><div><h2>参考解管理</h2><p>只有通过现有样例验证的程序，才能用于生成标准输出。</p></div></div><el-alert type="info" :closable="false" title="只有通过现有测试样例验证的参考解才会显示为 VERIFIED，并可用于批量生成标准输出。" /><el-form label-width="120px" class="form"><el-form-item label="语言"><el-select v-model="referenceForm.language" style="width: 180px"><el-option label="C++" value="cpp" /><el-option label="Python" value="python" /></el-select></el-form-item><el-form-item label="参考解代码"><el-input v-model="referenceForm.sourceCode" type="textarea" :rows="14" placeholder="粘贴管理员确认过的正确程序" /></el-form-item><el-form-item label="备注"><el-input v-model="referenceForm.note" /></el-form-item></el-form><div class="actions"><el-button type="primary" @click="saveAndValidateReference"><el-icon><DocumentChecked /></el-icon>保存并验证</el-button><el-button @click="saveReference">仅保存草稿</el-button></div><el-divider /><el-table :data="references" border><el-table-column prop="id" label="ID" width="80" /><el-table-column prop="language" label="语言" width="100" /><el-table-column prop="status" label="状态" width="140" /><el-table-column prop="validatedCaseCount" label="已验证数量" width="120" /><el-table-column prop="validationSummary" label="验证摘要" /><el-table-column label="操作" width="120"><template #default="{ row }"><el-button link type="success" :disabled="row.status === 'VERIFIED'" @click="validateReference(row.id)">验证</el-button></template></el-table-column></el-table><el-divider /><el-form label-width="120px"><el-form-item label="参考解快速调试"><el-input v-model="referenceInputs" type="textarea" :rows="6" placeholder="多个输入用单独一行 --- 分隔" /></el-form-item></el-form><el-button @click="debugReference"><el-icon><VideoPlay /></el-icon>调试参考解</el-button><el-table v-if="referenceDebug.length" :data="referenceDebug" border class="debug-table"><el-table-column prop="index" label="序号" width="80" /><el-table-column label="输入"><template #default="{ row }"><pre>{{ row.inputPreview }}</pre></template></el-table-column><el-table-column label="输出"><template #default="{ row }"><pre>{{ row.outputPreview }}</pre></template></el-table-column></el-table></el-tab-pane>
 
         <el-tab-pane name="manual">
           <template #label><span class="tab-label"><el-icon><DocumentChecked /></el-icon>手工维护</span></template>
