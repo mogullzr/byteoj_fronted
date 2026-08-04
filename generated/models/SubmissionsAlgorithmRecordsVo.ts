@@ -12,6 +12,10 @@ export type SubmissionsAlgorithmRecordsVo = {
     page_num?: number;
     /** 仅 Pending 状态返回，范围为 0-9。 */
     sandbox_index?: number;
+    /** 所属沙箱队列中排在当前任务前方的任务数量。 */
+    queue_ahead?: number;
+    /** 当前用户的 Pending 提交总数。 */
+    pending_total?: number;
     rated?: number;
     result?: any;
     score?: number;

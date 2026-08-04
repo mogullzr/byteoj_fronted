@@ -1,8 +1,26 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import dayjs from "dayjs";
+import axios from "axios";
 import { ProblemAlgorithmControllerService, type SubmissionsAlgorithmRecordsVo } from "../../../generated";
+import { OpenAPI } from "../../../generated/core/OpenAPI";
 import UserStore from "@/store/user";
+
+type QueueItem = {
+  sandboxIndex: number;
+  name: string;
+  messageCount: number;
+  consumerCount: number;
+  available: boolean;
+};
+
+type QueueStats = {
+  totalWaiting: number;
+  totalConsumers: number;
+  sandboxCount: number;
+  availableQueueCount: number;
+  queues: QueueItem[];
+};
 
 const userStore = UserStore();
 const records = ref<SubmissionsAlgorithmRecordsVo[]>([]);
@@ -19,6 +37,11 @@ const showChineseStatus = ref(false);
 const autoRefresh = ref(true);
 const loading = ref(false);
 const errorMessage = ref("");
+const queueStats = ref<QueueStats | null>(null);
+const myPendingRecords = ref<SubmissionsAlgorithmRecordsVo[]>([]);
+const myPendingTotal = ref(0);
+const myPendingLoading = ref(true);
+const myPendingError = ref("");
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 
 const statusOptionDefinitions = [
@@ -40,6 +63,41 @@ const statusOptions = computed(() => statusOptionDefinitions.map((option) => ({
 const languageOptions = ["C++", "C", "Python", "Java", "Go", "JavaScript"];
 
 const pendingCount = computed(() => records.value.filter((record) => record.result === "Pending").length);
+
+const fetchQueueStats = async () => {
+  try {
+    const baseUrl = OpenAPI.BASE.replace(/\/$/, "");
+    const response = await axios.get(`${baseUrl}/api/monitor/judge/queue/stats`, {
+      withCredentials: true,
+    });
+    if (response.data?.code !== 0) throw new Error(response.data?.message || "队列统计加载失败");
+    const data = response.data?.data || {};
+    queueStats.value = {
+      totalWaiting: Number(data.totalWaiting || 0),
+      totalConsumers: Number(data.totalConsumers || 0),
+      sandboxCount: Number(data.sandboxCount || 10),
+      availableQueueCount: Number(data.availableQueueCount || 0),
+      queues: Array.isArray(data.queues) ? data.queues : [],
+    };
+  } catch (error) {
+    console.warn("RabbitMQ 队列统计加载失败", error);
+  }
+};
+
+const fetchMyPending = async () => {
+  try {
+    myPendingError.value = "";
+    const response = await ProblemAlgorithmControllerService.problemAlgorithmPendingRecordsMineUsingGet(5);
+    if (response.code !== 0) throw new Error(response.message || "我的 Pending 加载失败");
+    myPendingRecords.value = response.data || [];
+    myPendingTotal.value = Number(myPendingRecords.value[0]?.pending_total || 0);
+  } catch (error) {
+    myPendingError.value = "暂时无法检查 Pending 状态";
+    console.warn("我的 Pending 加载失败", error);
+  } finally {
+    myPendingLoading.value = false;
+  }
+};
 
 const isOwner = (record: SubmissionsAlgorithmRecordsVo) =>
     Number(record.uuid) === Number(userStore.loginUser.uuid);
@@ -78,6 +136,16 @@ const sandboxLabel = (record: SubmissionsAlgorithmRecordsVo) => {
         : `Sandbox ${sandboxIndex + 1} / 10`;
   }
   return showChineseStatus.value ? "正在分配沙箱" : "Assigning sandbox";
+};
+
+const queueAheadLabel = (record: SubmissionsAlgorithmRecordsVo) => {
+  const ahead = Number(record.queue_ahead);
+  if (Number.isInteger(ahead) && ahead >= 0) {
+    return showChineseStatus.value
+        ? `前方还有 ${ahead} 个任务`
+        : `${ahead} ${ahead === 1 ? "task" : "tasks"} ahead`;
+  }
+  return showChineseStatus.value ? "正在计算队列位置" : "Calculating queue position";
 };
 
 const fetchRecords = async (page = currentPage.value, silent = false) => {
@@ -124,6 +192,16 @@ const resetFilters = () => {
   void fetchRecords(1);
 };
 
+const showMyPendingInList = () => {
+  selectedStatus.value = "Pending";
+  usernameKeyword.value = String(userStore.loginUser.username || "");
+  problemKeyword.value = "";
+  selectedLanguage.value = "";
+  startTime.value = "";
+  endTime.value = "";
+  void fetchRecords(1);
+};
+
 const changePage = (page: number) => {
   if (page < 1 || page > pageSum.value || page === currentPage.value) return;
   void fetchRecords(page);
@@ -139,8 +217,14 @@ const visiblePages = computed(() => {
 
 onMounted(() => {
   void fetchRecords(1);
+  void fetchQueueStats();
+  void fetchMyPending();
   refreshTimer = setInterval(() => {
-    if (autoRefresh.value && document.visibilityState === "visible") void fetchRecords(currentPage.value, true);
+    if (autoRefresh.value && document.visibilityState === "visible") {
+      void fetchRecords(currentPage.value, true);
+      void fetchQueueStats();
+      void fetchMyPending();
+    }
   }, 5000);
 });
 
@@ -154,7 +238,22 @@ onBeforeUnmount(() => {
     <header class="page-header">
       <div>
         <h1>全站提交记录</h1>
-        <p>当前页等待队列：<strong>{{ pendingCount }}</strong></p>
+        <p class="queue-summary">
+          RabbitMQ 实际等待：<strong>{{ queueStats?.totalWaiting ?? "-" }}</strong>
+          <span>消费者：{{ queueStats?.totalConsumers ?? "-" }} / {{ queueStats?.sandboxCount ?? 10 }}</span>
+          <span>当前页 Pending：{{ pendingCount }}</span>
+        </p>
+        <div v-if="queueStats?.queues.length" class="queue-breakdown" aria-label="各沙箱等待队列">
+          <span
+            v-for="queue in queueStats.queues"
+            :key="queue.name"
+            class="queue-chip"
+            :class="{ unavailable: !queue.available, busy: queue.messageCount > 0 }"
+            :title="`${queue.name}，消费者 ${queue.consumerCount}`"
+          >
+            S{{ queue.sandboxIndex + 1 }} <strong>{{ queue.messageCount }}</strong>
+          </span>
+        </div>
       </div>
       <div class="page-controls">
         <button
@@ -172,6 +271,34 @@ onBeforeUnmount(() => {
         <button type="button" :disabled="loading" @click="fetchRecords(currentPage)">刷新</button>
       </div>
     </header>
+
+    <section class="my-pending-panel" :class="{ clear: !myPendingLoading && !myPendingError && myPendingTotal === 0 }">
+      <div class="my-pending-heading">
+        <div>
+          <strong>我的 Pending</strong>
+          <span v-if="myPendingLoading">正在检查...</span>
+          <span v-else-if="myPendingError">{{ myPendingError }}</span>
+          <span v-else-if="myPendingTotal > 0">当前有 {{ myPendingTotal }} 条提交等待处理</span>
+          <span v-else>当前没有等待处理的提交</span>
+        </div>
+        <button v-if="myPendingTotal > 0" type="button" @click="showMyPendingInList">
+          在列表中查看
+        </button>
+      </div>
+      <div v-if="myPendingRecords.length" class="my-pending-list">
+        <router-link
+          v-for="record in myPendingRecords"
+          :key="record.submission_id"
+          :to="detailPath(record)"
+          class="my-pending-item"
+        >
+          <span class="pending-id">#{{ record.submission_id }}</span>
+          <span class="pending-problem">{{ record.chinese_name }}</span>
+          <span>{{ sandboxLabel(record) }}</span>
+          <strong>{{ queueAheadLabel(record) }}</strong>
+        </router-link>
+      </div>
+    </section>
 
     <form class="filter-bar" @submit.prevent="applyFilters">
       <div class="filter-grid">
@@ -256,6 +383,7 @@ onBeforeUnmount(() => {
                   <span class="pending-copy">
                     <strong>{{ statusMeta(record.result).text }}</strong>
                     <small>{{ sandboxLabel(record) }}</small>
+                    <small class="queue-ahead-label">{{ queueAheadLabel(record) }}</small>
                   </span>
                 </router-link>
                 <span v-else class="pending-status-card">
@@ -263,6 +391,7 @@ onBeforeUnmount(() => {
                   <span class="pending-copy">
                     <strong>{{ statusMeta(record.result).text }}</strong>
                     <small>{{ sandboxLabel(record) }}</small>
+                    <small class="queue-ahead-label">{{ queueAheadLabel(record) }}</small>
                   </span>
                 </span>
               </template>
@@ -330,7 +459,29 @@ onBeforeUnmount(() => {
 h1 { margin: 0 0 8px; color: #172033; font-size: 26px; line-height: 1.25; font-weight: 700; letter-spacing: 0; }
 .page-header p { margin: 0; color: #64748b; font-size: 14px; }
 .page-header strong { display: inline-block; min-width: 22px; margin-left: 3px; color: #b45309; font-variant-numeric: tabular-nums; }
+.queue-summary { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.queue-summary span { color: #64748b; }
+.queue-breakdown { display: flex; align-items: center; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.queue-chip { display: inline-flex; align-items: center; gap: 4px; min-width: 48px; box-sizing: border-box; padding: 4px 7px; border: 1px solid #d5dce5; border-radius: 5px; background: #fff; color: #64748b; font-size: 12px; font-variant-numeric: tabular-nums; }
+.queue-chip strong { min-width: 0; margin: 0; color: #334155; font-size: 12px; }
+.queue-chip.busy { border-color: #f59e0b; background: #fffbeb; color: #92400e; }
+.queue-chip.busy strong { color: #b45309; }
+.queue-chip.unavailable { border-color: #ef4444; background: #fef2f2; color: #b91c1c; }
 .page-controls { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.my-pending-panel { width: min(1320px, 100%); box-sizing: border-box; margin: 0 auto 16px; padding: 14px 16px; border: 1px solid #f3c969; border-left: 4px solid #f59e0b; border-radius: 6px; background: #fffbeb; }
+.my-pending-panel.clear { border-color: #bbdfc8; border-left-color: #16a34a; background: #f3faf5; }
+.my-pending-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.my-pending-heading > div { display: flex; align-items: baseline; gap: 10px; min-width: 0; flex-wrap: wrap; }
+.my-pending-heading strong { color: #78350f; font-size: 14px; }
+.my-pending-panel.clear .my-pending-heading strong { color: #166534; }
+.my-pending-heading span { color: #64748b; font-size: 13px; }
+.my-pending-heading button { min-height: 34px; flex: 0 0 auto; border: 1px solid #d89b20; border-radius: 5px; background: #fff; color: #92400e; padding: 0 11px; cursor: pointer; }
+.my-pending-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; margin-top: 12px; }
+.my-pending-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; min-width: 0; box-sizing: border-box; padding: 9px 10px; border: 1px solid #f1d79a; border-radius: 5px; background: #fff; color: #64748b; font-size: 12px; text-decoration: none; }
+.my-pending-item:hover { border-color: #f59e0b; }
+.my-pending-item .pending-id { color: #92400e; font-weight: 700; }
+.my-pending-item .pending-problem { overflow: hidden; color: #334155; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.my-pending-item strong { color: #b45309; font-size: 12px; }
 select, .filter-field input, .page-controls button, .filter-actions button, .pagination button { min-height: 38px; box-sizing: border-box; border: 1px solid #d5dce5; background: #fff; color: #263244; padding: 0 12px; border-radius: 6px; font: inherit; }
 select { min-width: 112px; }
 .page-controls button, .filter-actions button, .pagination button { cursor: pointer; transition: border-color .15s ease, color .15s ease, background-color .15s ease; }
@@ -368,6 +519,7 @@ tbody tr.pending-row, tbody tr.pending-row:hover { background: #fffdf5; box-shad
 .pending-copy { display: flex; min-width: 0; flex-direction: column; line-height: 1.15; }
 .pending-copy strong { font-size: 13px; font-weight: 800; }
 .pending-copy small { margin-top: 4px; color: #64748b; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.pending-copy .queue-ahead-label { color: #b45309; }
 @keyframes pending-pulse { 0%, 100% { opacity: .55; transform: scale(.85); } 50% { opacity: 1; transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) { .pending-signal { animation: none; } }
 .loading { position: absolute; inset: 0; display: grid; place-items: center; min-height: 150px; background: rgba(255,255,255,.82); color: #475569; }

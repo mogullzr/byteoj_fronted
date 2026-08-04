@@ -534,6 +534,26 @@ export class ProblemAlgorithmControllerService {
     });
   }
   /**
+   * problemAlgorithmPendingRecordsMine
+   * @param limit 最多返回多少条最靠前的 Pending 提交
+   * @returns BaseResponse_List_SubmissionsAlgorithmRecordsVo_ OK
+   */
+  public static problemAlgorithmPendingRecordsMineUsingGet(
+      limit: number = 5,
+  ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
+    return __request(OpenAPI, {
+      method: 'GET',
+      url: '/api/problem/algorithm/records/pending/mine',
+      query: {
+        'limit': limit,
+      },
+      errors: {
+        401: `Unauthorized`,
+        403: `Forbidden`,
+      },
+    });
+  }
+  /**
    * ListAlgorithmVoByPage
    * @param algorithmQueryRequest algorithmQueryRequest
    * @returns BaseResponse_List_ProblemAlgorithmBankVo_ OK
