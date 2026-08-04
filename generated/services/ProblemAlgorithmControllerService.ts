@@ -497,12 +497,22 @@ export class ProblemAlgorithmControllerService {
    * @param pageNum pageNum
    * @param pageSize pageSize
    * @param result result
+   * @param username username
+   * @param problem problem
+   * @param language language
+   * @param startTime startTime
+   * @param endTime endTime
    * @returns BaseResponse_List_SubmissionsAlgorithmRecordsVo_ OK
    */
   public static problemAlgorithmRecordsGlobalByPageUsingPost(
       pageNum: number = 1,
       pageSize: number = 20,
       result?: string,
+      username?: string,
+      problem?: string,
+      language?: string,
+      startTime?: string,
+      endTime?: string,
   ): CancelablePromise<BaseResponse_List_SubmissionsAlgorithmRecordsVo_ | any> {
     return __request(OpenAPI, {
       method: 'POST',
@@ -511,6 +521,11 @@ export class ProblemAlgorithmControllerService {
         'pageNum': pageNum,
         'pageSize': pageSize,
         'result': result,
+        'username': username,
+        'problem': problem,
+        'language': language,
+        'startTime': startTime,
+        'endTime': endTime,
       },
       errors: {
         401: `Unauthorized`,

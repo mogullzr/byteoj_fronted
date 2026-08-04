@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import dayjs from "dayjs";
 import { ProblemAlgorithmControllerService, type SubmissionsAlgorithmRecordsVo } from "../../../generated";
 import UserStore from "@/store/user";
@@ -10,6 +10,11 @@ const currentPage = ref(1);
 const pageSum = ref(1);
 const pageSize = 20;
 const selectedStatus = ref("");
+const usernameKeyword = ref("");
+const problemKeyword = ref("");
+const selectedLanguage = ref("");
+const startTime = ref("");
+const endTime = ref("");
 const showChineseStatus = ref(false);
 const autoRefresh = ref(true);
 const loading = ref(false);
@@ -32,6 +37,7 @@ const statusOptions = computed(() => statusOptionDefinitions.map((option) => ({
   value: option.value,
   label: showChineseStatus.value ? option.zh : option.en,
 })));
+const languageOptions = ["C++", "C", "Python", "Java", "Go", "JavaScript"];
 
 const pendingCount = computed(() => records.value.filter((record) => record.result === "Pending").length);
 
@@ -80,7 +86,14 @@ const fetchRecords = async (page = currentPage.value, silent = false) => {
   errorMessage.value = "";
   try {
     const response = await ProblemAlgorithmControllerService.problemAlgorithmRecordsGlobalByPageUsingPost(
-        page, pageSize, selectedStatus.value || undefined
+        page,
+        pageSize,
+        selectedStatus.value || undefined,
+        usernameKeyword.value.trim() || undefined,
+        problemKeyword.value.trim() || undefined,
+        selectedLanguage.value || undefined,
+        startTime.value || undefined,
+        endTime.value || undefined
     );
     if (response.code !== 0) throw new Error(response.message || "提交记录加载失败");
     records.value = response.data || [];
@@ -91,6 +104,24 @@ const fetchRecords = async (page = currentPage.value, silent = false) => {
   } finally {
     loading.value = false;
   }
+};
+
+const applyFilters = () => {
+  if (startTime.value && endTime.value && startTime.value > endTime.value) {
+    errorMessage.value = "开始时间不能晚于结束时间";
+    return;
+  }
+  void fetchRecords(1);
+};
+
+const resetFilters = () => {
+  selectedStatus.value = "";
+  usernameKeyword.value = "";
+  problemKeyword.value = "";
+  selectedLanguage.value = "";
+  startTime.value = "";
+  endTime.value = "";
+  void fetchRecords(1);
 };
 
 const changePage = (page: number) => {
@@ -105,8 +136,6 @@ const visiblePages = computed(() => {
   }
   return [...pages].sort((a, b) => a - b);
 });
-
-watch(selectedStatus, () => void fetchRecords(1));
 
 onMounted(() => {
   void fetchRecords(1);
@@ -128,11 +157,6 @@ onBeforeUnmount(() => {
         <p>当前页等待队列：<strong>{{ pendingCount }}</strong></p>
       </div>
       <div class="page-controls">
-        <select v-model="selectedStatus" aria-label="筛选提交状态">
-          <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-            {{ option.label }}
-          </option>
-        </select>
         <button
           type="button"
           class="language-toggle"
@@ -148,6 +172,46 @@ onBeforeUnmount(() => {
         <button type="button" :disabled="loading" @click="fetchRecords(currentPage)">刷新</button>
       </div>
     </header>
+
+    <form class="filter-bar" @submit.prevent="applyFilters">
+      <div class="filter-grid">
+        <label class="filter-field">
+          <span>用户名</span>
+          <input v-model="usernameKeyword" type="search" placeholder="输入用户名" autocomplete="off" />
+        </label>
+        <label class="filter-field">
+          <span>题目</span>
+          <input v-model="problemKeyword" type="search" placeholder="题目 ID 或名称" autocomplete="off" />
+        </label>
+        <label class="filter-field">
+          <span>语言</span>
+          <select v-model="selectedLanguage">
+            <option value="">全部语言</option>
+            <option v-for="language in languageOptions" :key="language" :value="language">{{ language }}</option>
+          </select>
+        </label>
+        <label class="filter-field">
+          <span>状态</span>
+          <select v-model="selectedStatus">
+            <option v-for="option in statusOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+        <label class="filter-field time-field">
+          <span>开始时间</span>
+          <input v-model="startTime" type="datetime-local" />
+        </label>
+        <label class="filter-field time-field">
+          <span>结束时间</span>
+          <input v-model="endTime" type="datetime-local" />
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button type="button" :disabled="loading" @click="resetFilters">重置</button>
+        <button type="submit" class="primary-action" :disabled="loading">查询</button>
+      </div>
+    </form>
 
     <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
@@ -248,6 +312,7 @@ onBeforeUnmount(() => {
   color: #1f2937;
 }
 .page-header,
+.filter-bar,
 .table-wrap,
 .pagination,
 .error-message {
@@ -266,13 +331,21 @@ h1 { margin: 0 0 8px; color: #172033; font-size: 26px; line-height: 1.25; font-w
 .page-header p { margin: 0; color: #64748b; font-size: 14px; }
 .page-header strong { display: inline-block; min-width: 22px; margin-left: 3px; color: #b45309; font-variant-numeric: tabular-nums; }
 .page-controls { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
-select, .page-controls button, .pagination button { min-height: 38px; border: 1px solid #d5dce5; background: #fff; color: #263244; padding: 0 12px; border-radius: 6px; font: inherit; }
+select, .filter-field input, .page-controls button, .filter-actions button, .pagination button { min-height: 38px; box-sizing: border-box; border: 1px solid #d5dce5; background: #fff; color: #263244; padding: 0 12px; border-radius: 6px; font: inherit; }
 select { min-width: 112px; }
-.page-controls button, .pagination button { cursor: pointer; transition: border-color .15s ease, color .15s ease, background-color .15s ease; }
-.page-controls button:hover, .pagination button:hover:not(:disabled) { border-color: #2563eb; color: #1d4ed8; }
+.page-controls button, .filter-actions button, .pagination button { cursor: pointer; transition: border-color .15s ease, color .15s ease, background-color .15s ease; }
+.page-controls button:hover, .filter-actions button:hover:not(:disabled), .pagination button:hover:not(:disabled) { border-color: #2563eb; color: #1d4ed8; }
 button:disabled { cursor: not-allowed; opacity: .5; }
 .refresh-control { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; color: #475569; white-space: nowrap; }
 .refresh-control input { width: 15px; height: 15px; margin: 0; accent-color: #2563eb; }
+.filter-bar { display: flex; align-items: end; gap: 14px; box-sizing: border-box; margin-bottom: 16px; padding: 14px 0; border-top: 1px solid #dce3eb; border-bottom: 1px solid #dce3eb; }
+.filter-grid { display: grid; flex: 1; grid-template-columns: minmax(130px, 1fr) minmax(170px, 1.35fr) minmax(120px, .8fr) minmax(145px, 1fr) minmax(190px, 1.2fr) minmax(190px, 1.2fr); gap: 10px; }
+.filter-field { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
+.filter-field span { color: #526174; font-size: 12px; font-weight: 600; }
+.filter-field input, .filter-field select { width: 100%; min-width: 0; }
+.filter-actions { display: flex; gap: 8px; }
+.filter-actions .primary-action { border-color: #2563eb; background: #2563eb; color: #fff; }
+.filter-actions .primary-action:hover:not(:disabled) { border-color: #1d4ed8; background: #1d4ed8; color: #fff; }
 .table-wrap { position: relative; overflow-x: auto; border: 1px solid #dce3eb; background: #fff; border-radius: 7px; box-shadow: 0 2px 8px rgba(15, 23, 42, .04); }
 table { width: 100%; min-width: 960px; border-collapse: collapse; }
 th { padding: 12px 14px; background: #f7f9fc; border-bottom: 1px solid #dfe5ec; color: #526174; text-align: left; font-size: 13px; font-weight: 600; }
@@ -307,5 +380,13 @@ tbody tr.pending-row, tbody tr.pending-row:hover { background: #fffdf5; box-shad
   .page-header { align-items: stretch; flex-direction: column; }
   .page-controls { display: grid; grid-template-columns: 1fr auto; }
   .page-controls select { grid-column: 1 / -1; }
+  .filter-bar { align-items: stretch; flex-direction: column; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-actions { justify-content: flex-end; }
+}
+@media (min-width: 721px) and (max-width: 1180px) {
+  .filter-bar { align-items: stretch; flex-direction: column; }
+  .filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .filter-actions { justify-content: flex-end; }
 }
 </style>
