@@ -7,7 +7,40 @@
     <div class="error-state">❌ 未找到考试信息或题目为空</div>
   </div>
 
-  <div class="exam-container" v-else>
+  <div class="exam-container" v-else @click.capture="handleExamImageClick">
+    <transition name="modal-fade">
+      <div v-if="imagePreviewUrl" class="exam-image-viewer" @click.self.stop="closeImagePreview">
+        <section class="exam-image-viewer-dialog" role="dialog" aria-modal="true" aria-label="图片放大预览" @click.stop>
+          <header>
+            <strong>{{ imagePreviewTitle }}</strong>
+            <button type="button" title="关闭预览" @click="closeImagePreview">
+              <XMarkIcon aria-hidden="true" />
+            </button>
+          </header>
+          <div class="exam-image-viewer-stage" @wheel.prevent="handleImagePreviewWheel">
+            <div
+                class="exam-image-viewer-canvas"
+                :style="{ width: `${imagePreviewScale * 100}%`, height: `${imagePreviewScale * 100}%` }"
+            >
+              <img :src="imagePreviewUrl" :alt="imagePreviewTitle" draggable="false" />
+            </div>
+          </div>
+          <footer>
+            <button type="button" title="缩小" :disabled="imagePreviewScale <= 0.5" @click="adjustImagePreviewScale(-0.25)">
+              <MinusIcon aria-hidden="true" />
+            </button>
+            <output>{{ Math.round(imagePreviewScale * 100) }}%</output>
+            <button type="button" title="放大" :disabled="imagePreviewScale >= 4" @click="adjustImagePreviewScale(0.25)">
+              <PlusIcon aria-hidden="true" />
+            </button>
+            <button type="button" title="恢复原始比例" @click="imagePreviewScale = 1">
+              <ArrowPathIcon aria-hidden="true" />
+            </button>
+          </footer>
+        </section>
+      </div>
+    </transition>
+
     <!-- 确认交卷弹窗 -->
     <transition name="modal-fade">
       <div v-if="showConfirmModal" class="modal-overlay">
@@ -58,6 +91,286 @@
         </div>
       </div>
     </transition>
+
+    <transition name="modal-fade">
+      <div v-if="showDesktopCamera" class="desktop-camera-overlay" @click.self="closeDesktopCamera">
+        <section class="desktop-camera-modal" role="dialog" aria-modal="true" aria-label="电脑摄像头拍照">
+          <div class="desktop-camera-header">
+            <div>
+              <h3>电脑摄像头拍照</h3>
+              <span>第 {{ desktopCameraQuestionOrder }} 题</span>
+            </div>
+            <button type="button" class="camera-icon-button" title="关闭摄像头" @click="closeDesktopCamera">
+              <XMarkIcon aria-hidden="true" />
+            </button>
+          </div>
+
+          <div class="desktop-camera-device-bar">
+            <label>
+              <span>拍照设备</span>
+              <select
+                  v-model="desktopCameraDeviceId"
+                  :disabled="desktopCameraStarting || desktopCameraProcessing"
+                  @change="switchDesktopCameraDevice"
+              >
+                <option
+                    v-for="(device, index) in desktopCameraDevices"
+                    :key="device.deviceId"
+                    :value="device.deviceId"
+                >
+                  {{ device.label || `摄像头 ${index + 1}` }}
+                </option>
+              </select>
+            </label>
+            <span class="desktop-camera-resolution">
+              {{ desktopCameraResolution || '正在读取实际分辨率...' }}
+            </span>
+          </div>
+
+          <div class="desktop-camera-stage">
+            <video
+                v-show="!desktopCameraPreviewUrl && !desktopCameraError"
+                ref="desktopCameraVideo"
+                autoplay
+                muted
+                playsinline
+            ></video>
+            <img v-if="desktopCameraPreviewUrl" :src="desktopCameraPreviewUrl" alt="已拍摄的答题图片" />
+            <div v-if="desktopCameraStarting" class="desktop-camera-status">正在启动摄像头...</div>
+            <div v-else-if="desktopCameraError" class="desktop-camera-status camera-error">
+              {{ desktopCameraError }}
+            </div>
+            <div v-else-if="desktopCameraProcessing" class="desktop-camera-status camera-processing">
+              {{ desktopCameraSelectingFrame ? '正在选择最清晰的一帧...' : '正在增强清晰度和颜色...' }}
+            </div>
+            <canvas ref="desktopCameraCanvas" hidden></canvas>
+          </div>
+
+          <div class="desktop-camera-enhancement">
+            <label class="camera-enhancement-toggle">
+              <input
+                  v-model="desktopCameraEnhancementEnabled"
+                  type="checkbox"
+                  :disabled="desktopCameraProcessing"
+                  @change="refreshDesktopCameraEnhancement"
+              />
+              <span>文档增强</span>
+            </label>
+            <label class="camera-enhancement-strength" :class="{ disabled: !desktopCameraEnhancementEnabled }">
+              <span>颜色/对比度</span>
+              <input
+                  v-model.number="desktopCameraEnhancementStrength"
+                  type="range"
+                  min="20"
+                  max="100"
+                  step="5"
+                  :disabled="!desktopCameraEnhancementEnabled || desktopCameraProcessing"
+                  @change="refreshDesktopCameraEnhancement"
+              />
+              <output>{{ desktopCameraEnhancementStrength }}%</output>
+            </label>
+            <label class="camera-enhancement-strength" :class="{ disabled: !desktopCameraEnhancementEnabled }">
+              <span>文字锐化</span>
+              <input
+                  v-model.number="desktopCameraSharpenStrength"
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  :disabled="!desktopCameraEnhancementEnabled || desktopCameraProcessing"
+                  @change="refreshDesktopCameraEnhancement"
+              />
+              <output>{{ desktopCameraSharpenStrength }}%</output>
+            </label>
+          </div>
+
+          <footer class="desktop-camera-actions">
+            <button type="button" class="camera-secondary-button" @click="closeDesktopCamera">取消</button>
+            <button
+                v-if="desktopCameraPreviewUrl"
+                type="button"
+                class="camera-secondary-button"
+                :disabled="uploading || desktopCameraProcessing"
+                @click="retakeDesktopPhoto"
+            >
+              <ArrowPathIcon aria-hidden="true" />
+              重拍
+            </button>
+            <button
+                v-if="!desktopCameraPreviewUrl"
+                type="button"
+                class="camera-primary-button"
+                :disabled="desktopCameraStarting || desktopCameraProcessing || !!desktopCameraError || !desktopCameraStream"
+                @click="captureDesktopPhoto"
+            >
+              <CameraIcon aria-hidden="true" />
+              拍照
+            </button>
+            <template v-else>
+              <button
+                  type="button"
+                  class="camera-secondary-button"
+                  :disabled="uploading || desktopCameraProcessing"
+                  @click="sendDesktopPhotoToSplitter"
+              >
+                <ScissorsIcon aria-hidden="true" />
+                进入整页切分
+              </button>
+              <button
+                  type="button"
+                  class="camera-primary-button"
+                  :disabled="uploading || desktopCameraProcessing"
+                  @click="uploadDesktopPhotoToQuestion"
+              >
+                <ArrowUpTrayIcon aria-hidden="true" />
+                {{ uploading ? '上传中...' : '上传到本题' }}
+              </button>
+            </template>
+          </footer>
+        </section>
+      </div>
+    </transition>
+
+    <transition name="modal-fade">
+      <div v-if="showPhoneCamera" class="desktop-camera-overlay" @click.self="closePhoneCamera">
+        <section class="desktop-camera-modal" role="dialog" aria-modal="true" aria-label="手机高清相机">
+          <div class="desktop-camera-header">
+            <div>
+              <h3>手机高清相机</h3>
+              <span>批量切分连续拍照 · 局域网原图直传</span>
+            </div>
+            <button type="button" class="camera-icon-button" title="关闭手机相机" @click="closePhoneCamera">
+              <XMarkIcon aria-hidden="true" />
+            </button>
+          </div>
+
+          <div class="phone-camera-address-bar">
+            <label>
+              <span>手机地址</span>
+              <input
+                  v-model.trim="phoneCameraAddress"
+                  type="text"
+                  inputmode="url"
+                  placeholder="例如 192.168.1.88:8765"
+                  :disabled="phoneCameraConnecting || phoneCameraCapturing"
+                  @keyup.enter="connectPhoneCamera"
+              />
+            </label>
+            <button
+                type="button"
+                class="camera-secondary-button"
+                :disabled="phoneCameraConnecting || phoneCameraCapturing || !phoneCameraAddress"
+                @click="connectPhoneCamera"
+            >
+              {{ phoneCameraConnecting ? '连接中...' : '连接' }}
+            </button>
+            <span :class="['phone-camera-connection', { connected: phoneCameraConnected }]">
+              {{ phoneCameraConnected ? '已连接' : '未连接' }}
+            </span>
+          </div>
+
+          <div class="phone-camera-download-bar">
+            <span>电脑桥接安装包</span>
+            <a
+                v-for="download in phoneCameraBridgeDownloads"
+                :key="download.platform"
+                :href="download.url"
+                class="phone-camera-download-link"
+                download
+            >
+              <ArrowDownTrayIcon aria-hidden="true" />
+              {{ download.label }}
+            </a>
+          </div>
+
+          <div class="desktop-camera-stage phone-camera-stage">
+            <img
+                v-if="phoneCameraConnected && phoneCameraLivePreviewUrl"
+                :src="phoneCameraLivePreviewUrl"
+                alt="手机相机实时预览"
+                @load="phoneCameraError = ''"
+                @error="handlePhoneCameraPreviewError"
+            />
+            <div v-if="phoneCameraConnecting" class="desktop-camera-status">正在连接手机相机...</div>
+            <div v-else-if="phoneCameraCapturing" class="desktop-camera-status camera-processing">
+              手机正在对焦并拍摄高清原图...
+            </div>
+            <div v-else-if="phoneCameraError" class="desktop-camera-status camera-error">
+              <span>{{ phoneCameraError }}</span>
+              <a
+                  v-if="isHttpsPage"
+                  class="camera-secondary-button phone-camera-bridge-download"
+                  :href="recommendedPhoneCameraBridgeDownloadUrl"
+                  download
+              >
+                下载本机桥接
+              </a>
+            </div>
+            <div v-else-if="!phoneCameraConnected" class="desktop-camera-status">
+              打开手机上的 ByteOJ 高清相机，并输入应用显示的地址
+            </div>
+          </div>
+
+          <div v-if="phoneCameraShots.length" class="phone-camera-shots">
+            <div v-for="(shot, index) in phoneCameraShots" :key="shot.id" class="phone-camera-shot">
+              <img :src="shot.previewUrl" :alt="`已拍摄第 ${index + 1} 张`" />
+              <span>{{ index + 1 }}</span>
+              <button
+                  type="button"
+                  title="删除这张照片"
+                  :disabled="phoneCameraCapturing || uploading"
+                  @click="removePhoneCameraShot(shot.id)"
+              >
+                <XMarkIcon aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <div class="phone-camera-photo-info">
+            <span v-if="phoneCameraShots.length">
+              已连续拍摄 {{ phoneCameraShots.length }} 张 · {{ phoneCameraPhotoResolution }}
+            </span>
+            <span v-else>预览使用轻量画质，拍照传输手机原始 JPEG</span>
+            <span v-if="phoneCameraLatestShot">{{ formatFileSize(phoneCameraLatestShot.file.size) }}</span>
+          </div>
+
+          <footer class="desktop-camera-actions">
+            <button type="button" class="camera-secondary-button" @click="closePhoneCamera">取消</button>
+            <button
+                v-if="phoneCameraShots.length"
+                type="button"
+                class="camera-secondary-button"
+                :disabled="uploading || phoneCameraCapturing"
+                @click="clearPhoneCameraShots"
+            >
+              <TrashIcon aria-hidden="true" />
+              清空已拍
+            </button>
+            <button
+                type="button"
+                class="camera-primary-button"
+                :disabled="!phoneCameraConnected || phoneCameraCapturing || phoneCameraConnecting || phoneCameraShots.length >= 30"
+                @click="capturePhonePhoto"
+            >
+              <CameraIcon aria-hidden="true" />
+              {{ phoneCameraCapturing ? '拍摄中...' : phoneCameraShots.length ? `继续拍摄（${phoneCameraShots.length}/30）` : '拍摄高清原图' }}
+            </button>
+            <template v-if="phoneCameraShots.length">
+              <button
+                  type="button"
+                  class="camera-primary-button"
+                  :disabled="uploading"
+                  @click="sendPhonePhotosToSplitter"
+              >
+                <ScissorsIcon aria-hidden="true" />
+                导入批量切分（{{ phoneCameraShots.length }}）
+              </button>
+            </template>
+          </footer>
+        </section>
+      </div>
+    </transition>
+
     <!-- 交卷结果遮罩层 -->
     <div v-if="showResult" class="result-overlay">
       <div class="result-card">
@@ -193,6 +506,14 @@
         <!-- 情况3: 填空题 (option_type=3) 或 简答题 (option_type=0) -->
         <template v-else>
           <div class="fill-answer-area">
+            <div v-if="uploadedAnswerImageCount" class="image-answer-summary">
+              <span>已上传 {{ uploadedAnswerImageCount }} 道题的图片答案</span>
+              <button type="button" class="clear-images-button" :disabled="uploading" @click="clearAllAnswerImages">
+                <TrashIcon aria-hidden="true" />
+                清空全部题目图片
+              </button>
+            </div>
+
             <!-- 已上传的图片展示区 -->
             <div class="uploaded-images" v-if="getAnswerImages(currentQuestion.problem_id).length">
               <div
@@ -210,7 +531,14 @@
             </div>
 
             <!-- 上传区域 -->
-            <div class="upload-zone">
+            <div
+                class="upload-zone"
+                :class="{ 'is-dragging': isDraggingImages }"
+                @dragenter.prevent="handleImageDragEnter"
+                @dragover.prevent="isDraggingImages = true"
+                @dragleave.prevent="handleImageDragLeave"
+                @drop.prevent="handleImageDrop"
+            >
               <input
                   type="file"
                   accept="image/*"
@@ -220,19 +548,66 @@
                   @change="handleFileChange"
                   hidden
               />
+              <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  class="file-input"
+                  ref="cameraInput"
+                  @change="handleFileChange"
+                  hidden
+              />
 
-              <button
-                  type="button"
-                  class="btn-upload"
-                  @click="triggerUpload"
-                  :disabled="uploading"
-              >
-                <span v-if="uploading">上传中...</span>
-                <span v-else>📤 上传答题图片</span>
-              </button>
+              <div class="drop-zone-copy">
+                <PhotoIcon aria-hidden="true" />
+                <div>
+                  <strong>拖入整页答题照片</strong>
+                  <span>电脑端可一次拖入多张，随后检查切割位置和题目映射</span>
+                </div>
+              </div>
+
+              <div class="upload-buttons">
+                <button
+                    type="button"
+                    class="btn-upload"
+                    @click="triggerUpload"
+                    :disabled="uploading"
+                >
+                  <ArrowUpTrayIcon aria-hidden="true" />
+                  <span v-if="uploading">上传中...</span>
+                  <span v-else>选择本题图片</span>
+                </button>
+                <button
+                    type="button"
+                    class="btn-upload camera-upload"
+                    @click="triggerCamera"
+                    :disabled="uploading"
+                >
+                  <CameraIcon aria-hidden="true" />
+                  拍照上传本题
+                </button>
+                <button
+                    type="button"
+                    class="btn-upload desktop-camera-upload"
+                    @click="openDesktopCamera"
+                    :disabled="uploading"
+                >
+                  <VideoCameraIcon aria-hidden="true" />
+                  电脑摄像头拍照
+                </button>
+                <button
+                    type="button"
+                    class="btn-upload batch-upload"
+                    @click="openImageSplitter()"
+                    :disabled="uploading || !eligibleImageQuestions.length"
+                >
+                  <ScissorsIcon aria-hidden="true" />
+                  整页图片批量切分
+                </button>
+              </div>
 
               <div class="upload-tip" v-if="!uploading">
-                支持 jpg / png / gif，建议单张小于 5MB
+                直接选择或拍照会覆盖本题原图；整页照片请使用批量切分
               </div>
             </div>
 
@@ -330,10 +705,21 @@
       </div>
     </aside>
   </div>
+
+  <ExamImageSplitter
+      v-if="showImageSplitter"
+      ref="imageSplitter"
+      :questions="eligibleImageQuestions"
+      :upload-image="uploadAnswerImage"
+      :initial-files="splitterInitialFiles"
+      @close="closeImageSplitter"
+      @applied="handleSplitImagesApplied"
+      @request-phone-camera="openPhoneCameraForSplitter"
+  />
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, onUnmounted, watch} from 'vue'
+import {ref, computed, nextTick, onMounted, onUnmounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 // 假设你的服务文件路径如下，请根据实际项目结构调整
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
@@ -342,6 +728,21 @@ import Router from "@/router";
 import {ProblemsControllerService} from "../../../generated/services/ProblemsControllerService";
 import {UserControllerService} from "../../../generated";
 import {useMessageBox} from "@/view/components/alert/useMessageBox";
+import ExamImageSplitter from "./ExamImageSplitter.vue";
+import { canvasToFile, enhanceDocumentCanvas, imageToCanvas } from './examImageSplitter'
+import {
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ArrowUpTrayIcon,
+  CameraIcon,
+  PhotoIcon,
+  MinusIcon,
+  PlusIcon,
+  ScissorsIcon,
+  TrashIcon,
+  VideoCameraIcon,
+  XMarkIcon,
+} from '@heroicons/vue/24/outline'
 // --- 类型定义 ---
 interface ProblemItem {
   problem_id: number
@@ -380,6 +781,77 @@ let timerInterval: number | null = null
 // ==================== 新增的状态 ====================
 const uploading = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
+const cameraInput = ref<HTMLInputElement | null>(null)
+const imagePreviewUrl = ref('')
+const imagePreviewTitle = ref('图片预览')
+const imagePreviewScale = ref(1)
+const showImageSplitter = ref(false)
+const splitterInitialFiles = ref<File[]>([])
+const isDraggingImages = ref(false)
+const showDesktopCamera = ref(false)
+const desktopCameraStarting = ref(false)
+const desktopCameraError = ref('')
+const desktopCameraVideo = ref<HTMLVideoElement | null>(null)
+const desktopCameraCanvas = ref<HTMLCanvasElement | null>(null)
+const desktopCameraStream = ref<MediaStream | null>(null)
+const desktopCameraFile = ref<File | null>(null)
+const desktopCameraPreviewUrl = ref('')
+const desktopCameraProblemId = ref<number | null>(null)
+const desktopCameraQuestionOrder = ref(0)
+const desktopCameraProcessing = ref(false)
+const desktopCameraSelectingFrame = ref(false)
+const desktopCameraEnhancementEnabled = ref(true)
+const desktopCameraEnhancementStrength = ref(72)
+const desktopCameraSharpenStrength = ref(68)
+const desktopCameraDevices = ref<MediaDeviceInfo[]>([])
+const desktopCameraDeviceId = ref('')
+const desktopCameraResolution = ref('')
+const showPhoneCamera = ref(false)
+const phoneCameraAddress = ref(localStorage.getItem('byteoj-phone-camera-address') || '')
+const phoneCameraConnected = ref(false)
+const phoneCameraConnecting = ref(false)
+const phoneCameraCapturing = ref(false)
+const phoneCameraError = ref('')
+const phoneCameraLivePreviewUrl = ref('')
+const phoneCameraPhotoResolution = ref('')
+const isHttpsPage = window.location.protocol === 'https:'
+type PhoneBridgePlatform = 'windows' | 'macos' | 'linux'
+interface PhoneBridgeDownload {
+  platform: PhoneBridgePlatform
+  label: string
+  url: string
+}
+const defaultPhoneCameraBridgeUrls: Record<PhoneBridgePlatform, string> = {
+  windows: 'https://www.byteoj.com/ByteOJ-Windows-v1.0.zip',
+  macos: 'https://www.byteoj.com/ByteOJ-macOS-v1.0.zip',
+  linux: 'https://www.byteoj.com/ByteOJ-Linux-v1.0.zip',
+}
+const phoneCameraBridgeUrls = ref<Record<PhoneBridgePlatform, string>>({ ...defaultPhoneCameraBridgeUrls })
+const phoneCameraBridgeDownloads = computed<PhoneBridgeDownload[]>(() => [
+  { platform: 'windows', label: 'Windows', url: phoneCameraBridgeUrls.value.windows },
+  { platform: 'macos', label: 'macOS', url: phoneCameraBridgeUrls.value.macos },
+  { platform: 'linux', label: 'Linux', url: phoneCameraBridgeUrls.value.linux },
+].filter(download => Boolean(download.url)))
+const currentPhoneBridgePlatform = (): PhoneBridgePlatform => {
+  const platform = navigator.platform.toLowerCase()
+  if (platform.includes('win')) return 'windows'
+  if (platform.includes('linux')) return 'linux'
+  return 'macos'
+}
+const recommendedPhoneCameraBridgeDownloadUrl = computed(() =>
+  phoneCameraBridgeUrls.value[currentPhoneBridgePlatform()] || phoneCameraBridgeUrls.value.macos
+)
+interface PhoneCameraShot {
+  id: number
+  file: File
+  previewUrl: string
+  width: number
+  height: number
+}
+const phoneCameraShots = ref<PhoneCameraShot[]>([])
+const phoneCameraLatestShot = computed(() => phoneCameraShots.value[phoneCameraShots.value.length - 1] || null)
+let phoneCameraPreviewTimer: number | null = null
+const imageSplitter = ref<{ addExternalFiles: (files: File[]) => Promise<void> } | null>(null)
 
 // 单独存文本部分（可选，如果你想同时支持文字+图片）
 const textAnswers = ref<Record<number, string>>({})
@@ -393,6 +865,38 @@ const languageStorageKey = computed(() => {
   return examId ? `exam-${examId}-languages` : null
 })
 const { success, error, warning } = useMessageBox();
+
+const closeImagePreview = () => {
+  imagePreviewUrl.value = ''
+  imagePreviewScale.value = 1
+}
+
+const adjustImagePreviewScale = (offset: number) => {
+  imagePreviewScale.value = Math.min(4, Math.max(0.5, imagePreviewScale.value + offset))
+}
+
+const handleImagePreviewWheel = (event: WheelEvent) => {
+  adjustImagePreviewScale(event.deltaY < 0 ? 0.25 : -0.25)
+}
+
+const handleExamImageClick = (event: MouseEvent) => {
+  const target = event.target
+  if (!(target instanceof HTMLImageElement) || target.closest('.exam-image-viewer')) return
+  const source = target.currentSrc || target.src
+  if (!source) return
+  event.preventDefault()
+  event.stopPropagation()
+  imagePreviewUrl.value = source
+  imagePreviewTitle.value = target.alt || '图片预览'
+  imagePreviewScale.value = 1
+}
+
+const handleImagePreviewKeydown = (event: KeyboardEvent) => {
+  if (!imagePreviewUrl.value) return
+  if (event.key === 'Escape') closeImagePreview()
+  else if (event.key === '+' || event.key === '=') adjustImagePreviewScale(0.25)
+  else if (event.key === '-') adjustImagePreviewScale(-0.25)
+}
 
 // 新增状态
 const showResult = ref(false)
@@ -486,50 +990,586 @@ const triggerUpload = () => {
   fileInput.value?.click()
 }
 
-// 处理文件上传
+const triggerCamera = () => {
+  cameraInput.value?.click()
+}
+
+const openImageSplitter = (files: File[] = []) => {
+  splitterInitialFiles.value = files
+  showImageSplitter.value = true
+}
+
+const closeImageSplitter = () => {
+  showImageSplitter.value = false
+  splitterInitialFiles.value = []
+}
+
+const handleImageDragEnter = (event: DragEvent) => {
+  const hasFiles = Array.from(event.dataTransfer?.items || []).some(item => item.kind === 'file')
+  if (hasFiles) isDraggingImages.value = true
+}
+
+const handleImageDragLeave = (event: DragEvent) => {
+  const zone = event.currentTarget as HTMLElement
+  const nextTarget = event.relatedTarget as Node | null
+  if (!nextTarget || !zone.contains(nextTarget)) isDraggingImages.value = false
+}
+
+const handleImageDrop = (event: DragEvent) => {
+  isDraggingImages.value = false
+  const files = Array.from(event.dataTransfer?.files || []).filter(file => file.type.startsWith('image/'))
+  if (!files.length) {
+    warning('请拖入 jpg、png 等图片文件')
+    return
+  }
+  openImageSplitter(files)
+}
+
+const stopDesktopCameraStream = () => {
+  desktopCameraStream.value?.getTracks().forEach(track => track.stop())
+  desktopCameraStream.value = null
+  if (desktopCameraVideo.value) desktopCameraVideo.value.srcObject = null
+}
+
+const clearDesktopCameraCapture = () => {
+  if (desktopCameraPreviewUrl.value) URL.revokeObjectURL(desktopCameraPreviewUrl.value)
+  desktopCameraPreviewUrl.value = ''
+  desktopCameraFile.value = null
+}
+
+const desktopCameraErrorMessage = (cameraError: unknown) => {
+  if (cameraError instanceof DOMException) {
+    if (cameraError.name === 'NotAllowedError') return '摄像头权限被拒绝，请在浏览器站点设置中允许使用摄像头。'
+    if (cameraError.name === 'NotFoundError') return '没有检测到可用的摄像头。'
+    if (cameraError.name === 'NotReadableError') return '摄像头正在被其他程序占用，请关闭后重试。'
+  }
+  return '无法启动摄像头。请使用 HTTPS 或 localhost 打开页面后重试。'
+}
+
+const refreshDesktopCameraDevices = async () => {
+  const devices = await navigator.mediaDevices.enumerateDevices()
+  desktopCameraDevices.value = devices.filter(device => device.kind === 'videoinput')
+}
+
+const startDesktopCameraStream = async (deviceId = '', preferPhone = true) => {
+  stopDesktopCameraStream()
+  desktopCameraStarting.value = true
+  desktopCameraResolution.value = ''
+
+  try {
+    const selectedDevice = desktopCameraDevices.value.find(device => device.deviceId === deviceId)
+    const isCamoDevice = /camo/i.test(selectedDevice?.label || '')
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: {
+        ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
+        // Camo 免费配置实际输出 720P。请求更高尺寸只会触发浏览器插值放大，反而让文字发虚。
+        width: { ideal: isCamoDevice ? 1280 : 3840 },
+        height: { ideal: isCamoDevice ? 720 : 2160 },
+        frameRate: { ideal: 30 },
+        ...(isCamoDevice ? { resizeMode: 'none' } : {}),
+      },
+    })
+    if (!showDesktopCamera.value) {
+      stream.getTracks().forEach(track => track.stop())
+      return
+    }
+
+    desktopCameraStream.value = stream
+    const videoTrack = stream.getVideoTracks()[0]
+    if (videoTrack?.getCapabilities) {
+      const capabilities = videoTrack.getCapabilities() as MediaTrackCapabilities & {
+        focusMode?: string[]
+      }
+      const width = capabilities.width?.max
+      const height = capabilities.height?.max
+      const advanced: MediaTrackConstraintSet[] = []
+      if (capabilities.focusMode?.includes('continuous')) {
+        advanced.push({ focusMode: 'continuous' } as MediaTrackConstraintSet)
+      }
+      try {
+        await videoTrack.applyConstraints({
+          ...(width ? { width: { ideal: isCamoDevice ? Math.min(width, 1280) : Math.min(width, 4096) } } : {}),
+          ...(height ? { height: { ideal: isCamoDevice ? Math.min(height, 720) : Math.min(height, 3072) } } : {}),
+          ...(advanced.length ? { advanced } : {}),
+        })
+      } catch (constraintError) {
+        console.warn('摄像头不支持高分辨率或连续对焦约束', constraintError)
+      }
+    }
+
+    if (desktopCameraVideo.value) {
+      desktopCameraVideo.value.srcObject = stream
+      await desktopCameraVideo.value.play()
+    }
+
+    const settings = videoTrack?.getSettings()
+    desktopCameraDeviceId.value = settings?.deviceId || deviceId
+    desktopCameraResolution.value = settings?.width && settings?.height
+      ? `${settings.width} × ${settings.height}`
+      : '分辨率未知'
+    await refreshDesktopCameraDevices()
+
+    const phoneCamera = desktopCameraDevices.value.find(device =>
+      /camo|redmi|xiaomi|小米/i.test(device.label),
+    )
+    if (preferPhone && phoneCamera && phoneCamera.deviceId !== desktopCameraDeviceId.value) {
+      desktopCameraDeviceId.value = phoneCamera.deviceId
+      await startDesktopCameraStream(phoneCamera.deviceId, false)
+    }
+  } catch (cameraError) {
+    desktopCameraError.value = desktopCameraErrorMessage(cameraError)
+  } finally {
+    desktopCameraStarting.value = false
+  }
+}
+
+const openDesktopCamera = async () => {
+  desktopCameraProblemId.value = currentQuestion.value.problem_id
+  desktopCameraQuestionOrder.value = currentIndex.value + 1
+  desktopCameraError.value = ''
+  clearDesktopCameraCapture()
+  showDesktopCamera.value = true
+  desktopCameraStarting.value = true
+  await nextTick()
+
+  if (!navigator.mediaDevices?.getUserMedia) {
+    desktopCameraStarting.value = false
+    desktopCameraError.value = '当前浏览器不支持摄像头拍照，请使用最新版 Chrome、Edge 或 Safari。'
+    return
+  }
+
+  await startDesktopCameraStream(desktopCameraDeviceId.value)
+}
+
+const switchDesktopCameraDevice = async () => {
+  clearDesktopCameraCapture()
+  desktopCameraError.value = ''
+  await startDesktopCameraStream(desktopCameraDeviceId.value, false)
+}
+
+const closeDesktopCamera = () => {
+  showDesktopCamera.value = false
+  desktopCameraStarting.value = false
+  desktopCameraProcessing.value = false
+  desktopCameraSelectingFrame.value = false
+  desktopCameraError.value = ''
+  stopDesktopCameraStream()
+  clearDesktopCameraCapture()
+  desktopCameraProblemId.value = null
+  desktopCameraResolution.value = ''
+  if (desktopCameraCanvas.value) {
+    desktopCameraCanvas.value.width = 0
+    desktopCameraCanvas.value.height = 0
+  }
+}
+
+const refreshDesktopCameraEnhancement = async () => {
+  const source = desktopCameraCanvas.value
+  if (!source?.width || !source.height) return
+  desktopCameraProcessing.value = true
+  desktopCameraError.value = ''
+  try {
+    await nextTick()
+    await new Promise(resolve => window.setTimeout(resolve, 0))
+    const output = desktopCameraEnhancementEnabled.value
+      ? enhanceDocumentCanvas(
+          source,
+          desktopCameraEnhancementStrength.value / 100,
+          desktopCameraSharpenStrength.value / 100,
+        )
+      : imageToCanvas(source, source.width, source.height)
+    const file = await canvasToFile(output, `exam-camera-${Date.now()}.jpg`, 0.99)
+    clearDesktopCameraCapture()
+    desktopCameraFile.value = file
+    desktopCameraPreviewUrl.value = URL.createObjectURL(file)
+  } catch (enhancementError) {
+    desktopCameraError.value = enhancementError instanceof Error
+      ? enhancementError.message
+      : '照片增强失败。'
+  } finally {
+    desktopCameraProcessing.value = false
+  }
+}
+
+const calculateFrameSharpness = (source: HTMLCanvasElement) => {
+  const sampleWidth = Math.min(360, source.width)
+  const sampleHeight = Math.max(1, Math.round(source.height * sampleWidth / source.width))
+  const sample = imageToCanvas(source, sampleWidth, sampleHeight)
+  const context = sample.getContext('2d', { willReadFrequently: true })
+  if (!context || sampleWidth < 3 || sampleHeight < 3) return 0
+
+  const pixels = context.getImageData(0, 0, sampleWidth, sampleHeight).data
+  const grayscale = new Float32Array(sampleWidth * sampleHeight)
+  for (let index = 0; index < grayscale.length; index += 1) {
+    const pixel = index * 4
+    grayscale[index] = pixels[pixel] * 0.299 + pixels[pixel + 1] * 0.587 + pixels[pixel + 2] * 0.114
+  }
+
+  let edgeEnergy = 0
+  let samples = 0
+  for (let y = 1; y < sampleHeight - 1; y += 2) {
+    for (let x = 1; x < sampleWidth - 1; x += 2) {
+      const index = y * sampleWidth + x
+      const laplacian = grayscale[index] * 4
+        - grayscale[index - 1]
+        - grayscale[index + 1]
+        - grayscale[index - sampleWidth]
+        - grayscale[index + sampleWidth]
+      edgeEnergy += laplacian * laplacian
+      samples += 1
+    }
+  }
+  return samples ? edgeEnergy / samples : 0
+}
+
+const captureSharpestDesktopFrame = async (video: HTMLVideoElement) => {
+  const frameCount = 6
+  let bestFrame: HTMLCanvasElement | null = null
+  let bestScore = -1
+
+  for (let index = 0; index < frameCount; index += 1) {
+    if (index) await new Promise(resolve => window.setTimeout(resolve, 120))
+    const frame = imageToCanvas(video, video.videoWidth, video.videoHeight)
+    const score = calculateFrameSharpness(frame)
+    if (score > bestScore) {
+      bestScore = score
+      bestFrame = frame
+    }
+  }
+
+  if (!bestFrame) throw new Error('无法获取摄像头画面。')
+  return bestFrame
+}
+
+const prepareDesktopCameraFocus = async () => {
+  const videoTrack = desktopCameraStream.value?.getVideoTracks()[0]
+  if (!videoTrack?.getCapabilities) return
+
+  const capabilities = videoTrack.getCapabilities() as MediaTrackCapabilities & {
+    focusMode?: string[]
+  }
+  const focusModes = capabilities.focusMode || []
+  const focusMode = focusModes.includes('single-shot')
+    ? 'single-shot'
+    : focusModes.includes('continuous') ? 'continuous' : ''
+  if (!focusMode) return
+
+  try {
+    await videoTrack.applyConstraints({
+      advanced: [{ focusMode } as MediaTrackConstraintSet],
+    })
+    await new Promise(resolve => window.setTimeout(resolve, focusMode === 'single-shot' ? 700 : 300))
+  } catch (focusError) {
+    console.warn('摄像头无法重新触发自动对焦', focusError)
+  }
+}
+
+const captureDesktopPhoto = async () => {
+  const video = desktopCameraVideo.value
+  const canvas = desktopCameraCanvas.value
+  if (!video || !canvas || !video.videoWidth || !video.videoHeight) {
+    desktopCameraError.value = '摄像头画面还未准备好，请稍后再拍。'
+    return
+  }
+
+  desktopCameraProcessing.value = true
+  desktopCameraSelectingFrame.value = true
+  desktopCameraError.value = ''
+  try {
+    await prepareDesktopCameraFocus()
+    const sharpestFrame = await captureSharpestDesktopFrame(video)
+    canvas.width = sharpestFrame.width
+    canvas.height = sharpestFrame.height
+    const context = canvas.getContext('2d', { willReadFrequently: true })
+    if (!context) throw new Error('无法生成拍照图片。')
+    context.imageSmoothingEnabled = false
+    context.drawImage(sharpestFrame, 0, 0)
+    desktopCameraSelectingFrame.value = false
+    await refreshDesktopCameraEnhancement()
+  } catch (captureError) {
+    desktopCameraError.value = captureError instanceof Error
+      ? captureError.message
+      : '摄像头拍照失败。'
+    desktopCameraProcessing.value = false
+  } finally {
+    desktopCameraSelectingFrame.value = false
+  }
+}
+
+const retakeDesktopPhoto = () => {
+  clearDesktopCameraCapture()
+  desktopCameraError.value = ''
+}
+
+const uploadDesktopPhotoToQuestion = async () => {
+  const file = desktopCameraFile.value
+  const problemId = desktopCameraProblemId.value
+  if (!file || !problemId) return
+  uploading.value = true
+  try {
+    answers.value[problemId] = await uploadAnswerImage(file, problemId)
+    closeDesktopCamera()
+    success('摄像头照片已上传到本题')
+  } catch (uploadError) {
+    error(uploadError instanceof Error ? uploadError.message : '摄像头照片上传失败')
+  } finally {
+    uploading.value = false
+  }
+}
+
+const sendDesktopPhotoToSplitter = () => {
+  const file = desktopCameraFile.value
+  if (!file) return
+  closeDesktopCamera()
+  openImageSplitter([file])
+}
+
+const normalizePhoneCameraAddress = (value: string) => {
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `http://${trimmed}`
+}
+
+const phoneCameraBridgeBaseUrl = 'http://127.0.0.1:8767'
+
+const loadPhoneCameraBridgeDownloadUrls = async () => {
+  try {
+    const response = await fetch(`/phone-camera-bridge-downloads.json?t=${Date.now()}`, { cache: 'no-store' })
+    if (!response.ok) return
+    const configuredUrls = await response.json() as Partial<Record<PhoneBridgePlatform, string>>
+    phoneCameraBridgeUrls.value = {
+      windows: configuredUrls.windows?.trim() || defaultPhoneCameraBridgeUrls.windows,
+      macos: configuredUrls.macos?.trim() || defaultPhoneCameraBridgeUrls.macos,
+      linux: configuredUrls.linux?.trim() || defaultPhoneCameraBridgeUrls.linux,
+    }
+  } catch (loadError) {
+    console.warn('手机相机桥接下载地址加载失败，使用内置地址', loadError)
+  }
+}
+
+const buildPhoneCameraRequestUrl = (path: string) => {
+  const phoneBaseUrl = normalizePhoneCameraAddress(phoneCameraAddress.value)
+  if (!phoneBaseUrl) return ''
+
+  if (isHttpsPage) {
+    const query = new URLSearchParams({
+      phone: phoneBaseUrl,
+      t: String(Date.now()),
+    })
+    return `${phoneCameraBridgeBaseUrl}${path}?${query.toString()}`
+  }
+
+  return `${phoneBaseUrl}${path}?t=${Date.now()}`
+}
+
+const stopPhoneCameraPreview = () => {
+  if (phoneCameraPreviewTimer !== null) {
+    window.clearInterval(phoneCameraPreviewTimer)
+    phoneCameraPreviewTimer = null
+  }
+  phoneCameraLivePreviewUrl.value = ''
+}
+
+const startPhoneCameraPreview = () => {
+  stopPhoneCameraPreview()
+  phoneCameraLivePreviewUrl.value = buildPhoneCameraRequestUrl('/stream.mjpeg')
+}
+
+const clearPhoneCameraShots = () => {
+  phoneCameraShots.value.forEach(shot => URL.revokeObjectURL(shot.previewUrl))
+  phoneCameraShots.value = []
+  phoneCameraPhotoResolution.value = ''
+}
+
+const removePhoneCameraShot = (shotId: number) => {
+  const shot = phoneCameraShots.value.find(item => item.id === shotId)
+  if (shot) URL.revokeObjectURL(shot.previewUrl)
+  phoneCameraShots.value = phoneCameraShots.value.filter(item => item.id !== shotId)
+  const latest = phoneCameraLatestShot.value
+  phoneCameraPhotoResolution.value = latest ? `${latest.width} × ${latest.height}` : ''
+}
+
+const connectPhoneCamera = async () => {
+  const baseUrl = normalizePhoneCameraAddress(phoneCameraAddress.value)
+  if (!baseUrl) return
+  phoneCameraConnecting.value = true
+  phoneCameraConnected.value = false
+  phoneCameraError.value = ''
+  stopPhoneCameraPreview()
+
+  try {
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 5000)
+    let response: Response
+    try {
+      response = await fetch(buildPhoneCameraRequestUrl('/status'), {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+    } finally {
+      window.clearTimeout(timeout)
+    }
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null) as { message?: string } | null
+      throw new Error(failure?.message || `手机返回 ${response.status}`)
+    }
+    const status = await response.json() as { ready?: boolean }
+    if (!status.ready) throw new Error('手机相机还没有准备好')
+    phoneCameraAddress.value = baseUrl
+    localStorage.setItem('byteoj-phone-camera-address', baseUrl)
+    phoneCameraConnected.value = true
+    startPhoneCameraPreview()
+  } catch (connectionError) {
+    phoneCameraError.value = isHttpsPage
+      ? `连接失败：${connectionError instanceof Error ? connectionError.message : '未检测到本机桥接'}。线上页面需要在这台电脑安装并启动 ByteOJ 手机相机桥接。`
+      : `连接失败：${connectionError instanceof Error ? connectionError.message : '请确认手机与电脑在同一 Wi-Fi'}`
+  } finally {
+    phoneCameraConnecting.value = false
+  }
+}
+
+const openPhoneCameraForSplitter = async () => {
+  closeDesktopCamera()
+  phoneCameraError.value = ''
+  clearPhoneCameraShots()
+  showPhoneCamera.value = true
+  await nextTick()
+  if (phoneCameraAddress.value) await connectPhoneCamera()
+}
+
+const closePhoneCamera = () => {
+  showPhoneCamera.value = false
+  phoneCameraConnecting.value = false
+  phoneCameraCapturing.value = false
+  phoneCameraConnected.value = false
+  phoneCameraError.value = ''
+  stopPhoneCameraPreview()
+  clearPhoneCameraShots()
+}
+
+const handlePhoneCameraPreviewError = () => {
+  if (!phoneCameraCapturing.value && phoneCameraConnected.value) {
+    phoneCameraError.value = '暂时没有收到预览画面，请保持手机应用在前台。'
+  }
+}
+
+const capturePhonePhoto = async () => {
+  const baseUrl = normalizePhoneCameraAddress(phoneCameraAddress.value)
+  if (!baseUrl || !phoneCameraConnected.value) return
+  if (phoneCameraShots.value.length >= 30) {
+    warning('一次最多连续拍摄 30 张，请先进入整页切分或清空已拍照片')
+    return
+  }
+  phoneCameraCapturing.value = true
+  phoneCameraError.value = ''
+  stopPhoneCameraPreview()
+
+  try {
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 25000)
+    let response: Response
+    try {
+      response = await fetch(buildPhoneCameraRequestUrl('/capture'), {
+        method: 'POST',
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+    } finally {
+      window.clearTimeout(timeout)
+    }
+    if (!response.ok) {
+      const failure = await response.json().catch(() => null) as { message?: string } | null
+      throw new Error(failure?.message || `拍照失败（${response.status}）`)
+    }
+    const blob = await response.blob()
+    if (!blob.type.startsWith('image/')) throw new Error('手机没有返回有效图片')
+    const file = new File([blob], `exam-phone-${Date.now()}.jpg`, { type: blob.type || 'image/jpeg' })
+    const previewUrl = URL.createObjectURL(file)
+    const image = new Image()
+    try {
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => resolve()
+        image.onerror = () => reject(new Error('无法读取手机照片'))
+        image.src = previewUrl
+      })
+    } catch (imageError) {
+      URL.revokeObjectURL(previewUrl)
+      throw imageError
+    }
+    phoneCameraShots.value.push({
+      id: Date.now() + phoneCameraShots.value.length,
+      file,
+      previewUrl,
+      width: image.naturalWidth,
+      height: image.naturalHeight,
+    })
+    phoneCameraPhotoResolution.value = `${image.naturalWidth} × ${image.naturalHeight}`
+  } catch (captureError) {
+    phoneCameraError.value = captureError instanceof Error ? captureError.message : '手机高清拍照失败'
+  } finally {
+    phoneCameraCapturing.value = false
+    if (phoneCameraConnected.value) startPhoneCameraPreview()
+  }
+}
+
+const sendPhonePhotosToSplitter = async () => {
+  const files = phoneCameraShots.value.map(shot => shot.file)
+  if (!files.length) return
+  closePhoneCamera()
+  await nextTick()
+  await imageSplitter.value?.addExternalFiles(files)
+}
+
+const formatFileSize = (bytes: number) => {
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
+const uploadAnswerImage = async (file: File, _problemId?: number) => {
+  const formData = new FormData()
+  formData.append('files[]', file, file.name)
+  const res = await UserControllerService.userUploadPictureUsingPost(formData, 2)
+  if (res.code !== 0 || typeof res.data !== 'string' || !res.data) {
+    throw new Error(res.message || '图片上传失败')
+  }
+  return res.data
+}
+
+interface SplitterQuestion {
+  problemId: number
+  order: number
+  typeLabel: string
+  hasImage: boolean
+}
+
+// 处理当前题目的单张图片上传
 const handleFileChange = async (e: Event) => {
   const target = e.target as HTMLInputElement
   if (!target.files || target.files.length === 0) return
 
   uploading.value = true
+  const problemId = currentQuestion.value.problem_id
 
   try {
-    const formData = new FormData()
-    // 支持一次传多张？这里示例只取第一张，你可以改成循环
-    formData.append('file', target.files[0])
-
-    // 调用你提供的上传接口（注意：你示例中是 userUploadPictureUsingPost(fileList, 1)）
-    // 这里假设改成了支持 FormData 的写法，根据实际 SDK 调整
-    const res = await UserControllerService.userUploadPictureUsingPost(
-        target.files,   // FileList
-        2               // 第二个参数是什么含义？请确认
-    )
-
-    if (res.code === 0) {
-      // 成功后清理
-      if (storageKey.value) {
-        localStorage.removeItem(storageKey.value)
-      }
-      // 假设 res.data 是字符串链接
-      const url = res.data
-
-      // 存入 answers（这里示例只支持一张，后面可改成数组）
-      answers.value[currentQuestion.value.problem_id] = url
-
-      // 如果你想支持多张，可以改成：
-      // if (!Array.isArray(answers.value[pid])) answers.value[pid] = []
-      // answers.value[pid].push(url)
-    } else {
-      error(res.message || "上传失败")
-    }
+    answers.value[problemId] = await uploadAnswerImage(target.files[0], problemId)
+    success('答题图片上传成功')
   } catch (err) {
     console.error("图片上传异常", err)
-    error("上传过程中发生错误")
+    error(err instanceof Error ? err.message : "上传过程中发生错误")
   } finally {
     uploading.value = false
     // 清空 input 防止重复触发相同文件
-    if (fileInput.value) fileInput.value.value = ''
+    target.value = ''
   }
+}
+
+const handleSplitImagesApplied = (results: Record<number, string>) => {
+  Object.entries(results).forEach(([problemId, url]) => {
+    answers.value[Number(problemId)] = url
+  })
+  closeImageSplitter()
+  success(`已为 ${Object.keys(results).length} 道题上传答案图片`)
 }
 
 // 删除已上传图片
@@ -544,6 +1584,16 @@ const removeUploadedImage = (problemId: number, index: number) => {
     // 单张直接删除
     delete answers.value[problemId]
   }
+}
+
+const clearAllAnswerImages = () => {
+  const problemIds = eligibleImageQuestions.value
+      .filter(question => question.hasImage)
+      .map(question => question.problemId)
+  if (!problemIds.length) return
+  if (!window.confirm(`确定清空已上传的 ${problemIds.length} 道题图片吗？文字答案不会被删除。`)) return
+  problemIds.forEach(problemId => delete answers.value[problemId])
+  success(`已清空 ${problemIds.length} 道题的图片答案`)
 }
 
 // ==================== 提交时的数据处理调整 ====================
@@ -585,17 +1635,12 @@ const confirmSubmit = async () => {
 
         case 3: // 填空
         case 0: // 简答
-                // 图片链接（你主要想实现的）
-          if (typeof val === 'string' && val.startsWith('http')) {
-            finalAnswer = val
-          } else if (Array.isArray(val) && val.length > 0) {
-            finalAnswer = val.join(',')   // 或 JSON.stringify(val)，看后端要求
+          // 后端只能识别一个纯图片 URL；有图片时不再拼接文字。
+          if (typeof val === 'string' && val.startsWith('http')) finalAnswer = val
+          else if (Array.isArray(val)) {
+            finalAnswer = val.find(item => typeof item === 'string' && item.startsWith('http')) || ''
           }
-          // 简答题可额外拼接文字（可选）
-          if (q.option_type === 0) {
-            const text = textAnswers.value[pid]?.trim()
-            if (text) finalAnswer = finalAnswer ? `${finalAnswer}\n${text}` : text
-          }
+          if (!finalAnswer) finalAnswer = textAnswers.value[pid]?.trim() || ''
           break
 
         case 4: // 算法题
@@ -644,6 +1689,22 @@ const confirmSubmit = async () => {
 }
 // --- 计算属性 ---
 const currentQuestion = computed(() => questions.value[currentIndex.value] || {})
+
+const eligibleImageQuestions = computed<SplitterQuestion[]>(() => {
+  return questions.value.flatMap((question, index) => {
+    if (isAlgorithmQuestion(question) || (question.option_type !== 0 && question.option_type !== 3)) return []
+    return [{
+      problemId: question.problem_id,
+      order: index + 1,
+      typeLabel: question.option_type === 3 ? '填空题' : '简答题',
+      hasImage: getAnswerImages(question.problem_id).length > 0,
+    }]
+  })
+})
+
+const uploadedAnswerImageCount = computed(() => {
+  return eligibleImageQuestions.value.filter(question => question.hasImage).length
+})
 
 const displayTimer = computed(() => {
   const h = Math.floor(remaining.value / 3600).toString().padStart(2, '0')
@@ -865,6 +1926,8 @@ const getEffectiveType = (q: ProblemItem) => {
 }
 // --- 生命周期 ---
 onMounted(async () => {
+  window.addEventListener('keydown', handleImagePreviewKeydown)
+  await loadPhoneCameraBridgeDownloadUrls()
 
   const examId = route.query.exam_id
   let current = localStorage.getItem(examId + "-currentIndex");
@@ -944,7 +2007,12 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleImagePreviewKeydown)
   stopTimer()
+  stopDesktopCameraStream()
+  clearDesktopCameraCapture()
+  stopPhoneCameraPreview()
+  clearPhoneCameraShots()
 })
 </script>
 <style scoped>
@@ -963,6 +2031,116 @@ onUnmounted(() => {
   --algo-text: #d4d4d4;
 
   background-color: var(--bg-main);
+}
+
+.exam-container :deep(img:not(.exam-image-viewer img)) {
+  cursor: zoom-in;
+}
+
+.exam-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(3, 7, 18, 0.88);
+}
+
+.exam-image-viewer-dialog {
+  width: min(1280px, 100%);
+  height: min(900px, calc(100vh - 40px));
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  background: #111827;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.exam-image-viewer-dialog > header,
+.exam-image-viewer-dialog > footer {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.exam-image-viewer-dialog > header {
+  justify-content: space-between;
+  border-bottom: 1px solid #dbe2ea;
+}
+
+.exam-image-viewer-dialog > header strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.exam-image-viewer-dialog button {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.exam-image-viewer-dialog button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.exam-image-viewer-dialog button svg {
+  width: 20px;
+  height: 20px;
+}
+
+.exam-image-viewer-stage {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: #111827;
+}
+
+.exam-image-viewer-canvas {
+  min-width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exam-image-viewer-canvas img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  cursor: default;
+  user-select: none;
+}
+
+.exam-image-viewer-dialog > footer {
+  justify-content: center;
+  border-top: 1px solid #dbe2ea;
+}
+
+.exam-image-viewer-dialog output {
+  width: 56px;
+  color: #475569;
+  font-size: 13px;
+  text-align: center;
 }
 
 /* --- 2. 基础重置 --- */
@@ -1420,6 +2598,44 @@ input[type="checkbox"] {
   padding: 12px 0;
 }
 
+.image-answer-summary {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  border: 1px solid #dbe2ea;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 14px;
+}
+
+.clear-images-button {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.clear-images-button svg {
+  width: 17px;
+  height: 17px;
+}
+
+.clear-images-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .uploaded-images {
   display: flex;
   flex-wrap: wrap;
@@ -1459,18 +2675,77 @@ input[type="checkbox"] {
 }
 
 .upload-zone {
-  text-align: center;
   margin: 16px 0 24px;
+  padding: 20px;
+  border: 2px dashed #b8c4d4;
+  border-radius: 8px;
+  background: #fbfcfe;
+  transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.upload-zone.is-dragging {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.drop-zone-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #334155;
+}
+
+.drop-zone-copy > svg {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  color: #2563eb;
+}
+
+.drop-zone-copy strong,
+.drop-zone-copy span {
+  display: block;
+}
+
+.drop-zone-copy strong {
+  font-size: 15px;
+}
+
+.drop-zone-copy span {
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.upload-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
 }
 
 .btn-upload {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   padding: 10px 24px;
   font-size: 1.05rem;
   background: #6366f1;
   color: white;
   border: none;
-  border-radius: 999px;
+  border-radius: 6px;
   cursor: pointer;
+}
+
+.btn-upload svg {
+  width: 19px;
+  height: 19px;
 }
 
 .btn-upload:disabled {
@@ -1478,10 +2753,541 @@ input[type="checkbox"] {
   cursor: not-allowed;
 }
 
+.btn-upload.batch-upload {
+  background: #ffffff;
+  color: #4338ca;
+  border: 1px solid #6366f1;
+}
+
+.camera-upload {
+  display: none;
+  background: #0f766e;
+}
+
+.desktop-camera-upload {
+  background: #0f766e;
+}
+
+.desktop-camera-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.desktop-camera-modal {
+  width: min(820px, 100%);
+  max-height: calc(100vh - 40px);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.38);
+}
+
+.desktop-camera-header {
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #dbe2ea;
+}
+
+.desktop-camera-header h3 {
+  margin: 0;
+  color: #172033;
+  font-size: 18px;
+}
+
+.desktop-camera-header span {
+  display: block;
+  margin-top: 2px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.desktop-camera-device-bar {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 9px 18px;
+  border-bottom: 1px solid #dbe2ea;
+  background: #f8fafc;
+}
+
+.desktop-camera-device-bar label {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.desktop-camera-device-bar select {
+  min-width: 0;
+  flex: 1;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+}
+
+.phone-camera-address-bar {
+  min-height: 58px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 18px;
+  border-bottom: 1px solid #dbe2ea;
+  background: #f8fafc;
+}
+
+.phone-camera-address-bar label {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.phone-camera-address-bar input {
+  min-width: 0;
+  flex: 1;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+}
+
+.phone-camera-connection {
+  flex: 0 0 auto;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.phone-camera-connection.connected {
+  color: #047857;
+}
+
+.phone-camera-download-bar {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 18px;
+  border-bottom: 1px solid #dbe2ea;
+  background: #ffffff;
+  color: #475569;
+  font-size: 13px;
+}
+
+.phone-camera-download-bar > span {
+  margin-right: 2px;
+  font-weight: 600;
+}
+
+.phone-camera-download-link {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #334155;
+  text-decoration: none;
+}
+
+.phone-camera-download-link:hover {
+  border-color: #2563eb;
+  color: #1d4ed8;
+}
+
+.phone-camera-download-link svg {
+  width: 15px;
+  height: 15px;
+}
+
+.phone-camera-stage {
+  aspect-ratio: 16 / 10;
+}
+
+.phone-camera-shots {
+  min-height: 82px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 8px 18px;
+  border-top: 1px solid #dbe2ea;
+  background: #ffffff;
+}
+
+.phone-camera-shot {
+  position: relative;
+  width: 72px;
+  height: 64px;
+  flex: 0 0 72px;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #0f172a;
+}
+
+.phone-camera-shot > img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.phone-camera-shot > span {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 20px;
+  text-align: center;
+}
+
+.phone-camera-shot > button {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(185, 28, 28, 0.9);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.phone-camera-shot > button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.phone-camera-shot > button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.phone-camera-photo-info {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px;
+  border-top: 1px solid #dbe2ea;
+  color: #475569;
+  font-size: 13px;
+}
+
+.desktop-camera-resolution {
+  flex: 0 0 auto;
+  color: #475569;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+.camera-icon-button {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+}
+
+.camera-icon-button svg {
+  width: 21px;
+  height: 21px;
+}
+
+.desktop-camera-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.desktop-camera-stage video,
+.desktop-camera-stage img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.desktop-camera-status {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.desktop-camera-status.camera-error {
+  color: #fecaca;
+}
+
+.phone-camera-stage .desktop-camera-status.camera-error {
+  flex-direction: column;
+  gap: 14px;
+}
+
+.phone-camera-bridge-download {
+  min-height: 36px;
+  text-decoration: none;
+}
+
+.desktop-camera-status.camera-processing {
+  background: rgba(15, 23, 42, 0.54);
+  color: #dbeafe;
+}
+
+.desktop-camera-enhancement {
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 9px 18px;
+  border-top: 1px solid #dbe2ea;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+}
+
+.camera-enhancement-toggle,
+.camera-enhancement-strength {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.camera-enhancement-toggle {
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.camera-enhancement-toggle input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.camera-enhancement-strength {
+  min-width: 280px;
+  flex: 1;
+}
+
+.camera-enhancement-strength input[type="range"] {
+  min-width: 140px;
+  flex: 1;
+  accent-color: #2563eb;
+}
+
+.camera-enhancement-strength output {
+  width: 42px;
+  color: #1d4ed8;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.camera-enhancement-strength.disabled {
+  opacity: 0.48;
+}
+
+.desktop-camera-actions {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid #dbe2ea;
+}
+
+.camera-primary-button,
+.camera-secondary-button {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.camera-primary-button {
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.camera-secondary-button {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.camera-primary-button svg,
+.camera-secondary-button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.camera-primary-button:disabled,
+.camera-secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .upload-tip {
   margin-top: 8px;
+  text-align: center;
   font-size: 0.9rem;
   color: #64748b;
+}
+
+@media (hover: none), (pointer: coarse) {
+  .camera-upload {
+    display: inline-flex;
+  }
+
+  .drop-zone-copy {
+    display: none;
+  }
+
+  .upload-buttons {
+    margin-top: 0;
+  }
+
+}
+
+@media (max-width: 640px) {
+  .image-answer-summary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .clear-images-button,
+  .btn-upload {
+    width: 100%;
+  }
+
+  .upload-zone {
+    padding: 14px;
+  }
+
+  .desktop-camera-upload {
+    display: none;
+  }
+
+  .desktop-camera-overlay {
+    padding: 0;
+  }
+
+  .desktop-camera-modal {
+    width: 100%;
+    max-height: 100vh;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .desktop-camera-actions > button {
+    flex: 1 1 140px;
+  }
+
+  .desktop-camera-enhancement {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .camera-enhancement-strength {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .desktop-camera-device-bar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .desktop-camera-device-bar label {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .phone-camera-address-bar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .phone-camera-address-bar label {
+    flex-basis: 100%;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .phone-camera-download-bar {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .phone-camera-download-bar > span {
+    flex-basis: 100%;
+  }
 }
 
 .fill-blank {
