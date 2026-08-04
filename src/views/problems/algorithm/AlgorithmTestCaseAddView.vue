@@ -107,9 +107,22 @@ const cancelJob = async () => { if (job.value?.jobId) { await AlgorithmTestGener
 const retryJob = async () => { if (job.value?.jobId) { await AlgorithmTestGenerationControllerService.retryJob(job.value.jobId); await loadJob(job.value.jobId); startPolling(job.value.jobId); } };
 const debugGenerator = async () => {
   if (!debugScale.value.code.trim()) return ElMessage.warning('请粘贴生成器代码');
-  const res = await AlgorithmTestGenerationControllerService.debugGenerator({ problemId: problemId.value, ...debugScale.value });
-  generatorDebug.value = res.data ?? null;
-  if (res.code === 0) ElMessage.success('生成器调试通过');
+  const runningMessage = ElMessage({ message: '正在调用沙箱，请稍候...', type: 'info', duration: 0 });
+  generatorDebug.value = null;
+  try {
+    const res = await AlgorithmTestGenerationControllerService.debugGenerator({ problemId: problemId.value, ...debugScale.value });
+    if (res.code !== 0 || !res.data) throw new Error(res.message || '生成器调试失败');
+    generatorDebug.value = res.data;
+    ElNotification.success({
+      title: '沙箱调试通过',
+      message: '成功生成 ' + (res.data.generatedCount ?? 0) + ' 条输入，耗时 ' + (res.data.elapsedMs ?? 0) + ' ms',
+    });
+  } catch (error: any) {
+    const message = error?.body?.message || error?.response?.data?.message || error?.message || '无法连接后端或沙箱服务';
+    ElNotification.error({ title: '沙箱调试失败', message, duration: 6000 });
+  } finally {
+    runningMessage.close();
+  }
 };
 const saveReference = async () => {
   referenceForm.value.problemId = problemId.value;
