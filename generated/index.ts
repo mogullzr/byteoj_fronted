@@ -9,6 +9,16 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AdminRegisterRequest } from './models/AdminRegisterRequest';
 export type { AlgorithmQueryRequest } from './models/AlgorithmQueryRequest';
+export type { CreateTestGenerationJobRequest } from './models/CreateTestGenerationJobRequest';
+export type { TestGenerationScaleRequest } from './models/TestGenerationScaleRequest';
+export type { GeneratorDebugRequest } from './models/GeneratorDebugRequest';
+export type { ReferenceSolutionUpsertRequest } from './models/ReferenceSolutionUpsertRequest';
+export type { ReferenceSolutionDebugRequest } from './models/ReferenceSolutionDebugRequest';
+export type { GeneratedCasePreviewVO } from './models/GeneratedCasePreviewVO';
+export type { GeneratorDebugResultVO } from './models/GeneratorDebugResultVO';
+export type { TestGenerationScaleVO } from './models/TestGenerationScaleVO';
+export type { TestGenerationJobVO } from './models/TestGenerationJobVO';
+export type { ReferenceSolutionVO } from './models/ReferenceSolutionVO';
 export type { BaseResponse_boolean_ } from './models/BaseResponse_boolean_';
 export type { BaseResponse_CompetitionInfoVo_ } from './models/BaseResponse_CompetitionInfoVo_';
 export type { BaseResponse_CompetitionRankVo_ } from './models/BaseResponse_CompetitionRankVo_';
@@ -90,6 +100,7 @@ export type { View } from './models/View';
 export type { WebsiteBackgroundPictures } from './models/WebsiteBackgroundPictures';
 
 export { BasicErrorControllerService } from './services/BasicErrorControllerService';
+export { AlgorithmTestGenerationControllerService } from './services/AlgorithmTestGenerationControllerService';
 export { CompetitionControllerService } from './services/CompetitionControllerService';
 export { CourseControllerService } from './services/CourseControllerService';
 export { DeepSeekAiControllerService } from './services/DeepSeekAiControllerService';
