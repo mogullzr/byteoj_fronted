@@ -17,7 +17,7 @@
   <!-- 左侧导航 -->
   <div class="fixed left-3 top-1/2 -translate-y-1/2 z-50 hidden xl:flex flex-col gap-5">
     <div
-        v-for="(item, index) in leftNavItems"
+        v-for="(item, index) in visibleLeftNavItems"
         :key="index"
         class="relative"
     >
@@ -68,7 +68,7 @@
   <!-- 右侧导航 -->
   <div class="fixed right-3 top-1/2 -translate-y-1/2 z-50 hidden xl:flex flex-col gap-5">
     <div
-        v-for="(item, index) in rightNavItems"
+        v-for="(item, index) in visibleRightNavItems"
         :key="index"
         class="relative"
     >
@@ -115,10 +115,11 @@
       </transition>
     </div>
   </div>
-  <div class="intro-page">
+  <div class="intro-page" :class="{ 'intro-page-2026': is2026 }">
     <!-- Hero Section -->
     <section class="hero bg-gradient-to-r from-primary to-info p-8 text-white text-center">
       <div class="container mx-auto py-16">
+        <div v-if="is2026" class="edition-kicker">2026 EDITION</div>
         <h1 class="text-5xl font-bold">ByteOJ</h1>
         <p class="text-2xl mb-8">AI赋能算法学习OJ平台</p>
 <!--        &lt;!&ndash; 添加的字数和阅读时间信息 &ndash;&gt;-->
@@ -126,7 +127,24 @@
 <!--        <span class="inline-block mx-2">•</span>-->
 <!--        <span class="inline-block mx-2">阅读约需 8 分钟</span>-->
         <div class="text-md opacity-80 font-bold mb-6">
-          <span class="inline-block mx-2" style="font-size: 20px">更新时间: 2025年10月6日 中午14:44:55</span>
+          <span v-if="is2026" class="inline-block mx-2" style="font-size: 20px">更新时间: 2026年8月8日 15:28:58</span>
+          <span v-else class="inline-block mx-2" style="font-size: 20px">更新时间: 2025年10月6日 中午14:44:55</span>
+        </div>
+        <div class="year-switcher" aria-label="介绍年份">
+          <router-link
+              to="/introduction?year=2025"
+              class="year-option"
+              :class="{ active: !is2026 }"
+          >
+            2025
+          </router-link>
+          <router-link
+              to="/introduction"
+              class="year-option"
+              :class="{ active: is2026 }"
+          >
+            2026
+          </router-link>
         </div>
         <div class="flex justify-center gap-4">
           <!-- 后端仓库 -->
@@ -223,7 +241,11 @@
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body">
                 <h4 class="card-title">Mogullzr（主开发者）</h4>
-                <p>软件工程某不知名校友🤭。自行开发<strong>ByteOJ</strong>，已经在<strong>2024届软件工程</strong> 学生
+                <p v-if="is2026">软件工程某不知名校友🤭。自行开发<strong>ByteOJ</strong>，已经面向<strong>2024届、2025届软件工程学生举办过讲座</strong>。其中，2024届以讲课模式为<strong>大一为主体、大二为辅的群体</strong>开展过较为体系化的教学和训练工作<strong>（主讲人：Mogullzr、Merrick、Siersi）</strong>；2025届也举办了讲座，但由于学生整体积极性略低，加上本人时间有限，后续教学与训练没有继续办起来。网站目前有123位用户，其中包括现大二大三大四软件工程专业学生以及极个别校外用户。主攻语言为<strong>Java、Python</strong>，
+                  <del>喜欢搞事情</del>
+                  。
+                </p>
+                <p v-else>软件工程某不知名校友🤭。自行开发<strong>ByteOJ</strong>，已经在<strong>2024届软件工程</strong> 学生
                   <strong>举办过讲座</strong>并且以讲课的模式为<strong>大一为主体，大二为辅的群体</strong>进行过较为体系化的教学和训练工作<strong>（主讲人：Mogullzr、Merrick、Siersi）</strong>。目前已经使用过一个学期<strong>（由于考研下册并没有继续）</strong>，网站目前有123位用户，其中包括现大二大三大四软件工程专业学生以及极个别校外用户。主攻语言为<strong>Java、Python</strong>，
                   <del>喜欢搞事情</del>
                   。
@@ -246,7 +268,7 @@
               <div class="card-body">
                 <h4 class="card-title">Myself</h4>
                 <p>
-                  大二的<strong>424软件工程1班知名校友（在读中）🤭</strong>。<strong>熟悉C/C++开发</strong>，开发了附属项目<strong>ByteIDE</strong>，基于
+                  {{ is2026 ? '大三' : '大二' }}的<strong>424软件工程1班知名校友（在读中）🤭</strong>。<strong>熟悉C/C++开发</strong>，开发了附属项目<strong>ByteIDE</strong>，基于
                   <strong>Qt</strong> 开发的简易文本编辑器和集成开发环境 <strong>（IDE）</strong>，解决了非计算机学生装配环境麻烦的问题，开发的项目为全校师生服务。
                 </p>
               </div>
@@ -256,7 +278,7 @@
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body">
                 <h4 class="card-title">Merrick</h4>
-                <p>大三的<strong>423软件工程1班知名校友（在读中）🤭</strong>。同样具备非常强大的网站开发能力，作为本网站的顾问。
+                <p>{{ is2026 ? '大四' : '大三' }}的<strong>423软件工程1班知名校友（在读中）🤭</strong>。同样具备非常强大的网站开发能力，作为本网站的顾问。
                 </p>
               </div>
             </div>
@@ -265,7 +287,7 @@
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body">
                 <h4 class="card-title">Siersi</h4>
-                <p>大二的<strong>424软件工程2班知名校友（在读中）🤭</strong>😏。具备较强大的网站开发能力，同时<strong>精通CV程序必备技能</strong>以及<strong>电脑各种硬件知识</strong>😏，同样作为本网站的顾问。
+                <p>{{ is2026 ? '大三' : '大二' }}的<strong>424软件工程2班知名校友（在读中）🤭</strong>😏。具备较强大的网站开发能力，同时<strong>精通CV程序必备技能</strong>以及<strong>电脑各种硬件知识</strong>😏，同样作为本网站的顾问。
                 </p>
               </div>
             </div>
@@ -274,7 +296,7 @@
             <div class="card bg-base-100 shadow-xl">
               <div class="card-body">
                 <h4 class="card-title">Arrinna</h4>
-                <p>大二的<strong>424软件工程2班知名校友（在读中）🤭</strong>😏。熟悉网站开发、小程序开发，同样作为本网站的顾问。
+                <p>{{ is2026 ? '大三' : '大二' }}的<strong>424软件工程2班知名校友（在读中）🤭</strong>😏。熟悉网站开发、小程序开发，同样作为本网站的顾问。
                 </p>
               </div>
             </div>
@@ -291,12 +313,13 @@
             三、学习须知
           </h2>
           <p class="text-lg text-base-content/80 max-w-2xl mx-auto">
-            大部分新生的心理变化和专业学习内容对比
+            <span v-if="is2026">计算机专业学习内容对比与学习参考</span>
+            <span v-else>大部分新生的心理变化和专业学习内容对比</span>
           </p>
         </div>
 
         <!-- 新生心理变化部分 -->
-        <div class="card bg-base-200 shadow-xl p-6 mb-8">
+        <div v-if="!is2026" class="card bg-base-200 shadow-xl p-6 mb-8">
           <div class="card-body">
             <h3 class="text-2xl font-bold mb-6">新生心理变化历程</h3>
             <p class="mb-6">本网站此次仅仅是对新生了解编程的一个小途径，核心目的已经不是<strong>教学</strong>了，学无余力了。
@@ -349,6 +372,9 @@
             <div class="text-lg mb-6 justify-between items-center">
               <div>对比学校课程和真实工作需求，帮你抓住自学的重点</div>
               <div class="text-right font-bold"> ——豫章师范学院数学与计算机学院软件实训室2509实验室</div>
+              <div v-if="is2026" class="text-sm text-warning font-semibold mt-3">
+                注：此内容调研时间为：2025年，并非最新数据，仅供参考。
+              </div>
             </div>
             
             <!-- 专业选择标签 -->
@@ -656,7 +682,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span><strong>温馨提示：</strong>目前并不是所有的题目允许提交，目前仅188道题目支持<strong>提交代码</strong>，其中174道简单题，12道中等题，2道困难题。</span>
+                <span v-if="is2026"><strong>温馨提示：</strong>目前并不是所有的题目允许提交，目前共有287道题目支持<strong>提交代码</strong>，其中238道简单题，38道中等题，11道困难题。</span>
+                <span v-else><strong>温馨提示：</strong>目前并不是所有的题目允许提交，目前仅188道题目支持<strong>提交代码</strong>，其中174道简单题，12道中等题，2道困难题。</span>
               </div>
               <img
                   data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250707235544411.png"
@@ -754,7 +781,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span><strong>温馨提示：</strong>每位用户的初始分为<strong>1200分</strong>，每次竞赛之后，会根据<strong>ELO改良算法</strong>来对用户的竞赛表现进行打分，最后得出用户在本次竞赛的分数变化。再提一嘴，目前的榜一是<strong>Siersi</strong>，<strong>2290分</strong>。</span>
+                <span v-if="is2026"><strong>温馨提示：</strong>每位用户的初始分为<strong>1200分</strong>，每次竞赛之后，会根据<strong>ELO改良算法</strong>来对用户的竞赛表现进行打分，最后得出用户在本次竞赛的分数变化。再提一嘴，目前的榜一是<strong>Siersi</strong>，<strong>2338分</strong>。</span>
+                <span v-else><strong>温馨提示：</strong>每位用户的初始分为<strong>1200分</strong>，每次竞赛之后，会根据<strong>ELO改良算法</strong>来对用户的竞赛表现进行打分，最后得出用户在本次竞赛的分数变化。再提一嘴，目前的榜一是<strong>Siersi</strong>，<strong>2290分</strong>。</span>
               </div>
               <img
                   data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250707235553650.png"
@@ -775,7 +803,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span><strong>温馨提示：</strong>该部分是用于快速实时获取<strong>CodeForces、LeetCode、牛客、蓝桥杯、CodeChef、jisuanke、Byteoj</strong>等各大知名OJ网站的竞赛信息的。</span>
+                <span v-if="is2026"><strong>温馨提示：</strong>该部分是用于快速实时获取<strong>CodeForces、LeetCode、牛客、蓝桥杯、CodeChef、jisuanke</strong>等各大知名OJ网站的竞赛信息的。</span>
+                <span v-else><strong>温馨提示：</strong>该部分是用于快速实时获取<strong>CodeForces、LeetCode、牛客、蓝桥杯、CodeChef、jisuanke、Byteoj</strong>等各大知名OJ网站的竞赛信息的。</span>
               </div>
               <img
                   data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250707235555192.png"
@@ -825,7 +854,8 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                 </svg>
-                <span>DeepSeek Reasoner 、DeepSeek V3 线路一暂时关闭<strong>（目前仅DeepSeek V3线路二可使用）</strong></span>
+                <span v-if="is2026"><strong>特别说明：</strong>目前仅千问模型可用。</span>
+                <span v-else>DeepSeek Reasoner 、DeepSeek V3 线路一暂时关闭<strong>（目前仅DeepSeek V3线路二可使用）</strong></span>
               </div>
               <img
                   data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250707235618135.png"
@@ -833,6 +863,56 @@
                   class="lazy-image rounded-lg w-full mb-4"
                   loading="lazy"
               >
+            </div>
+          </div>
+
+          <!-- Feature 10: Exam Module -->
+          <div v-if="is2026" id="feature10" class="card bg-base-100 shadow-xl exam-feature-card">
+            <div class="card-body">
+              <h3 class="text-2xl font-bold mb-4">10. 考试模块</h3>
+              <div class="alert alert-info mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                     class="stroke-current shrink-0 w-6 h-6">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span><strong>模块说明：</strong>目前支持考研数学、政治、408计算机考题的编写；考卷支持 AI 改卷，目前处于测试阶段，单次测评成本约为 5 分至 1 角钱，具体取决于使用的模型。</span>
+              </div>
+              <div class="exam-feature-overview">
+                <div class="exam-feature-item">
+                  <span class="exam-feature-index">01</span>
+                  <strong>考题编写</strong>
+                  <span>数学 · 政治 · 408</span>
+                </div>
+                <div class="exam-feature-item">
+                  <span class="exam-feature-index">02</span>
+                  <strong>AI 改卷</strong>
+                  <span>测试中 · 按模型计费</span>
+                </div>
+                <div class="exam-feature-item">
+                  <span class="exam-feature-index">03</span>
+                  <strong>持续完善</strong>
+                  <span>逐步补充考试能力</span>
+                </div>
+              </div>
+              <div class="exam-feature-gallery">
+                <figure>
+                  <img
+                      data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/1ec1e8ffc30ed72caa7728c2813b829e.png"
+                      alt="考试模块界面截图1"
+                      class="lazy-image"
+                      loading="lazy"
+                  >
+                </figure>
+                <figure>
+                  <img
+                      data-src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/84130d47a457e1a7e175e57d987ece2d.png"
+                      alt="考试模块界面截图2"
+                      class="lazy-image"
+                      loading="lazy"
+                  >
+                </figure>
+              </div>
             </div>
           </div>
         </div>
@@ -852,7 +932,7 @@
         </div>
         <div class="grid md:grid-cols-2 gap-8">
           <!-- QR Code Card -->
-          <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+          <div v-if="!is2026" class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
             <figure class="px-10 pt-10">
               <img
                   src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20250709110220883.jpg"
@@ -864,6 +944,17 @@
             <div class="card-body items-center text-center">
               <h3 class="card-title text-2xl mb-2">扫码加入社群</h3>
               <p class="text-base-content/70 mb-4">纯学习交流环境，共同进步</p>
+            </div>
+          </div>
+
+          <div v-else class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+            <div class="card-body items-center text-center justify-center min-h-80">
+              <h3 class="card-title text-2xl mb-2">加入学习交流群</h3>
+              <p class="text-base-content/70 mb-4">如果需要加入学习交流群，可以联系：</p>
+              <a href="mailto:898561494@qq.com" class="link link-primary text-xl font-semibold">
+                898561494@qq.com
+              </a>
+              <p class="text-lg text-red-400 font-bold mt-6">(请备注班级+姓名！！！！！！)</p>
             </div>
           </div>
 
@@ -934,6 +1025,17 @@
                     <span class="px-4 py-2 bg-warning/10 text-warning rounded-full text-sm">设计模式</span>
                     <span class="px-4 py-2 bg-warning/10 text-warning rounded-full text-sm">RBAC</span>
                     <span class="px-4 py-2 bg-warning/10 text-warning rounded-full text-sm">Qt</span>
+                  </div>
+                </div>
+
+                <!-- 硬件实践与赛事咨询（2026） -->
+                <div v-if="is2026">
+                  <h4 class="text-sm font-medium text-base-content/70 mb-3 pl-2">硬件实践与赛事咨询</h4>
+                  <div class="flex flex-wrap gap-3">
+                    <span class="px-4 py-2 bg-success/10 text-success rounded-full text-sm">3D打印</span>
+                    <span class="px-4 py-2 bg-success/10 text-success rounded-full text-sm">嵌入式开发</span>
+                    <span class="px-4 py-2 bg-success/10 text-success rounded-full text-sm">ACM / 马蹄杯咨询</span>
+                    <span class="px-4 py-2 bg-success/10 text-success rounded-full text-sm">RoboMaster机器人比赛咨询</span>
                   </div>
                 </div>
               </div>
@@ -1007,6 +1109,10 @@
 
 <script setup lang="ts">
 import {onMounted, onUnmounted, ref, computed, watch} from 'vue';
+import {useRoute} from 'vue-router';
+
+const route = useRoute();
+const is2026 = computed(() => route.query.year !== '2025');
 // 左侧导航数据
 const leftNavItems = ref([
   {
@@ -1033,6 +1139,13 @@ const leftNavItems = ref([
   }
 ]);
 
+const visibleLeftNavItems = computed(() => leftNavItems.value.map((item) => ({
+  ...item,
+  children: is2026.value
+    ? item.children.filter((child) => child.id !== 'guidelines')
+    : item.children,
+})));
+
 // 右侧导航数据
 const rightNavItems = ref([
   {
@@ -1047,7 +1160,8 @@ const rightNavItems = ref([
       {id: 'feature6', text: '6.排行榜服务'},
       {id: 'feature7', text: '7.OJ竞赛模块'},
       {id: 'feature8', text: '8.代码调试提交功能'},
-      {id: 'feature9', text: '9.AI智能助手（可自动识别代码和题目以及上下文信息）'}
+      {id: 'feature9', text: '9.AI智能助手（可自动识别代码和题目以及上下文信息）'},
+      {id: 'feature10', text: '10.考试模块'}
     ]
   },
   {
@@ -1065,6 +1179,13 @@ const rightNavItems = ref([
     ]
   }
 ]);
+
+const visibleRightNavItems = computed(() => rightNavItems.value.map((item) => ({
+  ...item,
+  children: is2026.value
+    ? item.children
+    : item.children.filter((child) => child.id !== 'feature10'),
+})));
 
 const activeId = ref(null);
 const expandedIndex = ref(null);
@@ -1768,6 +1889,199 @@ h4 {
 
 .hero p {
   font-size: 2rem !important;
+}
+
+/* 2026 edition: flatter surfaces, cooler blue-green tones and amber accents. */
+.intro-page-2026 {
+  --edition-primary: #0f766e;
+  --edition-deep: #0b5563;
+  --edition-accent: #f2b84b;
+  --edition-border: #d9e4e7;
+  background: #f4f7f8;
+  color: #17343c;
+}
+
+.intro-page-2026 .hero {
+  position: relative;
+  border-bottom: 6px solid var(--edition-accent);
+  background-image: linear-gradient(120deg, #0b5563 0%, #0f766e 50%, #2563eb 100%);
+}
+
+.intro-page-2026 .hero .container {
+  max-width: 1120px;
+}
+
+.edition-kicker {
+  display: inline-flex;
+  margin-bottom: 18px;
+  padding: 7px 13px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  background: rgba(5, 47, 54, 0.28);
+  color: #fff4d6;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.intro-page-2026 > section:not(.hero) {
+  border-bottom: 1px solid var(--edition-border);
+}
+
+.intro-page-2026 > section.bg-base-100,
+.intro-page-2026 > section.bg-gradient-to-b {
+  background: #f7fafb !important;
+  background-image: none !important;
+}
+
+.intro-page-2026 > section.bg-base-200 {
+  background: #edf3f4 !important;
+}
+
+.intro-page-2026 > section.bg-gradient-to-r:not(.hero) {
+  background: var(--edition-deep) !important;
+  background-image: none !important;
+}
+
+.intro-page-2026 h2.text-transparent {
+  background-image: none !important;
+  color: var(--edition-deep) !important;
+  -webkit-text-fill-color: currentColor;
+}
+
+.intro-page-2026 .card {
+  border: 1px solid var(--edition-border);
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: 0 6px 18px rgba(30, 67, 75, 0.07);
+}
+
+.intro-page-2026 .card:hover {
+  border-color: #b8cdd1;
+  box-shadow: 0 10px 24px rgba(30, 67, 75, 0.1);
+  transform: none;
+}
+
+.intro-page-2026 #features .card h3 {
+  padding-left: 14px;
+  border-left: 4px solid var(--edition-accent);
+  color: #174b55;
+}
+
+.intro-page-2026 .alert-info {
+  border: 1px solid #bddde2;
+  background: #eaf6f7;
+  color: #194e58;
+}
+
+.intro-page-2026 .alert-warning {
+  border: 1px solid #ecd293;
+  background: #fff7e5;
+  color: #624810;
+}
+
+.exam-feature-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.exam-feature-item {
+  display: grid;
+  gap: 6px;
+  min-height: 108px;
+  padding: 18px;
+  border-left: 3px solid var(--edition-primary);
+  background: #f2f8f8;
+}
+
+.exam-feature-index {
+  color: var(--edition-primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.exam-feature-item strong {
+  color: #174b55;
+  font-size: 1.08rem;
+}
+
+.exam-feature-item > span:last-child {
+  color: #6a7d82;
+  font-size: 0.9rem;
+}
+
+.exam-feature-gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.exam-feature-gallery figure {
+  display: flex;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid var(--edition-border);
+  border-radius: 6px;
+  background: #eef3f4;
+}
+
+.exam-feature-gallery img {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+}
+
+.intro-page-2026 .tab-button.active {
+  border-color: var(--edition-primary);
+  background: var(--edition-primary);
+}
+
+.year-switcher {
+  display: inline-flex;
+  gap: 4px;
+  margin: 0 auto 1.5rem;
+  padding: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.year-option {
+  min-width: 76px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.76);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.year-option:hover,
+.year-option.active {
+  background: #fff;
+  color: #5b5fc7;
+}
+
+.intro-page-2026 .year-switcher {
+  border-color: rgba(255, 255, 255, 0.45);
+  background: rgba(6, 46, 53, 0.28);
+}
+
+.intro-page-2026 .year-option:hover,
+.intro-page-2026 .year-option.active {
+  background: var(--edition-accent);
+  color: #17343c;
+}
+
+@media (max-width: 768px) {
+  .exam-feature-overview,
+  .exam-feature-gallery {
+    grid-template-columns: 1fr;
+  }
 }
 
 img {
