@@ -12,8 +12,13 @@ const defaultPicture =
 const route = useRoute();
 const router = useRouter();
 
+const editExamId = computed(() => {
+  const value = Number(route.query.exam_id);
+  return Number.isInteger(value) && value > 0 ? value : undefined;
+});
+
 const request = ref<any>({
-  exam_id: undefined,
+  exam_id: editExamId.value,
   exam_name: "",
   password: "",
   picture: defaultPicture,
@@ -46,7 +51,7 @@ const tabSearchState = reactive<Record<string, any>>({
   politics: { keyword: "", pageNum: 1, pageSize: 10 },
 });
 
-const isEditMode = computed(() => Boolean(request.value.exam_id));
+const isEditMode = computed(() => Boolean(editExamId.value));
 const currentSearch = computed(() => tabSearchState[activeTab.value]);
 const currentTab = computed(() => tabConfig[activeTab.value]);
 const totalScore = computed(() =>
@@ -299,12 +304,23 @@ onMounted(async () => {
             <div class="panel-title">考试信息</div>
           </template>
 
-          <el-form label-width="96px">
+          <el-form label-width="96px" autocomplete="off">
             <el-form-item label="考试名称">
-              <el-input v-model="request.exam_name" placeholder="请输入考试名称" />
+              <el-input
+                v-model="request.exam_name"
+                name="exam-title"
+                autocomplete="off"
+                placeholder="请输入考试名称"
+              />
             </el-form-item>
             <el-form-item label="考试密码">
-              <el-input v-model="request.password" placeholder="不修改可留空" show-password />
+              <el-input
+                v-model="request.password"
+                name="exam-password"
+                autocomplete="new-password"
+                placeholder="不修改可留空"
+                show-password
+              />
             </el-form-item>
             <el-form-item label="封面图片">
               <el-input v-model="request.picture" placeholder="请输入封面图片地址" />
