@@ -202,6 +202,7 @@ const searchRequest = ref<SearchRequest>({
   category: 'exam',
   keyword: (route.query.keyword as string) || '',
   pageNum: Number(route.query.pageNum) || 1,
+  pageSize: 10
 })
 
 const examList = ref<ExamItem[]>([])
