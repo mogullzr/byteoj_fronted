@@ -17,7 +17,25 @@
       <el-tag type="info" size="large" class="competition-tag">
         {{ competitionName }}
       </el-tag>
+      <el-button
+        type="danger"
+        plain
+        :icon="Refresh"
+        :loading="recalculateLoading"
+        @click="recalculateSimilarity"
+      >
+        重新计算
+      </el-button>
     </div>
+
+    <el-alert
+      v-if="recalculationSubmitted"
+      title="查重任务已重新提交，旧结果已清理。任务完成后刷新页面查看新结果。"
+      type="info"
+      show-icon
+      :closable="false"
+      class="recalculation-alert"
+    />
 
     <!-- Tab 切换 -->
     <el-tabs v-model="activeTab" class="main-tabs" @tab-click="handleTabClick">
@@ -42,7 +60,7 @@
                 <el-icon class="stat-icon" color="#F56C6C"><Warning /></el-icon>
                 <div class="stat-info">
                   <div class="stat-value">{{ highRiskCount }}</div>
-                  <div class="stat-label">高风险 (≥90%)</div>
+                <div class="stat-label">高风险 (≥75%)</div>
                 </div>
               </div>
             </el-card>
@@ -53,7 +71,7 @@
                 <el-icon class="stat-icon" color="#E6A23C"><WarningFilled /></el-icon>
                 <div class="stat-info">
                   <div class="stat-value">{{ mediumRiskCount }}</div>
-                  <div class="stat-label">中风险 (80-89%)</div>
+                <div class="stat-label">中风险 (62-74%)</div>
                 </div>
               </div>
             </el-card>
@@ -64,7 +82,7 @@
                 <el-icon class="stat-icon" color="#67C23A"><CircleCheck /></el-icon>
                 <div class="stat-info">
                   <div class="stat-value">{{ lowRiskCount }}</div>
-                  <div class="stat-label">低风险 (<80%)</div>
+                <div class="stat-label">需复核 (<62%)</div>
                 </div>
               </div>
             </el-card>
@@ -161,7 +179,7 @@
                 </div>
               </template>
             </el-table-column>
-            <el-table-column label="相似度" prop="similarityScore" width="180" sortable align="center">
+            <el-table-column label="综合风险" prop="similarityScore" width="220" sortable align="center">
               <template #default="scope">
                 <div class="similarity-cell">
                   <el-progress
@@ -169,8 +187,10 @@
                     :color="getProgressColor(scope.row.similarityScore)"
                     :stroke-width="20"
                     :text-inside="true"
-                    :format="() => ((scope.row.similarityScore || 0) * 100).toFixed(2) + '%'"
+                    :format="() => `${((scope.row.similarityScore || 0) * 100).toFixed(1)}% ${riskLabel(scope.row.riskLevel)}`"
                   />
+                  <small class="feature-hint">AST {{ percent(scope.row.astScore) }} · Token {{ percent(scope.row.tokenScore) }}</small>
+                  <small class="feature-hint">结构覆盖 {{ percent(scope.row.astContainmentScore) }} · 指纹覆盖 {{ percent(scope.row.tokenContainmentScore) }}</small>
                 </div>
               </template>
             </el-table-column>
@@ -294,7 +314,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="平均相似度" prop="avgSimilarity" width="180" sortable align="center">
+            <el-table-column label="平均综合风险" prop="avgSimilarity" width="180" sortable align="center">
               <template #default="scope">
                 <div class="similarity-cell">
                   <el-progress
@@ -354,7 +374,7 @@
             size="large"
             class="similarity-badge"
           >
-            相似度: {{ (currentRecord.similarityScore * 100).toFixed(2) }}%
+            综合风险: {{ percent(currentRecord.similarityScore) }} · {{ riskLabel(currentRecord.riskLevel) }}
           </el-tag>
           <el-tag type="info" size="large">
             {{ currentRecord.problemIndex }}题
@@ -432,7 +452,7 @@
             聚类人数: {{ currentCluster.clusterSize }} 人
           </el-tag>
           <el-tag type="warning" size="large">
-            平均相似度: {{ ((currentCluster.avgSimilarity || 0) * 100).toFixed(2) }}%
+            平均综合风险: {{ percent(currentCluster.avgSimilarity) }}
           </el-tag>
         </div>
 
@@ -503,7 +523,7 @@
 import { ref, computed, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { Back, Document, Search, Refresh, View, Close, Files, Warning, WarningFilled, CircleCheck, Switch, User } from '@element-plus/icons-vue';
-import { ElNotification } from 'element-plus';
+import { ElMessageBox, ElNotification } from 'element-plus';
 import { ProblemAlgorithmControllerService, SearchControllerService } from '../../../generated';
 import router from '../../router';
 import { VAceEditor } from 'vue3-ace-editor';
@@ -534,6 +554,8 @@ interface UserInfo {
 const route = useRoute();
 const competitionId = ref<number>(Number(route.query.competition_id) || 0);
 const competitionName = ref<string>('未知竞赛');
+const recalculateLoading = ref(false);
+const recalculationSubmitted = ref(false);
 
 const activeTab = ref('pairwise');
 
@@ -677,18 +699,18 @@ const handleUserSelectPairwise = (userUuid: number | null) => {
 };
 
 const highRiskCount = computed(() => {
-  return filteredList.value.filter(item => (item.similarityScore || 0) >= 0.9).length;
+  return filteredList.value.filter(item => item.riskLevel === 'HIGH' || (item.similarityScore || 0) >= 0.75).length;
 });
 
 const mediumRiskCount = computed(() => {
   return filteredList.value.filter(item => {
     const score = item.similarityScore || 0;
-    return score >= 0.8 && score < 0.9;
+    return item.riskLevel === 'MEDIUM' || (score >= 0.62 && score < 0.75);
   }).length;
 });
 
 const lowRiskCount = computed(() => {
-  return filteredList.value.filter(item => (item.similarityScore || 0) < 0.8).length;
+  return filteredList.value.filter(item => item.riskLevel === 'REVIEW' || (item.similarityScore || 0) < 0.62).length;
 });
 
 const detectLanguage = (code?: string): string => {
@@ -735,6 +757,40 @@ const loadSimilarityData = async () => {
     ElNotification.error({ title: '错误', message: '加载查重数据失败' });
   } finally {
     loading.value = false;
+  }
+};
+
+const recalculateSimilarity = async () => {
+  if (!competitionId.value || recalculateLoading.value) return;
+  try {
+    await ElMessageBox.confirm(
+      '该操作会删除此竞赛已有的代码向量、相似度结果和团伙数据，并使用新算法异步重新计算。',
+      '确认重新计算',
+      {
+        confirmButtonText: '确认重新计算',
+        cancelButtonText: '取消',
+        type: 'warning',
+      },
+    );
+    recalculateLoading.value = true;
+    const response = await ProblemAlgorithmControllerService.recalculateSimilarityUsingPost(competitionId.value);
+    if (response.code === 0 && response.data) {
+      similarityList.value = [];
+      clusterList.value = [];
+      total.value = 0;
+      clusterTotal.value = 0;
+      recalculationSubmitted.value = true;
+      ElNotification.success({
+        title: '任务已提交',
+        message: '旧结果已清理，系统正在使用新算法重新计算。',
+      });
+    }
+  } catch (error: any) {
+    if (error !== 'cancel' && error !== 'close') {
+      ElNotification.error({ title: '重新计算失败', message: error?.message || '请稍后重试' });
+    }
+  } finally {
+    recalculateLoading.value = false;
   }
 };
 
@@ -855,7 +911,7 @@ const scrollToMemberCard = (userUuid: string, userName: string) => {
   }
 };
 
-// 初始化关系图 - JPlag风格（全连接红色网络）
+// 初始化关系图，仅展示后端确认的真实关系边。
 const initGraphChart = () => {
   if (!currentCluster.value || !currentCluster.value.members || !graphChartRef.value) return;
   
@@ -907,16 +963,13 @@ const initGraphChart = () => {
     };
   });
   
-  // 构建边数据 - 全连接（JPlag风格）
-  const links: any[] = [];
-  for (let i = 0; i < members.length; i++) {
-    for (let j = i + 1; j < members.length; j++) {
-      links.push({
-        source: String(members[i].userUuid),
-        target: String(members[j].userUuid),
-      });
-    }
-  }
+  // 只绘制后端确认存在的关系边，避免把团伙误画成全连接。
+  const links: any[] = (currentCluster.value.edges || []).map(edge => ({
+    source: String(edge.source),
+    target: String(edge.target),
+    value: edge.score,
+    lineStyle: { width: Math.max(1, Math.round((edge.score || 0) * 5)), opacity: 0.75 },
+  }));
   
   const option = {
     title: {
@@ -1005,19 +1058,20 @@ const initGraphChart = () => {
 
 const getProgressColor = (score?: number): string => {
   if (!score) return '#909399';
-  if (score >= 0.9) return '#F56C6C';
-  if (score >= 0.8) return '#E6A23C';
-  if (score >= 0.7) return '#E6A23C';
+  if (score >= 0.75) return '#F56C6C';
+  if (score >= 0.62) return '#E6A23C';
   return '#67C23A';
 };
 
 const getSimilarityTagType = (score?: number): 'danger' | 'warning' | 'success' | 'info' => {
   if (!score) return 'info';
-  if (score >= 0.9) return 'danger';
-  if (score >= 0.8) return 'warning';
-  if (score >= 0.7) return 'warning';
+  if (score >= 0.75) return 'danger';
+  if (score >= 0.62) return 'warning';
   return 'success';
 };
+
+const percent = (score?: number): string => `${((score || 0) * 100).toFixed(1)}%`;
+const riskLabel = (risk?: string): string => risk === 'HIGH' ? '高风险' : risk === 'MEDIUM' ? '中风险' : '需复核';
 
 const getClusterSizeTagType = (size?: number): 'danger' | 'warning' | 'success' | 'info' => {
   if (!size) return 'info';
@@ -1045,6 +1099,10 @@ onMounted(() => {
 
 .main-tabs { 
   margin-top: 20px;
+}
+
+.recalculation-alert {
+  margin-bottom: 20px;
 }
 
 .main-tabs :deep(.el-tabs__header) {

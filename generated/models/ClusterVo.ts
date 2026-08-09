@@ -3,6 +3,14 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ClusterMemberVo } from './ClusterMemberVo';
+export type ClusterEdgeVo = {
+    astScore?: number;
+    riskLevel?: string;
+    score?: number;
+    source?: number;
+    target?: number;
+    tokenScore?: number;
+};
 export type ClusterVo = {
     avgSimilarity?: number;
     clusterId?: number;
@@ -10,6 +18,6 @@ export type ClusterVo = {
     competitionId?: number;
     createdAt?: string;
     members?: Array<ClusterMemberVo>;
+    edges?: Array<ClusterEdgeVo>;
     problemIndex?: string;
 };
-

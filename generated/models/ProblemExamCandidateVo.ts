@@ -2,7 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type ProblemExamProblemInfo = {
+export type ProblemExamCandidateVo = {
+    description?: string;
+    options?: string;
     problem_id?: number;
     problem_name?: string;
     score?: number;

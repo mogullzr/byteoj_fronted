@@ -6,12 +6,34 @@ import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
 import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_ProblemExamVo_';
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
+import type { BaseResponse_ProblemExamCandidatePageVo_ } from '../models/BaseResponse_ProblemExamCandidatePageVo_';
+import type { ProblemExamCandidateSearchRequest } from '../models/ProblemExamCandidateSearchRequest';
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
 import type { ProblemRequest } from '../models/ProblemRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class ProblemsControllerService {
+    /**
+     * Search exam candidate problems
+     * @param searchRequest searchRequest
+     * @returns BaseResponse_ProblemExamCandidatePageVo_ OK
+     * @throws ApiError
+     */
+    public static searchExamCandidatesUsingPost(
+        searchRequest: ProblemExamCandidateSearchRequest,
+    ): CancelablePromise<BaseResponse_ProblemExamCandidatePageVo_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/exam/problems/search',
+            body: searchRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
     /**
      * ProblemSearchExamId
      * @param examId exam_id

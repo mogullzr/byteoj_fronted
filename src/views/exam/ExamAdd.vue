@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { ElNotification } from "element-plus";
-import { SearchControllerService } from "../../../generated";
+import { ElMessageBox, ElNotification } from "element-plus";
 import { ProblemsControllerService } from "../../../generated/services/ProblemsControllerService.ts";
 import MarkdownView from "../components/MarkdownView.vue";
 
 const defaultPicture =
   "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/20260315195824468.png";
+const defaultExamStartTime = new Date(2026, 0, 1, 0, 0, 0);
+const defaultExamEndTime = new Date(2099, 11, 31, 23, 59, 59);
+const createExamDraftStorageKey = "admin:exam:create:draft:v1";
 
 const route = useRoute();
 const router = useRouter();
@@ -37,12 +39,18 @@ const tabConfig: Record<string, any> = {
 };
 
 const activeTab = ref("math");
-const timeRange = ref<any[]>([]);
+const timeRange = ref<any[]>([defaultExamStartTime, defaultExamEndTime]);
 const problemsList = ref<any[]>([]);
+const problemTotal = ref(0);
 const loadingProblems = ref(false);
+const loadingAllProblems = ref(false);
 const submitting = ref(false);
 const previewDialog = ref(false);
 const previewProblem = ref<any>({});
+const problemTableRef = ref<any>();
+const selectedCandidates = ref<Record<string, any>>({});
+const restoringSelection = ref(false);
+const batchScore = ref(5);
 
 const tabSearchState = reactive<Record<string, any>>({
   algorithm: { keyword: "", pageNum: 1, pageSize: 10 },
@@ -57,13 +65,9 @@ const currentTab = computed(() => tabConfig[activeTab.value]);
 const totalScore = computed(() =>
   request.value.problemExamProblemInfos.reduce((sum: number, item: any) => sum + Number(item.score || 0), 0)
 );
-const problemPagerTotal = computed(() => {
-  const state = currentSearch.value;
-  const base = (state.pageNum - 1) * state.pageSize;
-  return problemsList.value.length >= state.pageSize ? base + state.pageSize + 1 : base + problemsList.value.length;
-});
+const selectedCandidateCount = computed(() => Object.keys(selectedCandidates.value).length);
 
-const buildSearchRequest = () => {
+const buildSearchRequest = (all = false) => {
   const state = currentSearch.value;
   const config = currentTab.value;
   return {
@@ -72,15 +76,39 @@ const buildSearchRequest = () => {
     pageNum: state.pageNum,
     pageSize: state.pageSize,
     status: config.status,
+    all,
   };
+};
+
+const candidateKey = (problem: any) => `${Number(problem.status)}:${Number(problem.problem_id)}`;
+
+const isProblemSelected = (problem: any) =>
+  request.value.problemExamProblemInfos.some((item: any) => candidateKey(item) === candidateKey(problem));
+
+const isProblemSelectable = (problem: any) => !isProblemSelected(problem);
+
+const restorePageSelection = async () => {
+  await nextTick();
+  if (!problemTableRef.value) return;
+  restoringSelection.value = true;
+  problemTableRef.value.clearSelection();
+  problemsList.value.forEach((problem: any) => {
+    if (selectedCandidates.value[candidateKey(problem)] && isProblemSelectable(problem)) {
+      problemTableRef.value.toggleRowSelection(problem, true);
+    }
+  });
+  await nextTick();
+  restoringSelection.value = false;
 };
 
 const searchProblems = async () => {
   loadingProblems.value = true;
   try {
-    const res = await SearchControllerService.searchAllUsingPost(buildSearchRequest());
+    const res = await ProblemsControllerService.searchExamCandidatesUsingPost(buildSearchRequest());
     if (res.code === 0) {
-      problemsList.value = res.data?.dataList || [];
+      problemsList.value = res.data?.records || [];
+      problemTotal.value = Number(res.data?.total || 0);
+      await restorePageSelection();
     } else {
       ElNotification.error({ title: "查询失败", message: res.message || "题库查询失败" });
     }
@@ -133,28 +161,109 @@ const parseProblemOptions = (problem: any) => {
 };
 
 const getProblemQuestionType = (problem: any) => {
-  if (activeTab.value === "algorithm") return 4;
+  if (Number(problem.status) === 3) return 4;
   return Number(problem.option_type ?? problem.type ?? 0);
 };
 
-const addProblem = (problem: any) => {
-  const exist = request.value.problemExamProblemInfos.find((item: any) => item.problem_id === problem.problem_id);
-  if (exist) {
+const toExamProblem = (problem: any, score: number) => ({
+  problem_id: problem.problem_id,
+  problem_name: getProblemTitle(problem),
+  score,
+  status: Number(problem.status),
+  type: getProblemQuestionType(problem),
+});
+
+const pruneSelectedCandidates = () => {
+  selectedCandidates.value = Object.fromEntries(
+    Object.entries(selectedCandidates.value).filter(([, problem]) => !isProblemSelected(problem))
+  );
+};
+
+const mergeProblems = (problems: any[], score: number) => {
+  const existingKeys = new Set(request.value.problemExamProblemInfos.map(candidateKey));
+  let added = 0;
+  problems.forEach((problem: any) => {
+    const key = candidateKey(problem);
+    if (!existingKeys.has(key)) {
+      request.value.problemExamProblemInfos.push(toExamProblem(problem, score));
+      existingKeys.add(key);
+      added += 1;
+    }
+  });
+  return added;
+};
+
+const addProblem = async (problem: any) => {
+  if (!mergeProblems([problem], getProblemScore(problem))) {
     ElNotification.warning({ title: "提示", message: "该题目已经添加" });
+  }
+  pruneSelectedCandidates();
+  await restorePageSelection();
+};
+
+const handleCandidateSelectionChange = (rows: any[]) => {
+  if (restoringSelection.value) return;
+  const next = { ...selectedCandidates.value };
+  problemsList.value.forEach((problem: any) => delete next[candidateKey(problem)]);
+  rows.forEach((problem: any) => {
+    if (isProblemSelectable(problem)) next[candidateKey(problem)] = problem;
+  });
+  selectedCandidates.value = next;
+};
+
+const addSelectedProblems = async () => {
+  const selected = Object.values(selectedCandidates.value);
+  if (!selected.length) {
+    ElNotification.warning({ title: "提示", message: "请先勾选题目" });
+    return;
+  }
+  const added = mergeProblems(selected, batchScore.value);
+  selectedCandidates.value = {};
+  await restorePageSelection();
+  ElNotification.success({ title: "批量添加完成", message: `已添加 ${added} 道题，统一分值 ${batchScore.value}` });
+};
+
+const addAllSearchResults = async () => {
+  if (!problemTotal.value) {
+    ElNotification.warning({ title: "提示", message: "当前搜索条件没有可添加的题目" });
+    return;
+  }
+  try {
+    await ElMessageBox.confirm(
+      `将当前搜索条件匹配的 ${problemTotal.value} 道题全部加入试卷，并统一设置为 ${batchScore.value} 分。`,
+      "添加全部搜索结果",
+      { confirmButtonText: "确认添加", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
     return;
   }
 
-  request.value.problemExamProblemInfos.push({
-    problem_id: problem.problem_id,
-    problem_name: getProblemTitle(problem),
-    score: getProblemScore(problem),
-    status: currentTab.value.status,
-    type: getProblemQuestionType(problem),
-  });
+  loadingAllProblems.value = true;
+  try {
+    const res = await ProblemsControllerService.searchExamCandidatesUsingPost(buildSearchRequest(true));
+    if (res.code !== 0) {
+      ElNotification.error({ title: "添加失败", message: res.message || "获取全部题目失败" });
+      return;
+    }
+    const matches = res.data?.records || [];
+    const added = mergeProblems(matches, batchScore.value);
+    pruneSelectedCandidates();
+    await restorePageSelection();
+    ElNotification.success({
+      title: "批量添加完成",
+      message: `匹配 ${matches.length} 道，本次新增 ${added} 道，已跳过 ${matches.length - added} 道重复题目`,
+    });
+  } catch (err) {
+    console.error(err);
+    ElNotification.error({ title: "添加失败", message: "获取全部题目失败，请稍后重试" });
+  } finally {
+    loadingAllProblems.value = false;
+  }
 };
 
-const removeProblem = (index: number) => {
+const removeProblem = async (index: number) => {
   request.value.problemExamProblemInfos.splice(index, 1);
+  await restorePageSelection();
 };
 
 const previewProblemDetail = (problem: any) => {
@@ -210,6 +319,54 @@ const validateExam = () => {
   return true;
 };
 
+const restoreCreateExamDraft = () => {
+  if (isEditMode.value) return;
+  try {
+    const draftText = localStorage.getItem(createExamDraftStorageKey);
+    if (!draftText) return;
+    const draft = JSON.parse(draftText);
+    if (draft?.request && typeof draft.request === "object") {
+      request.value = {
+        ...request.value,
+        ...draft.request,
+        exam_id: undefined,
+        password: "",
+        problemExamProblemInfos: Array.isArray(draft.request.problemExamProblemInfos)
+          ? draft.request.problemExamProblemInfos
+          : [],
+      };
+    }
+    if (Array.isArray(draft?.timeRange) && draft.timeRange.length === 2) {
+      const start = new Date(draft.timeRange[0]);
+      const end = new Date(draft.timeRange[1]);
+      if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+        timeRange.value = [start, end];
+      }
+    }
+  } catch (err) {
+    console.error("恢复考试草稿失败", err);
+    localStorage.removeItem(createExamDraftStorageKey);
+  }
+};
+
+const saveCreateExamDraft = () => {
+  if (isEditMode.value) return;
+  const draftRequest = { ...request.value };
+  delete draftRequest.password;
+  try {
+    localStorage.setItem(
+      createExamDraftStorageKey,
+      JSON.stringify({
+        request: draftRequest,
+        timeRange: timeRange.value.map((item: any) => new Date(item).getTime()),
+        savedAt: Date.now(),
+      })
+    );
+  } catch (err) {
+    console.error("保存考试草稿失败", err);
+  }
+};
+
 const submitExam = async () => {
   if (!validateExam()) return;
 
@@ -220,6 +377,9 @@ const submitExam = async () => {
   try {
     const res = await ProblemsControllerService.problemExamEditUsingPost(request.value);
     if (res.code === 0) {
+      if (!isEditMode.value) {
+        saveCreateExamDraft();
+      }
       ElNotification.success({
         title: "保存成功",
         message: isEditMode.value ? "考试已更新" : "考试已创建",
@@ -275,6 +435,10 @@ const loadExamForEdit = async () => {
     ElNotification.error({ title: "加载失败", message: "获取考试信息失败" });
   }
 };
+
+restoreCreateExamDraft();
+
+watch([request, timeRange], saveCreateExamDraft, { deep: true });
 
 onMounted(async () => {
   await Promise.all([loadExamForEdit(), searchProblems()]);
@@ -399,7 +563,35 @@ onMounted(async () => {
         <el-tab-pane v-for="tab in Object.entries(tabConfig)" :key="tab[0]" :label="tab[1].label" :name="tab[0]" />
       </el-tabs>
 
-      <el-table :data="problemsList" v-loading="loadingProblems" class="data-table" border>
+      <div class="batch-toolbar">
+        <div class="batch-score-control">
+          <span>统一分值</span>
+          <el-input-number v-model="batchScore" :min="1" :max="1000" controls-position="right" />
+        </div>
+        <div class="batch-actions">
+          <el-button type="primary" :disabled="!selectedCandidateCount" @click="addSelectedProblems">
+            添加已勾选（{{ selectedCandidateCount }}）
+          </el-button>
+          <el-button
+            :loading="loadingAllProblems"
+            :disabled="!problemTotal"
+            @click="addAllSearchResults"
+          >
+            添加全部搜索结果（{{ problemTotal }}）
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        ref="problemTableRef"
+        :data="problemsList"
+        :row-key="candidateKey"
+        v-loading="loadingProblems"
+        class="data-table"
+        border
+        @selection-change="handleCandidateSelectionChange"
+      >
+        <el-table-column type="selection" width="48" :selectable="isProblemSelectable" />
         <el-table-column label="题号" prop="problem_id" width="110" />
         <el-table-column label="题目">
           <template #default="scope">
@@ -410,7 +602,15 @@ onMounted(async () => {
         <el-table-column label="操作" width="180" fixed="right">
           <template #default="scope">
             <div class="table-actions">
-              <button class="action-btn primary" type="button" @click="addProblem(scope.row)">添加</button>
+              <button
+                class="action-btn"
+                :class="{ primary: !isProblemSelected(scope.row), selected: isProblemSelected(scope.row) }"
+                type="button"
+                :disabled="isProblemSelected(scope.row)"
+                @click="addProblem(scope.row)"
+              >
+                {{ isProblemSelected(scope.row) ? "已添加" : "添加" }}
+              </button>
               <button class="action-btn" type="button" @click="previewProblemDetail(scope.row)">预览</button>
             </div>
           </template>
@@ -422,7 +622,7 @@ onMounted(async () => {
           v-model:current-page="currentSearch.pageNum"
           v-model:page-size="currentSearch.pageSize"
           :page-sizes="[10, 20, 50]"
-          :total="problemPagerTotal"
+          :total="problemTotal"
           layout="total, sizes, prev, pager, next"
           @current-change="changeProblemPage"
           @size-change="changeProblemPageSize"
@@ -616,6 +816,32 @@ onMounted(async () => {
   align-items: center;
 }
 
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.batch-score-control,
+.batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.batch-score-control span {
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .summary-panel :deep(.el-card__body) {
   display: flex;
   flex-direction: column;
@@ -718,6 +944,14 @@ onMounted(async () => {
   background: #111827;
 }
 
+.action-btn.selected,
+.action-btn.selected:hover {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+  color: #15803d;
+  cursor: default;
+}
+
 .preview-options {
   margin-top: 18px;
   padding-top: 16px;
@@ -768,12 +1002,21 @@ onMounted(async () => {
   }
 
   .header-actions,
-  .search-actions {
+  .search-actions,
+  .batch-toolbar,
+  .batch-actions {
     width: 100%;
   }
 
-  .search-actions {
+  .search-actions,
+  .batch-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .batch-toolbar,
+  .batch-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
 </style>

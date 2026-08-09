@@ -644,6 +644,28 @@ export class ProblemAlgorithmControllerService {
         });
     }
     /**
+     * 管理员清理旧查重结果并重新提交异步计算任务
+     * @param competitionId competitionId
+     * @returns BaseResponse_boolean_ OK
+     * @throws ApiError
+     */
+    public static recalculateSimilarityUsingPost(
+        competitionId: number,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/algorithm/similarity/recalculate',
+            query: {
+                'competitionId': competitionId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * getClustersByProblem
      * @param competitionId competitionId
      * @param currentPage currentPage
