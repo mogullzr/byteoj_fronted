@@ -55,7 +55,7 @@ const fetchLogData = async () => {
       status: logType.value
     } as LogGetSingleInfo;
 
-    const res = await LogControllerService.logDetailInfoGetUsingGet(request);
+    const res = await LogControllerService.logDetailInfoGetUsingPost(request);
 
     if (res.code === 0 && res.data) {
       const apiData = res.data;
