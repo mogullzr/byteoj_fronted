@@ -1,5 +1,25 @@
 <template>
   <div class="min-h-screen bg-[#f9fafb] pt-16 pb-24 px-4 sm:px-6 lg:px-8">
+    <div v-if="examToStart" class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/50 px-4" @click.self="closeStartAgreement">
+      <section class="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="exam-agreement-title">
+        <h2 id="exam-agreement-title" class="text-2xl font-bold text-slate-800">开始考试前请确认</h2>
+        <p class="mt-2 text-sm text-slate-500">请认真阅读以下考试须知，确认后将开始计时。</p>
+        <div class="mt-5 space-y-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+          <p>1. 考试计时从进入答题页面开始，刷新、切换页面或缩小窗口不会暂停计时。</p>
+          <p>2. 请独立完成考试，不得使用未经允许的资料、程序或其他协助。</p>
+          <p>3. 到时后系统将自动提交当前答案，请提前预留检查和提交时间。</p>
+          <p v-if="examToStart.time">本场考试时长：<strong>{{ examToStart.time }} 分钟</strong>。</p>
+        </div>
+        <label class="mt-5 flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+          <input v-model="agreementAccepted" type="checkbox" class="mt-1 h-4 w-4 accent-slate-700" />
+          <span>我已阅读并同意考试须知，承诺独立完成考试，不作弊。</span>
+        </label>
+        <div class="mt-6 flex justify-end gap-3">
+          <button class="rounded-xl border border-slate-300 px-5 py-2.5 text-slate-700 hover:bg-slate-50" @click="closeStartAgreement">取消</button>
+          <button class="rounded-xl bg-slate-700 px-5 py-2.5 text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40" :disabled="!agreementAccepted" @click="confirmStartExam">同意并开始</button>
+        </div>
+      </section>
+    </div>
     <div class="max-w-5xl mx-auto mb-6 flex justify-end">
       <button
           class="rounded-xl bg-emerald-700 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-emerald-800 active:scale-[0.98]"
@@ -209,6 +229,8 @@ const examList = ref<ExamItem[]>([])
 const loading = ref(false)
 const joiningExamId = ref<number | null>(null)
 const exportingExamId = ref<number | null>(null)
+const examToStart = ref<ExamItem | null>(null)
+const agreementAccepted = ref(false)
 const pageSize = 10
 const totalPages = computed(() => {
   const totalCount = examList.value[0]?.pages
@@ -301,6 +323,24 @@ const routerToExam = (exam?: ExamItem) => {
     warning('请先报名后再进入考试')
     return
   }
+  if (localStorage.getItem(`exam-${examId}-agreement`) === 'accepted') {
+    router.push('/exam/content?exam_id=' + examId)
+    return
+  }
+  examToStart.value = exam
+  agreementAccepted.value = false
+}
+
+const closeStartAgreement = () => {
+  examToStart.value = null
+  agreementAccepted.value = false
+}
+
+const confirmStartExam = () => {
+  if (!examToStart.value?.exam_id || !agreementAccepted.value) return
+  const examId = examToStart.value.exam_id
+  localStorage.setItem(`exam-${examId}-agreement`, 'accepted')
+  closeStartAgreement()
   router.push('/exam/content?exam_id=' + examId)
 }
 

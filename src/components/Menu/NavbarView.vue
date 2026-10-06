@@ -270,7 +270,6 @@ onUnmounted(() => {
           <li>
             <a @click.prevent="handleNavigation('/special')" href="/special">Byte专栏</a>
           </li>
-
           <!-- More dropdown menu -->
           <li class="dropdown" :class="{ 'dropdown-open': isMoreMenuOpen }">
             <div tabindex="0" role="button" class="flex items-center" @click.stop="toggleMoreMenu">
@@ -288,6 +287,9 @@ onUnmounted(() => {
               </li>
               <li>
                 <a @click.prevent="handleNavigation('/exam')" href="/exam">考试</a>
+              </li>
+              <li>
+                <a @click.prevent="handleNavigation('/timer')" href="/timer">精确计时</a>
               </li>
               <li>
                 <a @click.prevent="handleNavigation('/studyPath')" href="/studyPath">个性化学习路径生成</a>
@@ -323,6 +325,9 @@ onUnmounted(() => {
           </li>
           <li>
             <a @click.prevent="handleNavigation('/special')" href="/special">Byte专栏</a>
+          </li>
+          <li>
+            <a @click.prevent="handleNavigation('/timer')" href="/timer">精确计时</a>
           </li>
           <li>
             <a @click.prevent="handleNavigation('/introduction')" href="/introduction">网站介绍</a>

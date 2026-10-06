@@ -43,6 +43,12 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/HomeView.vue"),
   },
   {
+    path: "/timer",
+    name: "精确计时",
+    meta: { access: "0", title: "ByteOJ - 精确计时" },
+    component: () => import("@/view/PrecisionTimerView.vue"),
+  },
+  {
     path: "/user",
     name: "用户",
     children: [

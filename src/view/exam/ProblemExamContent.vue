@@ -677,7 +677,7 @@
         <div class="card-header">考试信息</div>
         <div class="info-item">
           <span class="info-label">考生</span>
-          <span class="info-value">莫顾 &emsp; 2021xxxxxx</span>
+          <span class="info-value">小刘同学 &emsp; 2022754222</span>
         </div>
         <div class="info-item">
           <span class="info-label">剩余时间</span>
@@ -778,6 +778,10 @@ const algorithmLanguageMap: Record<string, string> = {
 }
 const remaining = ref(3600) // 默认1小时，后续可从 examData.time 获取
 let timerInterval: number | null = null
+let timerEndAt: number | null = null
+let timerExamId: number | null = null
+let timerSubmitting = false
+const timerStorageKey = (examId: number) => `exam-${examId}-timer`
 // ==================== 新增的状态 ====================
 const uploading = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
@@ -1848,18 +1852,32 @@ const goPrev = () => { if (currentIndex.value > 0) currentIndex.value-- }
 const goNext = () => { if (currentIndex.value < questions.value.length - 1) currentIndex.value++ }
 
 const startTimer = () => {
-  // 如果有后端返回的考试时间，可以在这里初始化 remaining
-  // if (examData.value?.time) remaining.value = examData.value.time * 60
-
-  timerInterval = window.setInterval(() => {
-    remaining.value--
-    if (remaining.value <= 0) {
-      stopTimer()
-      error('考试时间到！系统将自动提交～')
-      handleSubmit()
-    }
-  }, 1000)
+  const examId = examData.value?.exam_id
+  if (!examId) return
+  timerExamId = examId
+  const key = timerStorageKey(examId)
+  const savedEndAt = Number(localStorage.getItem(key))
+  const durationMs = Math.max(1, Number(examData.value?.time || 180) * 60 * 1000)
+  timerEndAt = Number.isFinite(savedEndAt) && savedEndAt > 0 ? savedEndAt : Date.now() + durationMs
+  localStorage.setItem(key, String(timerEndAt))
+  updateTimerFromClock()
+  stopTimer()
+  timerInterval = window.setInterval(updateTimerFromClock, 250)
 }
+
+const updateTimerFromClock = () => {
+  if (!timerEndAt) return
+  remaining.value = Math.max(0, Math.ceil((timerEndAt - Date.now()) / 1000))
+  if (remaining.value <= 0 && !timerSubmitting) {
+    timerSubmitting = true
+    stopTimer()
+    if (timerExamId) localStorage.removeItem(timerStorageKey(timerExamId))
+    error('考试时间到！系统将自动提交～')
+    handleSubmit()
+  }
+}
+
+const handleTimerVisibility = () => updateTimerFromClock()
 
 const stopTimer = () => {
   if (timerInterval) {
@@ -1927,6 +1945,7 @@ const getEffectiveType = (q: ProblemItem) => {
 // --- 生命周期 ---
 onMounted(async () => {
   window.addEventListener('keydown', handleImagePreviewKeydown)
+  document.addEventListener('visibilitychange', handleTimerVisibility)
   await loadPhoneCameraBridgeDownloadUrls()
 
   const examId = route.query.exam_id
@@ -1969,8 +1988,7 @@ onMounted(async () => {
           });
         }
       }
-      // 初始化计时器 (假设默认3小时，或者从 infoRes 中获取)
-      remaining.value = 3 * 3600
+      // 使用持久化的绝对结束时间，刷新或后台运行不会重置计时
       startTimer()
     } else {
       error('获取题目失败：' + res.message)
@@ -2008,6 +2026,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener('keydown', handleImagePreviewKeydown)
+  document.removeEventListener('visibilitychange', handleTimerVisibility)
   stopTimer()
   stopDesktopCameraStream()
   clearDesktopCameraCapture()
