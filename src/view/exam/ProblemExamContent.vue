@@ -51,7 +51,7 @@
             <span>判卷模型</span>
             <select v-model="aiModel">
               <option value="GPT_5_4">GPT-5.4（默认）</option>
-              <option value="DEEPSEEK">DeepSeek</option>
+              <option value="DEEPSEEK">DeepSeek Flash</option>
             </select>
           </label>
           <div class="modal-buttons">

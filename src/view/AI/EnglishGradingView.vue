@@ -34,8 +34,8 @@
         <label>
           <span>AI 判卷模型</span>
           <select v-model="aiModel">
-            <option value="GPT_5_4">GPT-5.4（默认）</option>
-            <option value="DEEPSEEK">DeepSeek</option>
+            <option value="DEEPSEEK">DeepSeek Flash-4.1（极速路线）</option>
+            <option value="GPT_5_4">GPT-6.1-sol（不稳定1路线）</option>
           </select>
         </label>
         <div class="score-preview">
@@ -262,7 +262,7 @@ type GradingResult = {
 const mode = ref<Mode>('translation')
 const examType = ref('ENGLISH_I')
 const questionType = ref('TRANSLATION')
-const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('GPT_5_4')
+const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('DEEPSEEK')
 const questionContent = ref('')
 const studentAnswer = ref('')
 const referenceAnswer = ref('')
