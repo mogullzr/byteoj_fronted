@@ -8,7 +8,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -17,7 +17,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -26,7 +26,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -35,7 +35,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -44,7 +44,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",
@@ -53,7 +53,7 @@ const user_rank_list: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     ac_num: 74,
     rank_num: 1,
     create_time: "2024-08-03 17:07:14",

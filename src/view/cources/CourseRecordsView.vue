@@ -10,7 +10,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -22,7 +22,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -34,7 +34,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -46,7 +46,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",
@@ -58,7 +58,7 @@ const records: Ref<any> = ref([
     uuid: 9,
     username: "Mogullzr",
     avatar:
-      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+      "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     problem_id: 1300,
     problem_name: "1300.城市街道交通费系统",
     language: "C++",

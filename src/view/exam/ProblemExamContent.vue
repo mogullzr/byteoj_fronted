@@ -47,6 +47,13 @@
         <div class="confirm-modal">
           <h3>确定要交卷吗？</h3>
           <p>交卷后无法修改答案，请仔细检查！</p>
+          <label class="exam-ai-model-field">
+            <span>判卷模型</span>
+            <select v-model="aiModel">
+              <option value="GPT_5_4">GPT-5.4（默认）</option>
+              <option value="DEEPSEEK">DeepSeek</option>
+            </select>
+          </label>
           <div class="modal-buttons">
             <button class="btn cancel" @click="showConfirmModal = false">我再检查一下</button>
             <button class="btn confirm" @click="confirmSubmit" :disabled="submitting">
@@ -72,19 +79,38 @@
               <span class="prompt">$</span>
               <span class="log-text">submit --exam {{ examData?.exam_id }} --answers {{ questions.length }}</span>
             </div>
-            <div v-for="(log, i) in visibleLogs" :key="i" class="term-line">
-              <span :class="log.tag === 'OK' ? 'log-ok' : 'log-info'">[{{ log.tag }}]</span>
-              <span class="log-text"> {{ log.text }}</span>
-            </div>
-            <div class="progress-block">
-              <div class="progress-track">
-                <div class="progress-fill" :style="{ width: submitProgress + '%' }"></div>
+            <div class="grading-progress-heading">
+              <div>
+                <strong>{{ gradingProgressTitle }}</strong>
+                <span class="grading-progress-count">
+                  已完成 {{ gradingProgressCompleted }} / {{ gradingProgressTotal }} 题
+                </span>
               </div>
-              <span class="progress-percent">{{ Math.floor(submitProgress) }}%</span>
+              <span class="grading-progress-status" :class="`status-${gradingProgressStatus.toLowerCase()}`">
+                {{ gradingProgressStatusText }}
+              </span>
+            </div>
+            <div v-if="gradingCurrentItem" class="grading-current-item">
+              <span class="grading-current-dot"></span>
+              <span>第 {{ gradingCurrentItem.question_index }} 题</span>
+              <span class="grading-current-message">{{ gradingCurrentItem.message || '正在处理' }}</span>
+            </div>
+            <div class="grading-question-list">
+              <div
+                v-for="item in gradingProgressItems"
+                :key="`${item.question_index}-${item.problem_id}`"
+                class="grading-question-item"
+                :class="`state-${String(item.state || 'QUEUED').toLowerCase()}`"
+              >
+                <span class="grading-question-icon">{{ gradingItemIcon(item.state) }}</span>
+                <span class="grading-question-number">第 {{ item.question_index }} 题</span>
+                <span class="grading-question-state">{{ gradingItemStateText(item.state) }}</span>
+                <span class="grading-question-message">{{ item.message || '' }}</span>
+              </div>
             </div>
             <div class="term-line">
               <span class="prompt">&gt;</span>
-              <span class="log-text">please wait, do not close or refresh the page</span>
+              <span class="log-text">正在等待后端逐题返回判卷结果，请不要关闭页面</span>
               <span class="term-cursor">█</span>
             </div>
           </div>
@@ -916,67 +942,149 @@ const resultData = ref({
 // 新增状态
 const showConfirmModal = ref(false)
 const submitting = ref(false)
+const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('GPT_5_4')
 
-// 提交假进度条：约 60s 匀速走完，提前完成则快速补满到 100%
-const submitProgress = ref(0)
-let progressTimer: number | null = null
+// 后端逐题判卷进度（Redis 状态由提交接口实时更新）
+interface ExamGradingProgressItem {
+  question_index: number
+  problem_id: number
+  question_status?: number
+  state: 'QUEUED' | 'GRADING' | 'COMPLETED' | 'FAILED' | string
+  message?: string
+  score?: number | null
+  updated_at?: number
+}
 
-const visibleLogs = computed(() => {
-  const p = submitProgress.value
-  const logs: { tag: string; text: string }[] = []
-  if (p >= 2)  logs.push({ tag: 'INFO', text: 'connecting to exam server...' })
-  if (p >= 14) logs.push({ tag: 'INFO', text: 'authenticating user session...' })
-  if (p >= 30) logs.push({ tag: 'INFO', text: 'serializing answers payload...' })
-  if (p >= 50) logs.push({ tag: 'INFO', text: 'encrypting and uploading data...' })
-  if (p >= 72) logs.push({ tag: 'INFO', text: 'awaiting server response...' })
-  if (p >= 100) logs.push({ tag: 'OK', text: 'submission accepted successfully' })
-  return logs
+interface ExamGradingProgress {
+  exam_id?: number
+  status: 'QUEUED' | 'GRADING' | 'COMPLETED' | 'FAILED' | string
+  total: number
+  completed: number
+  failed: number
+  current_question_index?: number
+  current_problem_id?: number
+  current_status?: string
+  message?: string
+  updated_at?: number
+  items: ExamGradingProgressItem[]
+}
+
+const gradingProgress = ref<ExamGradingProgress | null>(null)
+const gradingProgressToken = ref('')
+let gradingProgressTimer: number | null = null
+let gradingProgressRequesting = false
+
+const createGradingProgressToken = () => {
+  const randomUuid = globalThis.crypto?.randomUUID
+  if (typeof randomUuid === 'function') return randomUuid.call(globalThis.crypto)
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+}
+
+const gradingProgressItems = computed<ExamGradingProgressItem[]>(() => {
+  const items = gradingProgress.value?.items || []
+  return [...items].sort((a, b) => (a.question_index || 0) - (b.question_index || 0))
 })
 
-const startProgress = () => {
-  submitProgress.value = 0
-  if (progressTimer) clearInterval(progressTimer)
-  const duration = 120000
-  const interval = 80
-  const increment = 100 / (duration / interval)
-  progressTimer = window.setInterval(() => {
-    if (submitProgress.value < 100) {
-      submitProgress.value = Math.min(submitProgress.value + increment, 100)
-    }
-  }, interval)
+const gradingProgressTotal = computed(() =>
+  gradingProgress.value?.total ?? gradingProgressItems.value.length,
+)
+
+const gradingProgressCompleted = computed(() => {
+  if (gradingProgress.value) return gradingProgress.value.completed || 0
+  return gradingProgressItems.value.filter(item =>
+    item.state === 'COMPLETED' || item.state === 'FAILED',
+  ).length
+})
+
+const gradingProgressStatus = computed(() => gradingProgress.value?.status || 'QUEUED')
+const gradingProgressTitle = computed(() =>
+  gradingProgressStatus.value === 'COMPLETED' || gradingProgressStatus.value === 'FAILED'
+    ? '判卷处理结束'
+    : '正在逐题判卷',
+)
+const gradingProgressStatusText = computed(() => {
+  switch (gradingProgressStatus.value) {
+    case 'QUEUED': return '等待开始'
+    case 'GRADING': return '判卷中'
+    case 'COMPLETED': return '已完成'
+    case 'FAILED': return '部分失败'
+    default: return gradingProgressStatus.value
+  }
+})
+
+const gradingCurrentItem = computed(() => {
+  const index = gradingProgress.value?.current_question_index
+  return gradingProgressItems.value.find(item => item.question_index === index)
+    || gradingProgressItems.value.find(item => item.state === 'GRADING')
+    || null
+})
+
+const gradingItemStateText = (state?: string) => {
+  switch (state) {
+    case 'GRADING': return '判卷中'
+    case 'COMPLETED': return '判卷完成'
+    case 'FAILED': return '需人工复核'
+    default: return '等待处理'
+  }
 }
 
-const finishProgress = () => {
-  return new Promise<void>((resolve) => {
-    if (progressTimer) {
-      clearInterval(progressTimer)
-      progressTimer = null
-    }
-    if (submitProgress.value >= 100) {
-      resolve()
-      return
-    }
-    const start = submitProgress.value
-    const startTime = performance.now()
-    const animDuration = 450
-    const step = () => {
-      const t = Math.min((performance.now() - startTime) / animDuration, 1)
-      submitProgress.value = start + (100 - start) * t
-      if (t < 1) {
-        requestAnimationFrame(step)
-      } else {
-        submitProgress.value = 100
-        resolve()
+const gradingItemIcon = (state?: string) => {
+  switch (state) {
+    case 'GRADING': return '⟳'
+    case 'COMPLETED': return '✓'
+    case 'FAILED': return '!'
+    default: return '·'
+  }
+}
+
+const stopGradingProgressPolling = () => {
+  if (gradingProgressTimer) {
+    clearInterval(gradingProgressTimer)
+    gradingProgressTimer = null
+  }
+  gradingProgressRequesting = false
+}
+
+const pollGradingProgress = async () => {
+  const token = gradingProgressToken.value
+  if (!token || gradingProgressRequesting) return
+  gradingProgressRequesting = true
+  try {
+    const response = await ProblemsControllerService.problemExamSubmitProgressUsingGet(token)
+    if (response?.code === 0 && response.data) {
+      gradingProgress.value = response.data as ExamGradingProgress
+      if (response.data.status === 'COMPLETED' || response.data.status === 'FAILED') {
+        stopGradingProgressPolling()
       }
     }
-    requestAnimationFrame(step)
-  })
+  } catch (pollError) {
+    // 提交主请求仍然有效，轮询失败时保留已有的逐题状态并继续重试。
+    console.warn('判卷进度查询失败，将继续重试', pollError)
+  } finally {
+    gradingProgressRequesting = false
+  }
 }
 
-const stopProgress = () => {
-  if (progressTimer) {
-    clearInterval(progressTimer)
-    progressTimer = null
+const startGradingProgressPolling = (token: string) => {
+  stopGradingProgressPolling()
+  gradingProgressToken.value = token
+  void pollGradingProgress()
+  gradingProgressTimer = window.setInterval(() => {
+    void pollGradingProgress()
+  }, 700)
+}
+
+const setLocalGradingProgressFailed = (message: string) => {
+  if (!gradingProgress.value) return
+  gradingProgress.value = {
+    ...gradingProgress.value,
+    status: 'FAILED',
+    message,
+    items: gradingProgress.value.items.map(item =>
+      item.state === 'COMPLETED' || item.state === 'FAILED'
+        ? item
+        : { ...item, state: 'FAILED', message },
+    ),
   }
 }
 
@@ -1609,7 +1717,6 @@ const handleSubmit = async () => {
 const confirmSubmit = async () => {
   showConfirmModal.value = false
   submitting.value = true
-  startProgress()
 
   const answerList = []
 
@@ -1666,9 +1773,29 @@ const confirmSubmit = async () => {
     })
   }
 
+  const token = createGradingProgressToken()
+  const initialItems: ExamGradingProgressItem[] = answerList.map((answer, index) => ({
+    question_index: index + 1,
+    problem_id: answer.problem_id,
+    question_status: answer.status,
+    state: 'QUEUED',
+    message: '等待判卷',
+  }))
+  gradingProgress.value = {
+    status: 'QUEUED',
+    total: initialItems.length,
+    completed: 0,
+    failed: 0,
+    message: '已接收交卷，等待开始判卷',
+    items: initialItems,
+  }
+  startGradingProgressPolling(token)
+
   const request = {
     exam_id: examData.value?.exam_id,
-    answers: answerList
+    progress_token: token,
+    ai_model: aiModel.value,
+    answers: answerList,
   }
 
   console.log('准备提交的数据：', JSON.stringify(request, null, 2))
@@ -1678,16 +1805,26 @@ const confirmSubmit = async () => {
     const res = await ProblemsControllerService.problemExamSubmitUsingPost(request)
     if (res.code === 0) {
       resultData.value = res.data
-      await finishProgress()
+      // 主请求返回代表数据库结果已经落库；进度面板仍保留最后一次真实状态。
+      if (gradingProgress.value && gradingProgress.value.status !== 'FAILED') {
+        gradingProgress.value = {
+          ...gradingProgress.value,
+          status: 'COMPLETED',
+          completed: gradingProgress.value.total,
+          message: '全部题目判卷完成',
+        }
+      }
       await new Promise(r => setTimeout(r, 350))
       showResult.value = true
     } else {
+      setLocalGradingProgressFailed(res.message || '提交失败')
       error("提交失败：" + (res.message || "未知错误"))
     }
   } catch (err) {
+    setLocalGradingProgressFailed('网络错误，提交结果未知，请刷新记录确认')
     error("网络错误，提交失败")
   } finally {
-    stopProgress()
+    stopGradingProgressPolling()
     submitting.value = false
   }
 }
@@ -2028,6 +2165,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleImagePreviewKeydown)
   document.removeEventListener('visibilitychange', handleTimerVisibility)
   stopTimer()
+  stopGradingProgressPolling()
   stopDesktopCameraStream()
   clearDesktopCameraCapture()
   stopPhoneCameraPreview()
@@ -3684,6 +3822,27 @@ input[type="checkbox"] {
   margin: 0 0 28px;
 }
 
+.exam-ai-model-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 24px;
+  color: #334155;
+  font-size: .95rem;
+  font-weight: 600;
+}
+
+.exam-ai-model-field select {
+  min-width: 190px;
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #1e293b;
+  font: inherit;
+}
+
 .modal-buttons {
   display: flex;
   gap: 16px;
@@ -3788,6 +3947,155 @@ input[type="checkbox"] {
 .term-line {
   white-space: nowrap;
   overflow: hidden;
+}
+
+.grading-progress-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 14px 0 10px;
+  color: #f0f6fc;
+}
+
+.grading-progress-heading strong {
+  display: block;
+  font-size: 1rem;
+  letter-spacing: 0.2px;
+}
+
+.grading-progress-count {
+  display: block;
+  margin-top: 4px;
+  color: #8b949e;
+  font-size: 0.82rem;
+}
+
+.grading-progress-status {
+  flex: none;
+  border: 1px solid #30363d;
+  border-radius: 999px;
+  padding: 3px 10px;
+  color: #8b949e;
+  font-size: 0.78rem;
+}
+
+.grading-progress-status.status-grading {
+  border-color: rgba(88, 166, 255, 0.55);
+  color: #58a6ff;
+}
+
+.grading-progress-status.status-completed {
+  border-color: rgba(63, 185, 80, 0.55);
+  color: #3fb950;
+}
+
+.grading-progress-status.status-failed {
+  border-color: rgba(248, 81, 73, 0.65);
+  color: #f85149;
+}
+
+.grading-current-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 9px 11px;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: 6px;
+  background: rgba(31, 111, 235, 0.12);
+  color: #c9d1d9;
+  font-size: 0.84rem;
+}
+
+.grading-current-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #58a6ff;
+  box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.15);
+  animation: gradingPulse 1.2s ease-in-out infinite;
+}
+
+.grading-current-message {
+  margin-left: auto;
+  color: #8b949e;
+}
+
+.grading-question-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  max-height: 230px;
+  margin: 8px 0 14px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.grading-question-item {
+  display: grid;
+  grid-template-columns: 18px 56px 68px minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid #30363d;
+  border-radius: 5px;
+  background: #161b22;
+  color: #8b949e;
+  font-size: 0.78rem;
+}
+
+.grading-question-icon {
+  color: #8b949e;
+  font-weight: 700;
+  text-align: center;
+}
+
+.grading-question-number,
+.grading-question-state,
+.grading-question-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grading-question-state {
+  color: #8b949e;
+}
+
+.grading-question-message {
+  color: #6e7681;
+}
+
+.grading-question-item.state-grading {
+  border-color: rgba(88, 166, 255, 0.55);
+  background: rgba(31, 111, 235, 0.12);
+}
+
+.grading-question-item.state-grading .grading-question-icon,
+.grading-question-item.state-grading .grading-question-state {
+  color: #58a6ff;
+}
+
+.grading-question-item.state-completed .grading-question-icon,
+.grading-question-item.state-completed .grading-question-state {
+  color: #3fb950;
+}
+
+.grading-question-item.state-failed {
+  border-color: rgba(248, 81, 73, 0.6);
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.grading-question-item.state-failed .grading-question-icon,
+.grading-question-item.state-failed .grading-question-state {
+  color: #f85149;
+}
+
+@keyframes gradingPulse {
+  0%, 100% { opacity: 0.45; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 .prompt {

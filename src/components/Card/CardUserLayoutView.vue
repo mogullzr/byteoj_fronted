@@ -35,17 +35,17 @@
     {
       username: "Hu",
       avatar:
-        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     },
     {
       username: "Axliu",
       avatar:
-        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     },
     {
       username: "Zhang",
       avatar:
-        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+        "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
     },
   ]);
 

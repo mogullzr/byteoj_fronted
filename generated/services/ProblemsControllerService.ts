@@ -173,6 +173,28 @@ export class ProblemsControllerService {
         });
     }
     /**
+     * ProblemExamSubmitProgress
+     * @param progressToken progress_token
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static problemExamSubmitProgressUsingGet(
+        progressToken: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/submit/progress',
+            query: {
+                'progress_token': progressToken,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
      * ProblemSearchByProblemId
      * @param problemId problem_id
      * @returns BaseResponse_ProblemMath408BankVo_ OK

@@ -465,6 +465,15 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/AI/PersonalLearningView.vue"),
   },
   {
+    path: "/english-grading",
+    name: "考研英语专项评分",
+    meta: {
+      access: "1",
+      title: "ByteOJ - 考研英语专项评分",
+    },
+    component: () => import("@/view/AI/EnglishGradingView.vue"),
+  },
+  {
     path: "/exam",
     name: "考试",
 

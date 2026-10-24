@@ -295,6 +295,9 @@ onUnmounted(() => {
                 <a @click.prevent="handleNavigation('/studyPath')" href="/studyPath">个性化学习路径生成</a>
               </li>
               <li>
+                <a @click.prevent="handleNavigation('/english-grading')" href="/english-grading">考研英语专项评分</a>
+              </li>
+              <li>
                 <a @click.prevent="handleNavigation('/update')" href="/studyPath">网站更新日志</a>
               </li>
               <li>
@@ -334,6 +337,9 @@ onUnmounted(() => {
           </li>
           <li>
             <a @click.prevent="handleNavigation('/requirements')" href="/requirements">需求模块</a>
+          </li>
+          <li>
+            <a @click.prevent="handleNavigation('/english-grading')" href="/english-grading">考研英语专项评分</a>
           </li>
           <li>
             <a class="disabled" @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>

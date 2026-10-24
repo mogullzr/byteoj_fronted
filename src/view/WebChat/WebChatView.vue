@@ -26,11 +26,11 @@ const ChatRoom: any = ref({
   room_id: 1,
   room_name: "Welcome To Mogullzr’s ChatRoom",
   first_avatar:
-    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
   second_avatar:
-    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
   third_avatar:
-    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+    "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
   online_num: 4,
 });
 

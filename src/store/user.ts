@@ -3440,7 +3440,7 @@ export const UserStore = defineStore("user", {
           Object.assign(this.loginUser, userData);
           if (this.loginUser.avatar == null || this.loginUser.avatar == "") {
             this.loginUser.avatar =
-              "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png";
+              "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png";
           }
           if (
             this.loginUser.background_picture == null ||
@@ -3454,7 +3454,7 @@ export const UserStore = defineStore("user", {
         this.loginUser = {
           uuid: -1,
           avatar:
-            "https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png",
+            "https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png",
           background_picture:
             "http://mogullzr001.oss-cn-beijing.aliyuncs.com/2024/08/7e0f3ceda888461785e03ab837e3ae98.jpeg",
         } as User;

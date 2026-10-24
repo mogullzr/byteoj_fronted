@@ -5,7 +5,7 @@
     <figure>
       <img
         @dragstart.prevent
-        src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/typora_img/202502101206472.png"
+        src="https://mogullzr001.oss-cn-beijing.aliyuncs.com/2026/10/52b5f55093c531b36ee10d0121aecff7.png"
         alt="ByteOJ出品"
       />
     </figure>
