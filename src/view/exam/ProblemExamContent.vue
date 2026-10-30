@@ -41,6 +41,43 @@
       </div>
     </transition>
 
+    <!-- 作答中的答案速览：只展示当前用户已经填写的答案，不包含标准答案 -->
+    <transition name="modal-fade">
+      <div v-if="showAnswerPreview" class="answer-preview-overlay" @click.self="showAnswerPreview = false">
+        <section class="answer-preview-dialog" role="dialog" aria-modal="true" aria-label="答案速览">
+          <header class="answer-preview-header">
+            <div>
+              <strong>答案速览</strong>
+              <span>只显示你的作答内容，不显示题目与标准答案</span>
+            </div>
+            <button type="button" class="answer-preview-close" title="关闭答案速览" @click="showAnswerPreview = false">
+              <XMarkIcon aria-hidden="true" />
+            </button>
+          </header>
+          <div class="answer-preview-summary">
+            <span>已作答 {{ answeredQuestionCount }} / {{ questions.length }} 题</span>
+            <span>点击题号可直接返回对应题目</span>
+          </div>
+          <div class="answer-preview-list">
+            <button
+                v-for="(question, index) in questions"
+                :key="question.problem_id"
+                type="button"
+                class="answer-preview-item"
+                :class="{ answered: isAnswered(question.problem_id), current: index === currentIndex }"
+                @click="jumpToQuestionFromPreview(index, question)"
+            >
+              <span class="answer-preview-number">{{ index + 1 }}</span>
+              <span class="answer-preview-type">{{ getQuestionTypeLabel(question.option_type, question.status) }}</span>
+              <span class="answer-preview-value" :class="{ empty: !getAnswerPreview(question) }">
+                {{ getAnswerPreview(question) || '未作答' }}
+              </span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </transition>
+
     <!-- 确认交卷弹窗 -->
     <transition name="modal-fade">
       <div v-if="showConfirmModal" class="modal-overlay">
@@ -448,8 +485,14 @@
         <div class="exam-title">
           {{ examData?.exam_name || '未知考试' }}
         </div>
-        <div class="timer" :class="{ 'timer-warning': remaining <= 300 }">
-          {{ displayTimer }}
+        <div class="header-actions">
+          <button type="button" class="answer-preview-trigger" @click="showAnswerPreview = true">
+            <span>答案预览</span>
+            <span class="answer-preview-trigger-count">{{ answeredQuestionCount }}/{{ questions.length }}</span>
+          </button>
+          <div class="timer" :class="{ 'timer-warning': remaining <= 300 }">
+            {{ displayTimer }}
+          </div>
         </div>
       </div>
     </header>
@@ -922,6 +965,10 @@ const handleExamImageClick = (event: MouseEvent) => {
 }
 
 const handleImagePreviewKeydown = (event: KeyboardEvent) => {
+  if (showAnswerPreview.value && event.key === 'Escape') {
+    showAnswerPreview.value = false
+    return
+  }
   if (!imagePreviewUrl.value) return
   if (event.key === 'Escape') closeImagePreview()
   else if (event.key === '+' || event.key === '=') adjustImagePreviewScale(0.25)
@@ -930,6 +977,7 @@ const handleImagePreviewKeydown = (event: KeyboardEvent) => {
 
 // 新增状态
 const showResult = ref(false)
+const showAnswerPreview = ref(false)
 const resultData = ref({
   exam_id: 0,
   exam_name: '',
@@ -1859,6 +1907,10 @@ const answeredCount = computed(() => {
   return `${count} / ${questions.value.length}`
 })
 
+const answeredQuestionCount = computed(() => {
+  return questions.value.filter(q => isAnswered(q.problem_id)).length
+})
+
 const progress = computed(() => {
   if (questions.value.length === 0) return 0
   const count = questions.value.filter(q => isAnswered(q.problem_id)).length
@@ -1937,9 +1989,40 @@ const isSelected = (id: number, letter: string) => {
 // 判断是否已作答
 const isAnswered = (id: number) => {
   const ans = answers.value[id]
-  if (ans === undefined || ans === null) return false
-  if (Array.isArray(ans)) return ans.length > 0
-  return String(ans).trim().length > 0
+  if (ans !== undefined && ans !== null) {
+    if (Array.isArray(ans) && ans.length > 0) return true
+    if (!Array.isArray(ans) && String(ans).trim().length > 0) return true
+  }
+  return Boolean(textAnswers.value[id]?.trim())
+}
+
+const getAnswerPreview = (question: ProblemItem) => {
+  const rawAnswer = answers.value[question.problem_id]
+
+  if (question.option_type === 1 || question.option_type === 2) {
+    const choices = Array.isArray(rawAnswer) ? rawAnswer : (rawAnswer ? [rawAnswer] : [])
+    return choices.map(choice => String(choice).trim()).filter(Boolean).join('、')
+  }
+
+  const imageCount = getAnswerImages(question.problem_id).length
+  const textAnswer = textAnswers.value[question.problem_id]?.trim() || ''
+  const directAnswer = typeof rawAnswer === 'string' && !rawAnswer.startsWith('http')
+    ? rawAnswer.trim()
+    : Array.isArray(rawAnswer)
+      ? rawAnswer.filter(item => typeof item === 'string' && !item.startsWith('http')).join('、').trim()
+      : ''
+
+  if (directAnswer && imageCount) return `${directAnswer}（含 ${imageCount} 张图片）`
+  if (directAnswer) return directAnswer
+  if (textAnswer && imageCount) return `${textAnswer}（含 ${imageCount} 张图片）`
+  if (textAnswer) return textAnswer
+  if (imageCount) return `图片答案（${imageCount} 张）`
+  return ''
+}
+
+const jumpToQuestionFromPreview = (index: number, question: ProblemItem) => {
+  showAnswerPreview.value = false
+  currentIndexChange(index, question.status, question.problem_id)
 }
 // 监听 answers 变化 → 保存到 localStorage（防抖版本更友好）
 watch(
@@ -2298,6 +2381,215 @@ onUnmounted(() => {
   color: #475569;
   font-size: 13px;
   text-align: center;
+}
+
+.answer-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.28);
+  backdrop-filter: blur(5px);
+}
+
+.answer-preview-dialog {
+  width: min(860px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dbe4f0;
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgba(30, 64, 175, 0.18);
+}
+
+.answer-preview-header {
+  position: static;
+  top: auto;
+  z-index: auto;
+  grid-column: auto;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 22px;
+  border-radius: 0;
+  border-bottom: 1px solid #e8eef7;
+  background: linear-gradient(135deg, #ffffff, #f6f8ff);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.answer-preview-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.answer-preview-header strong {
+  color: #1e293b;
+  font-size: 1.18rem;
+}
+
+.answer-preview-header span {
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.answer-preview-close {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid #d8e1ee;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.answer-preview-close:hover {
+  border-color: #a5b4fc;
+  color: #4f46e5;
+  background: #f5f7ff;
+}
+
+.answer-preview-close svg {
+  width: 19px;
+  height: 19px;
+}
+
+.answer-preview-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 22px;
+  color: #64748b;
+  font-size: 0.84rem;
+  background: #fbfcff;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.answer-preview-summary span:first-child {
+  color: #4338ca;
+  font-weight: 700;
+}
+
+.answer-preview-list {
+  min-height: 0;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 18px 22px 22px;
+}
+
+.answer-preview-item {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px auto minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+  padding: 12px 13px;
+  border: 1px solid #e3eaf4;
+  border-radius: 13px;
+  background: #ffffff;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.answer-preview-item:hover,
+.answer-preview-item.current {
+  border-color: #a5b4fc;
+  box-shadow: 0 7px 18px rgba(79, 70, 229, 0.1);
+  transform: translateY(-1px);
+}
+
+.answer-preview-item.answered {
+  background: #fbfdff;
+}
+
+.answer-preview-number {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.answer-preview-type {
+  padding-top: 5px;
+  color: #64748b;
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.answer-preview-value {
+  min-width: 0;
+  padding-top: 4px;
+  color: #1e293b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.answer-preview-value.empty {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.answer-preview-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 13px;
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  background: #f5f7ff;
+  color: #4338ca;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.answer-preview-trigger:hover {
+  border-color: #818cf8;
+  background: #eef2ff;
+  box-shadow: 0 5px 14px rgba(79, 70, 229, 0.14);
+  transform: translateY(-1px);
+}
+
+.answer-preview-trigger-count {
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+  font-size: 0.76rem;
 }
 
 /* --- 2. 基础重置 --- */
@@ -3369,6 +3661,46 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 640px) {
+  .header-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    gap: 7px;
+  }
+
+  .answer-preview-trigger {
+    justify-content: center;
+    padding: 7px 10px;
+    font-size: 0.78rem;
+  }
+
+  .answer-preview-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .answer-preview-dialog {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .answer-preview-header,
+  .answer-preview-summary {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .answer-preview-summary {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .answer-preview-list {
+    grid-template-columns: 1fr;
+    padding: 14px 16px 18px;
+  }
+
   .image-answer-summary {
     align-items: stretch;
     flex-direction: column;

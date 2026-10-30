@@ -1,5 +1,51 @@
 <template>
   <div class="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+    <div
+        v-if="showAnswerPreview"
+        class="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-[2px] sm:p-6"
+        @click.self="showAnswerPreview = false"
+    >
+      <section class="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="全部答案速览">
+        <header class="flex items-start justify-between gap-4 border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div>
+            <div class="text-lg font-bold text-slate-900">答案速览</div>
+            <p class="mt-1 text-sm text-slate-500">只列答案，不显示题目内容与解析</p>
+          </div>
+          <button
+              type="button"
+              class="rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+              aria-label="关闭答案速览"
+              @click="showAnswerPreview = false"
+          >
+            关闭
+          </button>
+        </header>
+
+        <div class="overflow-y-auto p-4 sm:p-6">
+          <div class="mb-4 flex items-center justify-between gap-3 text-xs text-slate-500">
+            <span>共 {{ questions.length }} 题</span>
+            <span>{{ answerPreviewCount }} 题有标准答案</span>
+          </div>
+          <div class="space-y-2">
+            <div
+                v-for="(question, index) in questions"
+                :key="question.problem_id || index"
+                class="grid grid-cols-[auto_minmax(0,1fr)] gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-3 sm:gap-4 sm:px-4"
+            >
+              <div class="flex min-w-[72px] flex-col gap-1">
+                <span class="text-sm font-bold tabular-nums text-slate-800">第 {{ index + 1 }} 题</span>
+                <span class="text-[11px] text-slate-500">{{ getQuestionTypeLabel(question) }}</span>
+              </div>
+              <div class="min-w-0 border-l border-slate-200 pl-3 text-sm leading-6 text-slate-800 sm:pl-4">
+                <Markdown v-if="getAnswerPreview(question)" :generate-data="getAnswerPreview(question)" />
+                <span v-else class="text-slate-400">暂无标准答案</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
     <div class="mx-auto max-w-[1600px]">
       <div class="mb-8 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div class="min-w-0 flex-1 space-y-3">
@@ -28,12 +74,23 @@
             </div>
           </div>
         </div>
-        <button
-            class="w-full rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 sm:w-auto"
-            @click="router.back()"
-        >
-          返回
-        </button>
+        <div class="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row">
+          <button
+              v-if="questions.length"
+              type="button"
+              class="w-full rounded-xl border border-cyan-200 bg-cyan-50 px-5 py-2.5 font-semibold text-cyan-800 shadow-sm transition-colors hover:border-cyan-300 hover:bg-cyan-100 sm:w-auto"
+              @click="showAnswerPreview = true"
+          >
+            答案速览
+          </button>
+          <button
+              type="button"
+              class="w-full rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-slate-700 shadow-sm transition-colors hover:bg-slate-50 sm:w-auto"
+              @click="router.back()"
+          >
+            返回
+          </button>
+        </div>
       </div>
 
       <div v-if="loading" class="py-24 text-center">
@@ -404,6 +461,7 @@ const router = useRouter()
 const { error } = useMessageBox()
 
 const loading = ref(false)
+const showAnswerPreview = ref(false)
 const questions = ref<ProblemMath408BankVo[]>([])
 const sheets = ref<ProblemExamSheetVo[]>([])
 const typeFilter = ref<QuestionTypeFilter>('all')
@@ -461,6 +519,10 @@ const totalAwardedScore = computed(() => {
 
 const totalExamScore = computed(() => {
   return questions.value.reduce((sum, question) => sum + (question.score || 0), 0)
+})
+
+const answerPreviewCount = computed(() => {
+  return questions.value.filter((question) => Boolean(getAnswerPreview(question))).length
 })
 
 const filteredQuestions = computed(() => {
@@ -734,6 +796,16 @@ const getStandardAnswerMarkdown = (question: ProblemMath408BankVo) => {
   }
 
   return answer
+}
+
+const getAnswerPreview = (question: ProblemMath408BankVo) => {
+  const answer = question.correct_answer?.trim()
+  if (!answer) return ''
+  if (isChoiceQuestion(question)) {
+    const choices = parseChoiceAnswer(answer)
+    return choices.length ? choices.join('、') : formatAnswer(answer)
+  }
+  return formatAnswer(answer)
 }
 
 const isImageUrl = (answer?: string) => {
