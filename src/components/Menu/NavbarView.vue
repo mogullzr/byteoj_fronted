@@ -4,6 +4,7 @@ import {SearchControllerService, SearchRequest, UserControllerService} from "../
 import { useRoute, useRouter } from "vue-router";
 import UserStore from "@/store/user";
 import { ACCESS_ENUM } from "@/access/access";
+import { DIRECTION_EXPLORATION_ENABLED } from "@/config/featureFlags";
 
 const darkTheme = ref<string>("ByteOJLight");
 const router = useRouter();
@@ -297,6 +298,9 @@ onUnmounted(() => {
               <li>
                 <a @click.prevent="handleNavigation('/english-grading')" href="/english-grading">考研英语专项评分</a>
               </li>
+              <li v-if="DIRECTION_EXPLORATION_ENABLED">
+                <a @click.prevent="handleNavigation('/explore')" href="/explore">计算机方向探索</a>
+              </li>
               <li>
                 <a @click.prevent="handleNavigation('/update')" href="/studyPath">网站更新日志</a>
               </li>
@@ -340,6 +344,9 @@ onUnmounted(() => {
           </li>
           <li>
             <a @click.prevent="handleNavigation('/english-grading')" href="/english-grading">考研英语专项评分</a>
+          </li>
+          <li v-if="DIRECTION_EXPLORATION_ENABLED">
+            <a @click.prevent="handleNavigation('/explore')" href="/explore">计算机方向探索</a>
           </li>
           <li>
             <a class="disabled" @click.prevent="handleNavigation('/data-structure-animation')" href="/data-structure-animation">数据结构动画</a>

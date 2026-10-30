@@ -4,7 +4,7 @@
       <div class="mb-8 flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
         <div class="min-w-0 flex-1 space-y-3">
           <div class="inline-flex w-fit items-center rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-            答题卡详情
+            {{ isPublicTopSheet ? '公开前三答卷' : '答题卡详情' }}
           </div>
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
@@ -427,6 +427,7 @@ const resultFilters: Array<{ label: string; value: ResultFilter }> = [
 
 const examId = Number(route.query.exam_id)
 const recordId = Number(route.query.recordId)
+const isPublicTopSheet = route.query.publicTop === '1'
 
 const sheetMap = computed(() => {
   const map = new Map<number, ProblemExamSheetVo>()
@@ -500,7 +501,9 @@ const fetchSheet = async () => {
   try {
     const [questionRes, sheetRes] = await Promise.all([
       ProblemsControllerService.problemExamSearchDetailUsingGet(examId),
-      ProblemsControllerService.problemExamSheetUsingGet(recordId),
+      isPublicTopSheet
+        ? ProblemsControllerService.problemExamTopScoreSheetUsingGet(examId, recordId)
+        : ProblemsControllerService.problemExamSheetUsingGet(recordId),
     ])
 
     if (questionRes.code === 0 && Array.isArray(questionRes.data)) {

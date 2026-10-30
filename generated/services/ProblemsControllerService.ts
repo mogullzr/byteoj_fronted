@@ -12,6 +12,7 @@ import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_Problem
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
 import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
+import type { ProblemExamTopScoreVo } from '../models/ProblemExamTopScoreVo';
 import type { ProblemRequest } from '../models/ProblemRequest';
 import type { CancelablePromise } from '../../../generated/core/CancelablePromise';
 import { OpenAPI } from '../../../generated/core/OpenAPI';
@@ -142,6 +143,49 @@ export class ProblemsControllerService {
             method: 'GET',
             url: '/api/problem/other/exam/sheet',
             query: {
+                'recordId': recordId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Public top-three score summaries (one best record per user).
+     * @param examId exam_id
+     */
+    public static problemExamTopScoresUsingGet(
+        examId: number,
+    ): CancelablePromise<{ code?: number; data?: Array<ProblemExamTopScoreVo>; message?: string }> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/top-scores',
+            query: {
+                'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Public answer sheet, available only while the record remains in the current top three.
+     * @param examId exam_id
+     * @param recordId recordId
+     */
+    public static problemExamTopScoreSheetUsingGet(
+        examId: number,
+        recordId: number,
+    ): CancelablePromise<BaseResponse_List_ProblemExamSheetVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/top-scores/sheet',
+            query: {
+                'exam_id': examId,
                 'recordId': recordId,
             },
             errors: {

@@ -4,6 +4,7 @@ import { ACCESS_ENUM } from "@/access/access";
 import checkAccess from "@/access/check";
 import user from "@/store/user";
 import { User } from "../../generated";
+import { DIRECTION_EXPLORATION_ENABLED } from "@/config/featureFlags";
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -474,6 +475,24 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import("@/view/AI/EnglishGradingView.vue"),
   },
   {
+    path: "/explore",
+    name: "计算机方向探索",
+    meta: { access: "0", offlineExperience: true, title: "ByteOJ - 计算机方向探索" },
+    component: () => import("@/view/explore/DirectionExploreView.vue"),
+  },
+  {
+    path: "/explore/task/:taskId",
+    name: "方向体验任务",
+    meta: { access: "0", offlineExperience: true, title: "ByteOJ - 方向体验任务" },
+    component: () => import("@/view/explore/DirectionExploreTaskView.vue"),
+  },
+  {
+    path: "/explore/result",
+    name: "方向探索结果",
+    meta: { access: "0", offlineExperience: true, title: "ByteOJ - 方向探索记录" },
+    component: () => import("@/view/explore/DirectionExploreResultView.vue"),
+  },
+  {
     path: "/exam",
     name: "考试",
 
@@ -556,6 +575,16 @@ const router = createRouter({
   routes,
 });
 router.beforeEach(async (to, from, next) => {
+  if (!DIRECTION_EXPLORATION_ENABLED && to.path.startsWith("/explore")) {
+    return next("/home");
+  }
+
+  // Keep the anonymous exploration flow fully local: skip user/session APIs and auth checks.
+  if (to.matched.some((record) => record.meta.offlineExperience)) {
+    document.title = to.meta.title ? `${to.meta.title}` : "ByteOJ";
+    return next();
+  }
+
   // 反调试逻辑
   // (function () {
   //   "use strict";

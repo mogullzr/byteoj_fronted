@@ -50,8 +50,8 @@
           <label class="exam-ai-model-field">
             <span>判卷模型</span>
             <select v-model="aiModel">
-              <option value="GPT_5_4">GPT-5.4（默认）</option>
-              <option value="DEEPSEEK">DeepSeek Flash</option>
+              <option value="DEEPSEEK">DeepSeek Flash-4.1（极速路线）</option>
+              <option value="GPT_5_4">GPT-6.1-sol（不稳定1路线）</option>
             </select>
           </label>
           <div class="modal-buttons">
@@ -942,7 +942,7 @@ const resultData = ref({
 // 新增状态
 const showConfirmModal = ref(false)
 const submitting = ref(false)
-const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('GPT_5_4')
+const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('DEEPSEEK')
 
 // 后端逐题判卷进度（Redis 状态由提交接口实时更新）
 interface ExamGradingProgressItem {
