@@ -51,6 +51,12 @@ const problemTableRef = ref<any>();
 const selectedCandidates = ref<Record<string, any>>({});
 const restoringSelection = ref(false);
 const batchScore = ref(5);
+const selectedProblems = ref<any[]>([]);
+const selectedProblemTableRef = ref<any>();
+const selectedBatchScore = ref(5);
+const rangeStart = ref(1);
+const rangeEnd = ref(1);
+const draggedProblemIndex = ref<number | null>(null);
 
 const tabSearchState = reactive<Record<string, any>>({
   algorithm: { keyword: "", pageNum: 1, pageSize: 10 },
@@ -262,8 +268,105 @@ const addAllSearchResults = async () => {
 };
 
 const removeProblem = async (index: number) => {
+  const removedProblem = request.value.problemExamProblemInfos[index];
   request.value.problemExamProblemInfos.splice(index, 1);
+  selectedProblems.value = selectedProblems.value.filter((problem) => problem !== removedProblem);
   await restorePageSelection();
+};
+
+const handleSelectedProblemSelectionChange = (rows: any[]) => {
+  selectedProblems.value = rows;
+};
+
+const selectProblemRange = () => {
+  const total = request.value.problemExamProblemInfos.length;
+  const start = Math.floor(Number(rangeStart.value));
+  const end = Math.floor(Number(rangeEnd.value));
+  if (!total || !Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end < start || end > total) {
+    ElNotification.warning({ title: "范围无效", message: `请输入 1-${total || 1} 之间的有效题号范围` });
+    return;
+  }
+
+  selectedProblemTableRef.value?.clearSelection();
+  request.value.problemExamProblemInfos.slice(start - 1, end).forEach((problem: any) => {
+    selectedProblemTableRef.value?.toggleRowSelection(problem, true);
+  });
+};
+
+const applyBatchScore = () => {
+  if (!selectedProblems.value.length) {
+    ElNotification.warning({ title: "提示", message: "请先勾选要设置分数的题目" });
+    return;
+  }
+  const score = Number(selectedBatchScore.value);
+  if (!Number.isFinite(score) || score < 1) {
+    ElNotification.warning({ title: "分值无效", message: "分值必须是大于等于 1 的数字" });
+    return;
+  }
+  selectedProblems.value.forEach((problem) => {
+    problem.score = score;
+  });
+  ElNotification.success({ title: "批量设置完成", message: `已将 ${selectedProblems.value.length} 道题设置为 ${score} 分` });
+};
+
+const removeSelectedProblems = async () => {
+  if (!selectedProblems.value.length) {
+    ElNotification.warning({ title: "提示", message: "请先勾选要删除的题目" });
+    return;
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确定删除已勾选的 ${selectedProblems.value.length} 道题目吗？`,
+      "批量删除题目",
+      { confirmButtonText: "确认删除", cancelButtonText: "取消", type: "warning" }
+    );
+  } catch {
+    return;
+  }
+
+  const selectedKeys = new Set(selectedProblems.value.map(candidateKey));
+  request.value.problemExamProblemInfos = request.value.problemExamProblemInfos.filter(
+    (problem: any) => !selectedKeys.has(candidateKey(problem))
+  );
+  selectedProblems.value = [];
+  selectedProblemTableRef.value?.clearSelection();
+  ElNotification.success({ title: "删除完成", message: "已删除勾选题目" });
+};
+
+const startProblemDrag = (index: number, event: DragEvent) => {
+  draggedProblemIndex.value = index;
+  if (event.dataTransfer) {
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", String(index));
+  }
+};
+
+const dropProblem = (targetIndex: number, event: DragEvent) => {
+  event.preventDefault();
+  const dataIndex = event.dataTransfer ? Number(event.dataTransfer.getData("text/plain")) : NaN;
+  const sourceIndex = draggedProblemIndex.value ?? (Number.isInteger(dataIndex) ? dataIndex : null);
+  if (
+    sourceIndex === null ||
+    sourceIndex < 0 ||
+    sourceIndex >= request.value.problemExamProblemInfos.length ||
+    sourceIndex === targetIndex
+  ) {
+    draggedProblemIndex.value = null;
+    return;
+  }
+
+  const targetElement = event.currentTarget;
+  const dropAfterTarget =
+    targetElement instanceof HTMLElement && event.clientY > targetElement.getBoundingClientRect().top + targetElement.clientHeight / 2;
+  let insertIndex = targetIndex + (dropAfterTarget ? 1 : 0);
+  if (sourceIndex < insertIndex) insertIndex -= 1;
+  const [movedProblem] = request.value.problemExamProblemInfos.splice(sourceIndex, 1);
+  request.value.problemExamProblemInfos.splice(insertIndex, 0, movedProblem);
+  draggedProblemIndex.value = null;
+};
+
+const finishProblemDrag = () => {
+  draggedProblemIndex.value = null;
 };
 
 const previewProblemDetail = (problem: any) => {
@@ -301,6 +404,15 @@ const questionTypeText = (type?: number) => {
   if (type === 3) return "填空";
   if (type === 4) return "算法";
   return "未知";
+};
+
+const questionTypeClass = (type?: number) => {
+  if (type === 0) return "question-type-short-answer";
+  if (type === 1) return "question-type-single-choice";
+  if (type === 2) return "question-type-multiple-choice";
+  if (type === 3) return "question-type-fill";
+  if (type === 4) return "question-type-algorithm";
+  return "question-type-unknown";
 };
 
 const validateExam = () => {
@@ -635,13 +747,60 @@ onMounted(async () => {
         <div class="panel-header">
           <div>
             <div class="panel-title">已选题目</div>
-            <div class="panel-desc">可调整分值；编辑考试时也会提交这一组题目。</div>
+            <div class="panel-desc">拖动题目前的手柄调整顺序；勾选题目后可批量改分或删除。</div>
           </div>
           <el-tag size="large">总分 {{ totalScore }}</el-tag>
         </div>
       </template>
 
-      <el-table :data="request.problemExamProblemInfos" class="data-table" border empty-text="暂未添加题目">
+      <div class="selected-toolbar">
+        <div class="range-select-control">
+          <span class="toolbar-label">按序号勾选</span>
+          <el-input-number v-model="rangeStart" :min="1" :max="request.problemExamProblemInfos.length || 1" />
+          <span class="range-separator">至</span>
+          <el-input-number v-model="rangeEnd" :min="1" :max="request.problemExamProblemInfos.length || 1" />
+          <el-button @click="selectProblemRange">选择范围</el-button>
+        </div>
+        <div class="selected-batch-actions">
+          <span class="selected-count">已选 {{ selectedProblems.length }} 题</span>
+          <span class="range-separator">设为</span>
+          <el-input-number v-model="selectedBatchScore" :min="1" :max="1000" controls-position="right" />
+          <el-button type="primary" :disabled="!selectedProblems.length" @click="applyBatchScore">
+            统一设置分数
+          </el-button>
+          <el-button type="danger" plain :disabled="!selectedProblems.length" @click="removeSelectedProblems">
+            批量删除
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        ref="selectedProblemTableRef"
+        :data="request.problemExamProblemInfos"
+        :row-key="candidateKey"
+        class="data-table selected-problem-table"
+        border
+        empty-text="暂未添加题目"
+        @selection-change="handleSelectedProblemSelectionChange"
+      >
+        <el-table-column type="selection" width="48" />
+        <el-table-column label="序号" type="index" width="70" />
+        <el-table-column label="排序" width="76" align="center">
+          <template #default="scope">
+            <span
+              class="drag-handle"
+              :class="{ dragging: draggedProblemIndex === scope.$index }"
+              draggable="true"
+              title="拖动调整顺序"
+              @dragstart="startProblemDrag(scope.$index, $event)"
+              @dragover.prevent
+              @drop="dropProblem(scope.$index, $event)"
+              @dragend="finishProblemDrag"
+            >
+              ⋮⋮
+            </span>
+          </template>
+        </el-table-column>
         <el-table-column label="题号" prop="problem_id" width="110" />
         <el-table-column label="题目">
           <template #default="scope">
@@ -653,9 +812,15 @@ onMounted(async () => {
             <el-tag :type="problemTypeTag(scope.row.status)">{{ problemTypeText(scope.row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="题型" width="110">
+        <el-table-column label="题型" width="130">
           <template #default="scope">
-            <el-tag type="info">{{ questionTypeText(scope.row.type) }}</el-tag>
+            <el-tag
+              class="question-type-tag"
+              :class="questionTypeClass(scope.row.type)"
+              effect="light"
+            >
+              {{ questionTypeText(scope.row.type) }}
+            </el-tag>
           </template>
         </el-table-column>
         <el-table-column label="分值" width="160">
@@ -842,6 +1007,105 @@ onMounted(async () => {
   white-space: nowrap;
 }
 
+.selected-toolbar,
+.range-select-control,
+.selected-batch-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.selected-toolbar {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.toolbar-label,
+.selected-count {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.range-separator {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 30px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -3px;
+  cursor: grab;
+  user-select: none;
+}
+
+.drag-handle:active,
+.drag-handle.dragging {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+  cursor: grabbing;
+}
+
+.question-type-tag {
+  min-width: 58px;
+  justify-content: center;
+  border-width: 1px;
+  font-weight: 700;
+}
+
+.question-type-short-answer {
+  color: #9a3412;
+  border-color: #fdba74;
+  background: #fff7ed;
+}
+
+.question-type-single-choice {
+  color: #1d4ed8;
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.question-type-multiple-choice {
+  color: #6d28d9;
+  border-color: #c4b5fd;
+  background: #f5f3ff;
+}
+
+.question-type-fill {
+  color: #047857;
+  border-color: #6ee7b7;
+  background: #ecfdf5;
+}
+
+.question-type-algorithm {
+  color: #be123c;
+  border-color: #fda4af;
+  background: #fff1f2;
+}
+
+.question-type-unknown {
+  color: #475569;
+  border-color: #cbd5e1;
+  background: #f1f5f9;
+}
+
 .summary-panel :deep(.el-card__body) {
   display: flex;
   flex-direction: column;
@@ -1004,7 +1268,10 @@ onMounted(async () => {
   .header-actions,
   .search-actions,
   .batch-toolbar,
-  .batch-actions {
+  .batch-actions,
+  .selected-toolbar,
+  .range-select-control,
+  .selected-batch-actions {
     width: 100%;
   }
 
@@ -1014,9 +1281,17 @@ onMounted(async () => {
   }
 
   .batch-toolbar,
-  .batch-actions {
+  .batch-actions,
+  .selected-toolbar,
+  .range-select-control,
+  .selected-batch-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .range-select-control :deep(.el-input-number),
+  .selected-batch-actions :deep(.el-input-number) {
+    width: 100%;
   }
 }
 </style>
