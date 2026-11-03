@@ -1,7 +1,69 @@
 <template>
   <div class="min-h-screen bg-[#f9fafb] pt-16 pb-24 px-4 sm:px-6 lg:px-8">
-    <div v-if="examToStart" class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/50 px-4" @click.self="closeStartAgreement">
-      <section class="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="exam-agreement-title">
+    <div v-if="showCountdownPrompt" class="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-950/60 px-4 py-6 backdrop-blur-sm" @click="closeCountdownPrompt">
+      <section class="relative w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="countdown-title" @click.stop>
+        <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 px-7 pb-7 pt-8 text-white sm:px-9">
+          <button
+              type="button"
+              aria-label="关闭倒计时提示"
+              class="absolute right-5 top-5 rounded-full p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
+              @click="closeCountdownPrompt"
+          >
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <p class="text-sm font-semibold tracking-[0.25em] text-emerald-300">2026 考研冲刺计划</p>
+          <h2 id="countdown-title" class="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+            {{ countdown.remainingMs > 0 ? '距离 12 月 19 日还有' : '考研日到了，全力以赴' }}
+          </h2>
+          <p class="mt-2 text-sm text-slate-300">
+            {{ countdown.remainingMs > 0 ? '倒计时截至 2026 年 12 月 19 日 00:00（北京时间）' : '祝你沉着应考，发挥出全部实力。' }}
+          </p>
+          <div class="mt-7 grid grid-cols-4 gap-2 sm:gap-3">
+            <div v-for="item in countdownItems" :key="item.label" class="rounded-2xl border border-white/10 bg-white/10 px-2 py-3 text-center backdrop-blur-sm">
+              <strong class="block text-2xl font-black tabular-nums sm:text-3xl">{{ item.value }}</strong>
+              <span class="mt-1 block text-xs text-slate-300">{{ item.label }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-5 px-7 py-6 sm:px-9">
+          <div>
+            <label for="target-school" class="mb-2 block text-sm font-semibold text-slate-700">写下你的目标院校</label>
+            <input
+                id="target-school"
+                v-model="targetSchoolDraft"
+                type="text"
+                maxlength="40"
+                placeholder="例如：清华大学计算机系"
+                class="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                @keyup.enter="saveTargetSchoolAndClose"
+            />
+            <p class="mt-2 text-xs text-slate-500">只保存在当前浏览器中，每个登录用户分别保存。</p>
+          </div>
+
+          <div class="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-center">
+            <p class="text-base font-bold leading-7 text-amber-900 sm:text-lg">
+              想想你写过的几百套试卷，必定拿下「{{ targetSchoolLabel }}」！
+            </p>
+            <p class="mt-1 text-sm text-amber-700">今天的每一道题，都是上岸路上的一块垫脚石。</p>
+          </div>
+
+          <div class="flex justify-end gap-3">
+            <button type="button" class="rounded-xl px-4 py-2.5 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700" @click="closeCountdownPrompt">
+              稍后再看
+            </button>
+            <button type="button" class="rounded-xl bg-emerald-700 px-5 py-2.5 font-semibold text-white shadow-sm transition hover:bg-emerald-800 active:scale-[0.98]" @click="saveTargetSchoolAndClose">
+              保存目标，开始冲刺
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div v-if="examToStart" class="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/50 px-4" @click="closeStartAgreement">
+      <section class="w-full max-w-lg rounded-2xl bg-white p-7 shadow-2xl" role="dialog" aria-modal="true" aria-labelledby="exam-agreement-title" @click.stop>
         <h2 id="exam-agreement-title" class="text-2xl font-bold text-slate-800">开始考试前请确认</h2>
         <p class="mt-2 text-sm text-slate-500">请认真阅读以下考试须知，确认后将开始计时。</p>
         <div class="mt-5 space-y-3 rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
@@ -28,6 +90,30 @@
         进入我的错题本
       </button>
     </div>
+    <section
+        class="mx-auto mb-8 max-w-5xl cursor-pointer overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-slate-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        aria-label="考研倒计时"
+        @click="openCountdownPrompt"
+    >
+      <div class="flex flex-col gap-5 px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold tracking-wide text-white">考研倒计时</span>
+            <span class="text-sm font-medium text-slate-500">2026 年 12 月 19 日</span>
+          </div>
+          <p class="mt-2 text-lg font-bold text-slate-800 sm:text-xl">
+            {{ countdown.remainingMs > 0 ? `距离上岸还有 ${countdown.days} 天，稳住节奏，继续刷题。` : '考研日到了，祝你从容应考，成功上岸。' }}
+          </p>
+          <p class="mt-1 text-sm text-slate-500">目标院校：<span class="font-semibold text-emerald-700">{{ targetSchoolLabel }}</span> · 点击修改目标</p>
+        </div>
+        <div class="flex shrink-0 items-end gap-2 text-center">
+          <div v-for="item in compactCountdownItems" :key="item.label" class="min-w-[3.5rem] rounded-xl bg-white px-2 py-2 shadow-sm ring-1 ring-slate-200">
+            <strong class="block text-xl font-black tabular-nums text-slate-800">{{ item.value }}</strong>
+            <span class="text-[11px] text-slate-500">{{ item.label }}</span>
+          </div>
+        </div>
+      </div>
+    </section>
     <div class="max-w-5xl mx-auto mb-12">
       <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         <div class="flex items-center">
@@ -192,8 +278,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import UserStore from '@/store/user'
 import { SearchControllerService, SearchRequest } from '../../../generated'
 import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
@@ -216,7 +303,16 @@ type ExamItem = {
 
 const route = useRoute()
 const router = useRouter()
+const useStore = UserStore()
 const { success, error, warning } = useMessageBox()
+
+const countdownTargetTimestamp = new Date('2026-12-19T00:00:00+08:00').getTime()
+const countdownStoragePrefix = 'byteoj:exam:graduate-target-school:'
+const countdownTimer = ref<number | null>(null)
+const showCountdownPrompt = ref(false)
+const targetSchool = ref('')
+const targetSchoolDraft = ref('')
+const countdown = ref({ days: 0, hours: 0, minutes: 0, seconds: 0, remainingMs: 0 })
 
 const searchRequest = ref<SearchRequest>({
   category: 'exam',
@@ -237,8 +333,96 @@ const totalPages = computed(() => {
   return typeof totalCount === 'number' && totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1
 })
 
+const targetSchoolStorageKey = computed(() => {
+  const uuid = useStore.loginUser?.uuid
+  return uuid !== undefined && uuid !== null && String(uuid) !== '-1'
+    ? `${countdownStoragePrefix}${String(uuid)}`
+    : `${countdownStoragePrefix}guest`
+})
+
+const targetSchoolLabel = computed(() => targetSchoolDraft.value.trim() || targetSchool.value.trim() || '你的目标院校')
+
+const countdownItems = computed(() => [
+  { label: '天', value: countdown.value.days },
+  { label: '小时', value: String(countdown.value.hours).padStart(2, '0') },
+  { label: '分钟', value: String(countdown.value.minutes).padStart(2, '0') },
+  { label: '秒', value: String(countdown.value.seconds).padStart(2, '0') },
+])
+
+const compactCountdownItems = computed(() => [
+  { label: '天', value: countdown.value.days },
+  { label: '时', value: String(countdown.value.hours).padStart(2, '0') },
+  { label: '分', value: String(countdown.value.minutes).padStart(2, '0') },
+  { label: '秒', value: String(countdown.value.seconds).padStart(2, '0') },
+])
+
+const updateCountdown = () => {
+  const remainingMs = Math.max(0, countdownTargetTimestamp - Date.now())
+  const totalSeconds = Math.floor(remainingMs / 1000)
+  countdown.value = {
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+    remainingMs,
+  }
+}
+
+const loadTargetSchool = () => {
+  try {
+    const savedSchool = localStorage.getItem(targetSchoolStorageKey.value) || ''
+    targetSchool.value = savedSchool
+    targetSchoolDraft.value = savedSchool
+  } catch (err) {
+    console.warn('读取目标院校失败', err)
+  }
+}
+
+const saveTargetSchool = () => {
+  const school = targetSchoolDraft.value.trim()
+  targetSchool.value = school
+  try {
+    if (school) {
+      localStorage.setItem(targetSchoolStorageKey.value, school)
+    } else {
+      localStorage.removeItem(targetSchoolStorageKey.value)
+    }
+  } catch (err) {
+    console.warn('保存目标院校失败', err)
+  }
+}
+
+const openCountdownPrompt = () => {
+  targetSchoolDraft.value = targetSchool.value
+  showCountdownPrompt.value = true
+}
+
+const closeCountdownPrompt = () => {
+  targetSchoolDraft.value = targetSchool.value
+  showCountdownPrompt.value = false
+}
+
+const saveTargetSchoolAndClose = () => {
+  saveTargetSchool()
+  showCountdownPrompt.value = false
+}
+
 onMounted(() => {
+  loadTargetSchool()
+  updateCountdown()
+  countdownTimer.value = window.setInterval(updateCountdown, 1000)
+  showCountdownPrompt.value = !targetSchool.value.trim()
   doSearch()
+})
+
+watch(targetSchoolStorageKey, () => {
+  loadTargetSchool()
+})
+
+onBeforeUnmount(() => {
+  if (countdownTimer.value !== null) {
+    window.clearInterval(countdownTimer.value)
+  }
 })
 
 const isJoined = (exam?: ExamItem) => {
