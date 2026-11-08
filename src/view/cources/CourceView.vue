@@ -2,6 +2,8 @@
 import { onMounted, ref, Ref } from "vue";
 import { CourseControllerService } from "../../../generated/services/CourseControllerService";
 import router from "../../router/index";
+import GraduateStudyPanel from "@/components/Study/GraduateStudyPanel.vue";
+import { TEMPORARY_STUDY_MOTIVATION_ENABLED } from "@/config/featureFlags";
 
 // const path = router.currentRoute.value.fullPath;
 // const problem_id = ref(parseInt(path.toString().split("/")[3]));
@@ -23,6 +25,7 @@ onMounted(async () => {
 // }
 </script>
 <template>
+<!--  <graduate-study-panel v-if="TEMPORARY_STUDY_MOTIVATION_ENABLED" />-->
   <div
     class="flex card card-compact bg-base-100 shadow-xl mx-auto"
     style="max-width: 1150px"

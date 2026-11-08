@@ -281,6 +281,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import UserStore from '@/store/user'
+import { GRADUATE_EXAM_TARGET_TIME, GRADUATE_TARGET_SCHOOL_STORAGE_PREFIX } from '@/config/temporaryStudy'
 import { SearchControllerService, SearchRequest } from '../../../generated'
 import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
@@ -306,8 +307,8 @@ const router = useRouter()
 const useStore = UserStore()
 const { success, error, warning } = useMessageBox()
 
-const countdownTargetTimestamp = new Date('2026-12-19T00:00:00+08:00').getTime()
-const countdownStoragePrefix = 'byteoj:exam:graduate-target-school:'
+const countdownTargetTimestamp = new Date(GRADUATE_EXAM_TARGET_TIME).getTime()
+const countdownStoragePrefix = GRADUATE_TARGET_SCHOOL_STORAGE_PREFIX
 const countdownTimer = ref<number | null>(null)
 const showCountdownPrompt = ref(false)
 const targetSchool = ref('')

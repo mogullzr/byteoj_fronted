@@ -108,6 +108,35 @@
       <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
     </section>
 
+    <section class="history-panel">
+      <div class="history-heading">
+        <div>
+          <p class="eyebrow">GRADING HISTORY</p>
+          <h2>历史评分记录</h2>
+          <p class="history-hint">记录保存在当前浏览器中，可随时打开复习。</p>
+        </div>
+        <span class="history-count">{{ historyItems.length }} 条记录</span>
+      </div>
+      <div v-if="historyItems.length" class="history-list">
+        <article v-for="item in historyItems" :key="item.id" class="history-item" :class="{ selected: activeHistoryId === item.id }">
+          <div class="history-info">
+            <div class="history-meta">
+              <strong>{{ getExamLabel(item.examType) }} · {{ getQuestionLabel(item.questionType) }}</strong>
+              <span>{{ formatHistoryDate(item.createdAt) }}</span>
+            </div>
+            <p class="history-score">得分：{{ item.result.awarded_score ?? 0 }} / {{ item.result.total_score ?? getTotalScore(item.examType, item.questionType) }} 分</p>
+            <p class="history-preview">题目：{{ item.questionContent || '题目图片' }}</p>
+            <p class="history-preview">答案：{{ item.studentAnswer || '答案图片' }}</p>
+          </div>
+          <div class="history-actions">
+            <button class="secondary-button" @click="openHistory(item)">查看记录</button>
+            <button class="delete-history-button" :aria-label="`删除${getQuestionLabel(item.questionType)}记录`" @click="deleteHistory(item.id)">删除</button>
+          </div>
+        </article>
+      </div>
+      <p v-else class="empty-history">完成一次评分后，记录会自动保存在这里。</p>
+    </section>
+
     <section v-if="result" class="result-panel">
       <div class="result-summary">
         <div>
@@ -231,7 +260,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import axios from 'axios'
 import { OpenAPI } from '../../../generated/core/OpenAPI'
 import { UserControllerService } from '../../../generated'
@@ -258,6 +287,35 @@ type GradingResult = {
   corrected_answer?: string
   [key: string]: any
 }
+type GradingHistoryItem = {
+  id: string
+  createdAt: number
+  mode: Mode
+  examType: string
+  questionType: string
+  aiModel: 'GPT_5_4' | 'DEEPSEEK'
+  questionContent: string
+  studentAnswer: string
+  referenceAnswer: string
+  questionImageUrls: string[]
+  studentAnswerImageUrls: string[]
+  result: GradingResult
+}
+
+const HISTORY_STORAGE_KEY = 'byteoj-english-grading-history'
+
+function readHistory(): GradingHistoryItem[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = window.localStorage.getItem(HISTORY_STORAGE_KEY)
+    const parsed = stored ? JSON.parse(stored) : []
+    return Array.isArray(parsed)
+      ? parsed.filter((item): item is GradingHistoryItem => Boolean(item && typeof item.id === 'string' && item.result && typeof item.createdAt === 'number'))
+      : []
+  } catch {
+    return []
+  }
+}
 
 const mode = ref<Mode>('translation')
 const examType = ref('ENGLISH_I')
@@ -274,6 +332,8 @@ const uploading = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 const result = ref<GradingResult | null>(null)
+const historyItems = ref<GradingHistoryItem[]>(readHistory())
+const activeHistoryId = ref<string | null>(null)
 
 const totalScore = computed(() => {
   if (questionType.value === 'TRANSLATION') return examType.value === 'ENGLISH_I' ? 10 : 15
@@ -294,6 +354,86 @@ function switchMode(next: Mode) {
   mode.value = next
   questionType.value = next === 'translation' ? 'TRANSLATION' : 'SMALL_ESSAY'
   result.value = null
+  activeHistoryId.value = null
+}
+
+function getExamLabel(value: string) {
+  return value === 'ENGLISH_II' ? '英语二' : '英语一'
+}
+
+function getQuestionLabel(value: string) {
+  if (value === 'SMALL_ESSAY') return '小作文'
+  if (value === 'LARGE_ESSAY') return '大作文'
+  return '翻译题'
+}
+
+function getTotalScore(savedExamType: string, savedQuestionType: string) {
+  if (savedQuestionType === 'TRANSLATION') return savedExamType === 'ENGLISH_I' ? 10 : 15
+  if (savedQuestionType === 'SMALL_ESSAY') return 10
+  return savedExamType === 'ENGLISH_I' ? 20 : 15
+}
+
+function formatHistoryDate(timestamp: number) {
+  return new Date(timestamp).toLocaleString('zh-CN')
+}
+
+function persistHistory(items: GradingHistoryItem[]) {
+  if (typeof window === 'undefined') return false
+  try {
+    window.localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(items))
+    return true
+  } catch {
+    return false
+  }
+}
+
+function cacheGradingResult(gradingResult: GradingResult) {
+  const now = Date.now()
+  const previousItems = historyItems.value
+  const item: GradingHistoryItem = {
+    id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: now,
+    mode: mode.value,
+    examType: examType.value,
+    questionType: questionType.value,
+    aiModel: aiModel.value,
+    questionContent: questionContent.value,
+    studentAnswer: studentAnswer.value,
+    referenceAnswer: referenceAnswer.value,
+    questionImageUrls: questionImageItems.value.map(image => image.url),
+    studentAnswerImageUrls: imageItems.value.map(image => image.url),
+    result: gradingResult,
+  }
+  const items = [item, ...previousItems]
+  if (!persistHistory(items)) return false
+  historyItems.value = items
+  return true
+}
+
+function openHistory(item: GradingHistoryItem) {
+  mode.value = item.mode
+  examType.value = item.examType
+  questionType.value = item.questionType
+  aiModel.value = item.aiModel
+  questionContent.value = item.questionContent
+  studentAnswer.value = item.studentAnswer
+  referenceAnswer.value = item.referenceAnswer
+  questionImageItems.value = item.questionImageUrls.map(url => ({ url }))
+  imageItems.value = item.studentAnswerImageUrls.map(url => ({ url }))
+  result.value = item.result
+  activeHistoryId.value = item.id
+  errorMessage.value = ''
+  void nextTick(() => document.querySelector('.result-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' }))
+}
+
+function deleteHistory(id: string) {
+  const items = historyItems.value.filter(item => item.id !== id)
+  if (!persistHistory(items)) {
+    errorMessage.value = '本地存储暂不可用，未能删除这条记录。'
+    return
+  }
+  historyItems.value = items
+  if (activeHistoryId.value === id) activeHistoryId.value = null
 }
 
 async function uploadImages(event: Event, target: typeof imageItems) {
@@ -342,6 +482,7 @@ function resetForm() {
   questionImageItems.value = []
   imageItems.value = []
   result.value = null
+  activeHistoryId.value = null
   errorMessage.value = ''
 }
 
@@ -371,6 +512,10 @@ async function submitGrading() {
     }, { withCredentials: true })
     if (response.data?.code !== 0) throw new Error(response.data?.message || '评分失败')
     result.value = response.data.data
+    activeHistoryId.value = null
+    if (!cacheGradingResult(response.data.data)) {
+      errorMessage.value = '评分已完成，但本地存储空间不足，无法保存这条记录。'
+    }
   } catch (error: any) {
     errorMessage.value = error?.response?.data?.message || error?.message || '评分失败，请稍后重试。'
   } finally {
@@ -387,7 +532,25 @@ async function submitGrading() {
 h1 { margin: 0; font-size: clamp(27px, 4vw, 42px); letter-spacing: -.02em; }
 .subtitle { margin: 12px 0 0; color: #64748b; }
 .score-rule-chip { padding: 10px 14px; color: #475569; background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px; white-space: nowrap; }
-.workspace, .result-panel { padding: 24px; background: #fff; border: 1px solid #e5eaf1; border-radius: 16px; box-shadow: 0 12px 34px rgba(15, 23, 42, .06); }
+.workspace, .history-panel, .result-panel { padding: 24px; background: #fff; border: 1px solid #e5eaf1; border-radius: 16px; box-shadow: 0 12px 34px rgba(15, 23, 42, .06); }
+.history-panel { max-width: 1180px; margin: 24px auto 0; }
+.history-heading, .history-meta { display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.history-heading { margin-bottom: 16px; }
+.history-heading h2 { margin: 0; font-size: 20px; }
+.history-hint { margin: 6px 0 0; color: #64748b; font-size: 13px; }
+.history-count { padding: 7px 11px; border-radius: 999px; color: #1d4ed8; background: #eff6ff; font-size: 13px; white-space: nowrap; }
+.history-list { display: grid; gap: 10px; }
+.history-item { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 14px 16px; border: 1px solid #e8edf4; border-radius: 11px; background: #fcfdff; }
+.history-item.selected { border-color: #93c5fd; background: #f8fbff; }
+.history-info { min-width: 0; flex: 1; }
+.history-meta { justify-content: flex-start; flex-wrap: wrap; }
+.history-meta strong { color: #334155; }
+.history-meta span { color: #94a3b8; font-size: 12px; }
+.history-score { margin: 6px 0 0; color: #2563eb; font-size: 13px; font-weight: 700; }
+.history-preview { overflow: hidden; margin: 4px 0 0; color: #64748b; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.history-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.delete-history-button { padding: 9px 12px; border: 0; border-radius: 9px; color: #b91c1c; background: #fef2f2; cursor: pointer; font-weight: 700; }
+.empty-history { margin: 0; padding: 24px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #94a3b8; text-align: center; }
 .mode-tabs { display: flex; gap: 8px; border-bottom: 1px solid #edf0f5; margin: -24px -24px 24px; padding: 14px 24px 0; }
 .mode-tabs button { padding: 12px 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #64748b; font-weight: 700; cursor: pointer; }
 .mode-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; }
@@ -444,5 +607,5 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .preline { white-space: pre-wrap; color: #475569; line-height: 1.8; }
 .corrected-answer { margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; color: #166534; white-space: pre-wrap; line-height: 1.7; }
 .empty-result { color: #94a3b8; font-size: 13px; }
-@media (max-width: 760px) { .page-header { flex-direction: column; } .score-rule-chip { white-space: normal; } .config-grid, .input-grid, .result-grid { grid-template-columns: 1fr; } .full-width, .reference-field, .wide-card { grid-column: auto; } .workspace, .result-panel { padding: 16px; } .mode-tabs { margin: -16px -16px 18px; padding: 10px 16px 0; } .result-summary { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .page-header { flex-direction: column; } .score-rule-chip { white-space: normal; } .config-grid, .input-grid, .result-grid { grid-template-columns: 1fr; } .full-width, .reference-field, .wide-card { grid-column: auto; } .workspace, .history-panel, .result-panel { padding: 16px; } .mode-tabs { margin: -16px -16px 18px; padding: 10px 16px 0; } .result-summary { align-items: flex-start; flex-direction: column; } .history-item { align-items: flex-start; flex-direction: column; } .history-actions { width: 100%; } }
 </style>
