@@ -11,6 +11,7 @@ import type { BaseResponse_ProblemExamSubmitVo_ } from '../models/BaseResponse_P
 import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_ProblemExamVo_';
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
+import type { ProblemExamAnnotationRequest } from '../models/ProblemExamAnnotationRequest';
 import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
 import type { ProblemExamTopScoreVo } from '../models/ProblemExamTopScoreVo';
 import type { ProblemRequest } from '../models/ProblemRequest';
@@ -145,6 +146,23 @@ export class ProblemsControllerService {
             query: {
                 'recordId': recordId,
             },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Save a private per-question review annotation on the current user's submitted sheet.
+     */
+    public static problemExamAnnotationSaveUsingPost(
+        annotationRequest: ProblemExamAnnotationRequest,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/exam/annotation',
+            body: annotationRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

@@ -473,7 +473,7 @@
             <p class="tip">成绩已提交，请等待老师批改主观题</p>
             <div class="buttons">
               <button class="btn primary" @click="goToDashboard">返回首页</button>
-              <button class="btn secondary" @click="showResult = false">查看答题卡</button>
+              <button class="btn secondary" @click="goToAnswerSheet">查看答题卡</button>
             </div>
           </div>
         </div>
@@ -980,6 +980,7 @@ const showResult = ref(false)
 const showAnswerPreview = ref(false)
 const resultData = ref({
   exam_id: 0,
+  record_id: 0,
   exam_name: '',
   total_score: 0,
   uuid: 0,
@@ -1875,6 +1876,21 @@ const confirmSubmit = async () => {
     stopGradingProgressPolling()
     submitting.value = false
   }
+}
+
+const goToAnswerSheet = () => {
+  if (!resultData.value.record_id) {
+    error('未获取到本次答卷编号，请到考试记录中查看')
+    return
+  }
+  showResult.value = false
+  router.push({
+    path: '/exam/sheet',
+    query: {
+      exam_id: String(resultData.value.exam_id),
+      recordId: String(resultData.value.record_id),
+    },
+  })
 }
 // --- 计算属性 ---
 const currentQuestion = computed(() => questions.value[currentIndex.value] || {})

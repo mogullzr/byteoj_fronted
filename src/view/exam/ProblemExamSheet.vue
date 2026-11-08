@@ -348,12 +348,90 @@
                 <div class="mb-3 border-l-4 border-slate-400 pl-3 text-sm font-semibold text-slate-800">题目解析</div>
                 <Markdown :generate-data="question.analysis" />
               </div>
+
             </div>
 
             <div class="space-y-6">
               <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
                 <div class="mb-3 border-l-4 border-slate-700 pl-3 text-sm font-semibold text-slate-900">判题速览</div>
                 <Markdown :generate-data="buildQuickSummaryMarkdown(question)" />
+              </div>
+            </div>
+          </div>
+
+          <div v-if="!isPublicTopSheet" class="mx-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 sm:mx-7 sm:p-6">
+            <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <div class="border-l-4 border-amber-500 pl-3 text-sm font-semibold text-amber-900">个人复习标注</div>
+                <p class="mt-1 pl-3 text-xs text-amber-800">可用 Markdown 记录易错点、思路提醒或下次复习重点</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <span
+                    v-if="!annotationEditing[question.problem_id] && annotationSaveStates[question.problem_id] === 'saved'"
+                    class="text-xs font-medium text-emerald-700"
+                >已保存</span>
+                <span
+                    v-if="annotationSaveStates[question.problem_id] === 'error'"
+                    class="text-xs font-medium text-rose-700"
+                >保存失败，请重试</span>
+                <button
+                    v-if="!annotationEditing[question.problem_id]"
+                    type="button"
+                    class="rounded-lg border border-amber-300 bg-white px-4 py-2 text-sm font-semibold text-amber-900 transition hover:bg-amber-100"
+                    @click="startAnnotationEdit(question)"
+                >
+                  {{ getSavedAnnotation(question) ? '编辑标注' : '添加标注' }}
+                </button>
+              </div>
+            </div>
+
+            <div v-if="!annotationEditing[question.problem_id]">
+              <div v-if="getSavedAnnotation(question)" class="rounded-xl border border-amber-100 bg-white px-5 py-4 text-slate-800 shadow-sm">
+                <Markdown :generate-data="getSavedAnnotation(question)" />
+              </div>
+              <div v-else class="rounded-xl border border-dashed border-amber-300 bg-white/70 px-5 py-6 text-center text-sm text-slate-500">
+                还没有复习标注，点击“添加标注”记录这道题的复习重点。
+              </div>
+            </div>
+
+            <div v-else class="space-y-4">
+              <div class="grid gap-4 lg:grid-cols-2">
+                <label class="block">
+                  <span class="mb-2 block text-xs font-semibold text-slate-600">Markdown 编辑</span>
+                  <textarea
+                      :value="annotationDrafts[question.problem_id] ?? ''"
+                      maxlength="5000"
+                      rows="8"
+                      class="w-full resize-y rounded-xl border border-amber-200 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+                      placeholder="例如：# 易错点；- 容易漏掉定义域条件；**复习提醒：** 先检查边界情况。"
+                      @input="updateAnnotationDraft(question.problem_id, $event)"
+                  ></textarea>
+                </label>
+                <div>
+                  <div class="mb-2 text-xs font-semibold text-slate-600">实时预览</div>
+                  <div class="min-h-[12rem] rounded-xl border border-amber-100 bg-white px-5 py-4 text-slate-800 shadow-sm">
+                    <Markdown :generate-data="annotationDrafts[question.problem_id] || '*输入内容后将在这里实时预览*'" />
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <span class="text-xs text-slate-500">{{ (annotationDrafts[question.problem_id] ?? '').length }} / 5000</span>
+                <div class="flex gap-2">
+                  <button
+                      type="button"
+                      class="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="annotationSaveStates[question.problem_id] === 'saving'"
+                      @click="cancelAnnotationEdit(question)"
+                  >取消</button>
+                  <button
+                      type="button"
+                      class="rounded-lg bg-amber-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-60"
+                      :disabled="annotationSaveStates[question.problem_id] === 'saving'"
+                      @click="saveAnnotation(question)"
+                  >
+                    {{ annotationSaveStates[question.problem_id] === 'saving' ? '保存中…' : '保存标注' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -458,12 +536,15 @@ type ResultFilter = 'all' | 'correct' | 'wrong' | 'unanswered'
 
 const route = useRoute()
 const router = useRouter()
-const { error } = useMessageBox()
+const { error, success } = useMessageBox()
 
 const loading = ref(false)
 const showAnswerPreview = ref(false)
 const questions = ref<ProblemMath408BankVo[]>([])
 const sheets = ref<ProblemExamSheetVo[]>([])
+const annotationDrafts = ref<Record<number, string>>({})
+const annotationEditing = ref<Record<number, boolean>>({})
+const annotationSaveStates = ref<Record<number, 'saving' | 'saved' | 'error'>>({})
 const typeFilter = ref<QuestionTypeFilter>('all')
 const resultFilter = ref<ResultFilter>('all')
 
@@ -576,6 +657,11 @@ const fetchSheet = async () => {
 
     if (sheetRes.code === 0 && Array.isArray(sheetRes.data)) {
       sheets.value = sheetRes.data
+      annotationDrafts.value = Object.fromEntries(
+          questions.value
+              .filter((question) => question.problem_id)
+              .map((question) => [question.problem_id as number, sheetMap.value.get(question.problem_id as number)?.annotation || '']),
+      )
     } else {
       error(sheetRes.message || '获取答题记录失败')
     }
@@ -584,6 +670,59 @@ const fetchSheet = async () => {
     error('获取答题卡失败，请稍后重试')
   } finally {
     loading.value = false
+  }
+}
+
+const updateAnnotationDraft = (problemId: number | undefined, event: Event) => {
+  if (!problemId) return
+  annotationDrafts.value[problemId] = (event.target as HTMLTextAreaElement).value
+  delete annotationSaveStates.value[problemId]
+}
+
+const getSavedAnnotation = (question: ProblemMath408BankVo) => {
+  return getSheet(question)?.annotation || ''
+}
+
+const startAnnotationEdit = (question: ProblemMath408BankVo) => {
+  const problemId = question.problem_id
+  if (!problemId) return
+  annotationDrafts.value[problemId] = getSavedAnnotation(question)
+  annotationEditing.value[problemId] = true
+}
+
+const cancelAnnotationEdit = (question: ProblemMath408BankVo) => {
+  const problemId = question.problem_id
+  if (!problemId) return
+  annotationDrafts.value[problemId] = getSavedAnnotation(question)
+  annotationEditing.value[problemId] = false
+  delete annotationSaveStates.value[problemId]
+}
+
+const saveAnnotation = async (question: ProblemMath408BankVo) => {
+  const problemId = question.problem_id
+  if (!problemId || !recordId) return
+  const annotation = annotationDrafts.value[problemId] ?? ''
+  annotationSaveStates.value[problemId] = 'saving'
+  try {
+    const res = await ProblemsControllerService.problemExamAnnotationSaveUsingPost({
+      record_id: recordId,
+      problem_id: problemId,
+      annotation,
+    })
+    if (res.code === 0) {
+      const existing = sheets.value.find((sheet) => sheet.problem_id === problemId)
+      if (existing) existing.annotation = annotation
+      else sheets.value.push({ problem_id: problemId, annotation })
+      annotationSaveStates.value[problemId] = 'saved'
+      annotationEditing.value[problemId] = false
+      success('复习标注已保存')
+    } else {
+      annotationSaveStates.value[problemId] = 'error'
+      error(res.message || '保存标注失败')
+    }
+  } catch (err) {
+    annotationSaveStates.value[problemId] = 'error'
+    error('保存标注失败，请稍后重试')
   }
 }
 

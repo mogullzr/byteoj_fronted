@@ -5,6 +5,7 @@
 export type ProblemExamSubmitVo = {
     exam_id?: number;
     exam_name?: string;
+    record_id?: number;
     score_option?: number;
     score_subjective?: number;
     total_score?: number;

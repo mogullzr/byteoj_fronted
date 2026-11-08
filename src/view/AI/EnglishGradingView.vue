@@ -149,6 +149,15 @@
       <div v-if="result.needs_manual_review" class="review-alert">当前内容无法完全可靠判分，建议人工复核。</div>
 
       <div class="result-grid">
+        <article v-if="result.presentation_assessment" class="result-card presentation-card">
+          <div class="presentation-heading">
+            <h3>卷面与书写评价</h3>
+            <strong v-if="result.presentation_assessment.assessed">扣 {{ result.presentation_assessment.deduction ?? 0 }} 分</strong>
+            <span v-else>暂不评分</span>
+          </div>
+          <p class="preline">{{ result.presentation_assessment.assessment || '暂无卷面评价。' }}</p>
+          <p class="preline"><b>改进建议：</b>{{ result.presentation_assessment.suggestion || '暂无' }}</p>
+        </article>
         <article v-if="questionType === 'TRANSLATION'" class="result-card wide-card">
           <h3>翻译逐句分析</h3>
           <div v-if="result.translation_sentence_analysis?.length" class="detail-list">
@@ -160,6 +169,15 @@
               <p><b>准确性：</b>{{ item.accuracy_analysis || '未返回' }}</p>
               <p><b>流畅性：</b>{{ item.fluency_analysis || '未返回' }}</p>
               <p><b>语法与结构：</b>{{ item.grammar_analysis || '未返回' }}</p>
+              <div v-if="item.scoring_points?.length" class="sentence-points">
+                <strong>句内语义得分点</strong>
+                <div v-for="(point, pointIndex) in item.scoring_points" :key="pointIndex" class="sentence-point">
+                  <strong>{{ point.category || `得分点 ${pointIndex + 1}` }} <span>{{ point.awarded_score ?? 0 }} / {{ point.max_score ?? 0 }} 分</span></strong>
+                  <p v-if="point.expected_meaning"><b>应表达：</b>{{ point.expected_meaning }}</p>
+                  <p v-if="point.student_evidence"><b>作答依据：</b>{{ point.student_evidence }}</p>
+                  <p v-if="point.reason">{{ point.reason }}</p>
+                </div>
+              </div>
               <div v-if="item.deductions?.length" class="sentence-deductions">
                 <div v-for="(deduction, deductionIndex) in item.deductions" :key="deductionIndex"><b>扣分 {{ deduction.deduction ?? deduction.score ?? '' }} 分：</b>{{ deduction.reason || deduction.description || '' }}<span v-if="deduction.student_text">（原文：{{ deduction.student_text }}）</span></div>
               </div>
@@ -285,6 +303,12 @@ type GradingResult = {
   chinese_overall_advice?: string
   mistakes?: Record<string, any>[]
   corrected_answer?: string
+  presentation_assessment?: {
+    assessed?: boolean
+    deduction?: number
+    assessment?: string
+    suggestion?: string
+  }
   [key: string]: any
 }
 type GradingHistoryItem = {
@@ -601,6 +625,16 @@ button:disabled { cursor: not-allowed; opacity: .58; }
 .sentence-row:last-child { border-bottom: 0; }
 .sentence-row > strong { display: flex; justify-content: space-between; color: #1e40af; }
 .sentence-row p { margin: 6px 0 0; color: #475569; white-space: pre-wrap; }
+.sentence-points { display: grid; gap: 8px; margin-top: 10px; padding: 11px; border-radius: 8px; background: #f1f5f9; }
+.sentence-points > strong { color: #334155; font-size: 13px; }
+.sentence-point { padding-top: 8px; border-top: 1px solid #e2e8f0; }
+.sentence-point > strong { display: flex; justify-content: space-between; gap: 8px; color: #475569; font-size: 13px; }
+.sentence-point > strong span { color: #2563eb; white-space: nowrap; }
+.sentence-point p { margin: 4px 0 0; color: #64748b; font-size: 13px; }
+.presentation-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.presentation-heading h3 { margin-bottom: 10px; }
+.presentation-heading strong { color: #b91c1c; white-space: nowrap; }
+.presentation-heading span { color: #64748b; font-size: 13px; white-space: nowrap; }
 .sentence-deductions { margin-top: 8px; padding: 9px 11px; color: #991b1b; background: #fff1f2; border-radius: 7px; }
 .deduction em { color: #dc2626; font-style: normal; white-space: nowrap; }
 .correction { color: #047857 !important; }
