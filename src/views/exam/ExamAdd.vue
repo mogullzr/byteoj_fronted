@@ -57,6 +57,8 @@ const selectedBatchScore = ref(5);
 const rangeStart = ref(1);
 const rangeEnd = ref(1);
 const draggedProblemIndex = ref<number | null>(null);
+const batchMoveSequences = ref("");
+const batchMoveAfterSequence = ref(1);
 
 const tabSearchState = reactive<Record<string, any>>({
   algorithm: { keyword: "", pageNum: 1, pageSize: 10 },
@@ -331,6 +333,47 @@ const removeSelectedProblems = async () => {
   selectedProblems.value = [];
   selectedProblemTableRef.value?.clearSelection();
   ElNotification.success({ title: "删除完成", message: "已删除勾选题目" });
+};
+
+const moveProblemsAfterSequence = () => {
+  const problems = request.value.problemExamProblemInfos;
+  const total = problems.length;
+  const rawSequences = batchMoveSequences.value.trim();
+  const sequenceTokens = rawSequences.split(/[,，、;；\s]+/).filter(Boolean);
+  const sequences = sequenceTokens.map((token) => (/^\d+$/.test(token) ? Number(token) : NaN));
+  const targetSequence = Number(batchMoveAfterSequence.value);
+
+  if (!sequenceTokens.length || sequences.some((sequence) => !Number.isSafeInteger(sequence) || sequence < 1 || sequence > total)) {
+    ElNotification.warning({ title: "序号无效", message: `请输入 1-${total || 1} 之间的题目序号，多个序号用逗号分隔` });
+    return;
+  }
+  if (new Set(sequences).size !== sequences.length) {
+    ElNotification.warning({ title: "序号重复", message: "请移除重复的题目序号后再试" });
+    return;
+  }
+  if (!Number.isInteger(targetSequence) || targetSequence < 1 || targetSequence > total) {
+    ElNotification.warning({ title: "目标序号无效", message: `请输入 1-${total || 1} 之间的目标题目序号` });
+    return;
+  }
+  if (sequences.includes(targetSequence)) {
+    ElNotification.warning({ title: "目标题目无效", message: "目标题目不能同时包含在待移动列表中" });
+    return;
+  }
+
+  const movingIndexes = new Set(sequences.map((sequence) => sequence - 1));
+  const movingProblems = sequences.map((sequence) => problems[sequence - 1]);
+  const remainingProblems = problems.filter((_, index) => !movingIndexes.has(index));
+  const targetProblem = problems[targetSequence - 1];
+  const targetIndex = remainingProblems.indexOf(targetProblem);
+  if (targetIndex < 0) return;
+
+  remainingProblems.splice(targetIndex + 1, 0, ...movingProblems);
+  request.value.problemExamProblemInfos = remainingProblems;
+  batchMoveSequences.value = "";
+  ElNotification.success({
+    title: "顺序调整完成",
+    message: `已将第 ${sequences.join("、")} 题按输入顺序移动到第 ${targetSequence} 题后面`,
+  });
 };
 
 const startProblemDrag = (index: number, event: DragEvent) => {
@@ -747,7 +790,7 @@ onMounted(async () => {
         <div class="panel-header">
           <div>
             <div class="panel-title">已选题目</div>
-            <div class="panel-desc">拖动题目前的手柄调整顺序；勾选题目后可批量改分或删除。</div>
+            <div class="panel-desc">拖动题目前的手柄调整顺序；也可按序号批量移动题目，或勾选后批量改分、删除。</div>
           </div>
           <el-tag size="large">总分 {{ totalScore }}</el-tag>
         </div>
@@ -770,6 +813,37 @@ onMounted(async () => {
           </el-button>
           <el-button type="danger" plain :disabled="!selectedProblems.length" @click="removeSelectedProblems">
             批量删除
+          </el-button>
+        </div>
+      </div>
+
+      <div class="batch-reorder-toolbar">
+        <div class="reorder-heading">
+          <strong>批量调整顺序</strong>
+          <span>输入左侧“序号”，多个序号用逗号分隔；移动的题目会按输入顺序放到目标题目后面。</span>
+        </div>
+        <div class="reorder-controls">
+          <el-input
+            v-model="batchMoveSequences"
+            class="reorder-sequences"
+            placeholder="要移动的序号，例如：4, 8, 44"
+            clearable
+            @keyup.enter="moveProblemsAfterSequence"
+          />
+          <span>移动到第</span>
+          <el-input-number
+            v-model="batchMoveAfterSequence"
+            :min="1"
+            :max="request.problemExamProblemInfos.length || 1"
+            controls-position="right"
+          />
+          <span>题后</span>
+          <el-button
+            type="primary"
+            :disabled="request.problemExamProblemInfos.length < 2"
+            @click="moveProblemsAfterSequence"
+          >
+            批量移动
           </el-button>
         </div>
       </div>
@@ -1009,7 +1083,8 @@ onMounted(async () => {
 
 .selected-toolbar,
 .range-select-control,
-.selected-batch-actions {
+.selected-batch-actions,
+.reorder-controls {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1036,6 +1111,41 @@ onMounted(async () => {
 .range-separator {
   color: #64748b;
   font-size: 13px;
+}
+
+.batch-reorder-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  background: #eff6ff;
+}
+
+.reorder-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+}
+
+.reorder-heading strong {
+  color: #1e3a8a;
+  font-size: 14px;
+}
+
+.reorder-heading span,
+.reorder-controls > span {
+  color: #64748b;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.reorder-sequences {
+  width: 270px;
 }
 
 .drag-handle {
@@ -1271,7 +1381,9 @@ onMounted(async () => {
   .batch-actions,
   .selected-toolbar,
   .range-select-control,
-  .selected-batch-actions {
+  .selected-batch-actions,
+  .batch-reorder-toolbar,
+  .reorder-controls {
     width: 100%;
   }
 
@@ -1284,13 +1396,17 @@ onMounted(async () => {
   .batch-actions,
   .selected-toolbar,
   .range-select-control,
-  .selected-batch-actions {
+  .selected-batch-actions,
+  .batch-reorder-toolbar,
+  .reorder-controls {
     align-items: stretch;
     flex-direction: column;
   }
 
   .range-select-control :deep(.el-input-number),
-  .selected-batch-actions :deep(.el-input-number) {
+  .selected-batch-actions :deep(.el-input-number),
+  .reorder-controls :deep(.el-input-number),
+  .reorder-sequences {
     width: 100%;
   }
 }
