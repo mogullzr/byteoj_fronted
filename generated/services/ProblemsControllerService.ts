@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_string_ } from '../models/BaseResponse_string_';
 import type { BaseResponse_List_ProblemExamSheetPaperVo_ } from '../models/BaseResponse_List_ProblemExamSheetPaperVo_';
 import type { BaseResponse_List_ProblemExamSheetVo_ } from '../models/BaseResponse_List_ProblemExamSheetVo_';
 import type { BaseResponse_List_ProblemMath408BankVo_ } from '../models/BaseResponse_List_ProblemMath408BankVo_';
@@ -11,6 +12,8 @@ import type { BaseResponse_ProblemExamSubmitVo_ } from '../models/BaseResponse_P
 import type { BaseResponse_ProblemExamVo_ } from '../models/BaseResponse_ProblemExamVo_';
 import type { BaseResponse_ProblemMath408BankVo_ } from '../models/BaseResponse_ProblemMath408BankVo_';
 import type { ProblemExamEditRequest } from '../models/ProblemExamEditRequest';
+import type { ExamReviewGuideGenerateRequest } from '../models/ExamReviewGuideGenerateRequest';
+import type { ProblemExamReviewGuideRequest } from '../models/ProblemExamReviewGuideRequest';
 import type { ProblemExamAnnotationRequest } from '../models/ProblemExamAnnotationRequest';
 import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
 import type { ProblemExamTopScoreVo } from '../models/ProblemExamTopScoreVo';
@@ -19,6 +22,68 @@ import type { CancelablePromise } from '../../../generated/core/CancelablePromis
 import { OpenAPI } from '../../../generated/core/OpenAPI';
 import { request as __request } from '../../../generated/core/request';
 export class ProblemsControllerService {
+    /**
+     * Generate a personal paper-wide review guide draft
+     * @param generateRequest generateRequest
+     * @returns BaseResponse_string_ OK
+     * @throws ApiError
+     */
+    public static generateExamReviewGuideUsingPost(
+        generateRequest: ExamReviewGuideGenerateRequest,
+    ): CancelablePromise<BaseResponse_string_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/exam/review-guide/generate',
+            body: generateRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Get the current user's paper-wide review guide
+     * @param recordId recordId
+     * @returns BaseResponse_string_ OK
+     * @throws ApiError
+     */
+    public static problemExamReviewGuideUsingGet(
+        recordId: number,
+    ): CancelablePromise<BaseResponse_string_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/review-guide',
+            query: {
+                recordId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Save the current user's paper-wide review guide
+     * @param reviewGuideRequest reviewGuideRequest
+     * @returns BaseResponse_boolean_ OK
+     * @throws ApiError
+     */
+    public static problemExamReviewGuideSaveUsingPost(
+        reviewGuideRequest: ProblemExamReviewGuideRequest,
+    ): CancelablePromise<BaseResponse_boolean_> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/problem/other/exam/review-guide',
+            body: reviewGuideRequest,
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
     /**
      * ProblemSearchExamId
      * @param examId exam_id
@@ -98,6 +163,31 @@ export class ProblemsControllerService {
             url: '/api/problem/other/exam/problem',
             query: {
                 'exam_id': examId,
+            },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * Load all standard question details for an owned submission or public top-three sheet
+     * @param examId examId
+     * @param recordId recordId
+     * @returns BaseResponse_List_ProblemMath408BankVo_ OK
+     * @throws ApiError
+     */
+    public static problemExamSheetQuestionDetailsUsingGet(
+        examId: number,
+        recordId: number,
+    ): CancelablePromise<BaseResponse_List_ProblemMath408BankVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/sheet/questions',
+            query: {
+                examId,
+                recordId,
             },
             errors: {
                 401: `Unauthorized`,

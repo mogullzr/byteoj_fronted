@@ -98,11 +98,116 @@
         <Markdown :generate-data="'加载答题卡中...'" />
       </div>
 
+      <div v-else-if="questionLoadError" class="rounded-2xl border border-rose-200 bg-white py-16 text-center shadow-sm">
+        <p class="font-semibold text-rose-700">{{ questionLoadError }}</p>
+        <button
+            type="button"
+            class="mt-4 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-700"
+            @click="fetchSheet"
+        >重新加载</button>
+      </div>
+
       <div v-else-if="questions.length === 0" class="rounded-2xl border border-slate-200 bg-white py-20 text-center">
         <Markdown :generate-data="'**未找到试题信息**'" />
       </div>
 
       <div v-else class="space-y-8">
+        <div v-if="sheetLoading" class="rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900" role="status">
+          题目已加载，正在读取作答记录和标注…
+        </div>
+        <div v-else-if="sheetLoadError" class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900" role="status">
+          题目内容已加载，但作答记录和标注暂时无法显示：{{ sheetLoadError }}
+          <button type="button" class="ml-2 font-semibold underline" @click="fetchSheet">重试</button>
+        </div>
+
+        <section
+            v-if="!isPublicTopSheet"
+            class="rounded-2xl border border-cyan-200 bg-gradient-to-br from-cyan-50 to-white p-6 shadow-sm sm:p-8"
+        >
+          <div class="mb-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div class="text-lg font-bold text-cyan-950">我的整卷复习建议</div>
+              <p class="mt-1 text-sm leading-6 text-cyan-900/75">结合你的作答、得分和 AI 首次判卷意见定位具体问题，优先复盘概念题；大题只总结有依据的概念性失分。内容先作为草稿，可自行修改并保存。</p>
+            </div>
+            <div class="flex shrink-0 flex-col gap-2 sm:flex-row">
+              <button
+                  v-if="!reviewGuideEditing"
+                  type="button"
+                  class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  @click="startReviewGuideEdit"
+              >
+                {{ reviewGuideDraft.trim() ? '编辑建议' : '手动填写' }}
+              </button>
+              <button
+                  type="button"
+                  class="rounded-xl border border-cyan-300 bg-white px-4 py-2.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="generatingReviewGuide || questions.length === 0"
+                  @click="generateReviewGuide"
+              >
+                {{ generatingReviewGuide ? '生成中…' : reviewGuideDraft.trim() ? '重新生成' : 'AI 生成建议' }}
+              </button>
+            </div>
+          </div>
+          <div v-if="!reviewGuideEditing" class="min-h-40 rounded-xl border border-cyan-100 bg-white px-5 py-4 text-slate-800 shadow-sm">
+            <template v-if="standardReviewSections.length || reviewGuideDraft.trim()">
+              <h1 v-if="standardReviewSections.length" class="mb-4 text-2xl font-bold text-slate-900">标注集合</h1>
+              <section v-for="section in standardReviewSections" :key="section.key" class="mb-6 last:mb-0">
+                <h2 class="mb-2 border-b border-slate-100 pb-2 text-xl font-semibold text-slate-800">题{{ section.questionNumber }}</h2>
+                <Markdown :generate-data="section.annotation" />
+              </section>
+              <section v-if="reviewGuideDraft.trim()" class="mt-6 border-t border-slate-200 pt-5">
+                <h1 class="mb-3 text-2xl font-bold text-slate-900">综合AI建议</h1>
+                <Markdown :generate-data="reviewGuideDraft" />
+              </section>
+            </template>
+            <span v-else class="text-sm text-slate-500">还没有题目标注或整卷复习建议。可以先让 AI 生成，也可以点击“手动填写”。</span>
+          </div>
+          <div v-else class="grid gap-4 xl:grid-cols-2">
+            <label class="block">
+              <span class="mb-2 block text-xs font-semibold text-slate-600">编辑建议（支持 Markdown）</span>
+              <textarea
+                  v-model="reviewGuideDraft"
+                  maxlength="12000"
+                  rows="12"
+                  class="w-full resize-y rounded-xl border border-cyan-200 bg-white px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                  placeholder="AI 会根据你的作答和首次判卷意见生成针对性复盘，你也可以自行修改。"
+                  @input="reviewGuideSaved = false"
+              ></textarea>
+              <span class="mt-1 block text-right text-xs text-slate-500">{{ reviewGuideDraft.length }} / 12000</span>
+            </label>
+            <div>
+              <div class="mb-2 text-xs font-semibold text-slate-600">实时预览</div>
+              <div class="min-h-64 max-h-[24rem] overflow-y-auto rounded-xl border border-cyan-100 bg-white px-5 py-4 text-slate-800 shadow-sm">
+                <Markdown v-if="reviewGuideDraft.trim()" :generate-data="reviewGuideDraft" />
+                <span v-else class="text-sm text-slate-400">填写内容后可预览</span>
+              </div>
+            </div>
+          </div>
+          <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <span v-if="reviewGuideSaved" class="text-sm font-medium text-emerald-700">已保存到你的答题卡</span>
+            <span v-else class="text-sm text-slate-500">当前建议尚未保存。</span>
+            <div class="flex gap-2">
+              <button
+                  v-if="reviewGuideEditing"
+                  type="button"
+                  class="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                  @click="cancelReviewGuideEdit"
+              >
+                取消
+              </button>
+              <button
+                  v-if="reviewGuideEditing || (!reviewGuideSaved && reviewGuideDraft.trim())"
+                  type="button"
+                  class="rounded-xl bg-cyan-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  :disabled="savingReviewGuide"
+                  @click="saveReviewGuide"
+              >
+                {{ savingReviewGuide ? '保存中…' : '保存复习建议' }}
+              </button>
+            </div>
+          </div>
+        </section>
+
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -539,9 +644,19 @@ const router = useRouter()
 const { error, success } = useMessageBox()
 
 const loading = ref(false)
+const questionLoadError = ref('')
+const sheetLoading = ref(false)
+const sheetLoadError = ref('')
 const showAnswerPreview = ref(false)
 const questions = ref<ProblemMath408BankVo[]>([])
 const sheets = ref<ProblemExamSheetVo[]>([])
+const reviewGuideDraft = ref('')
+const reviewGuideEditing = ref(false)
+const reviewGuideEditBaseline = ref('')
+const reviewGuideEditSavedBaseline = ref(false)
+const generatingReviewGuide = ref(false)
+const savingReviewGuide = ref(false)
+const reviewGuideSaved = ref(false)
 const annotationDrafts = ref<Record<number, string>>({})
 const annotationEditing = ref<Record<number, boolean>>({})
 const annotationSaveStates = ref<Record<number, 'saving' | 'saved' | 'error'>>({})
@@ -632,44 +747,141 @@ const filteredExamScore = computed(() => {
 })
 
 onMounted(() => {
-  if (!examId || !recordId) {
-    error('缺少考试ID或答卷ID参数')
-    return
-  }
-  fetchSheet()
+  void fetchSheet()
 })
 
 const fetchSheet = async () => {
+  if (!Number.isSafeInteger(examId) || examId <= 0 || !Number.isSafeInteger(recordId) || recordId <= 0) {
+    loading.value = false
+    questionLoadError.value = '缺少有效的考试ID或答卷ID参数'
+    error(questionLoadError.value)
+    return
+  }
+
   loading.value = true
-  try {
-    const [questionRes, sheetRes] = await Promise.all([
-      ProblemsControllerService.problemExamSearchDetailUsingGet(examId),
-      isPublicTopSheet
-        ? ProblemsControllerService.problemExamTopScoreSheetUsingGet(examId, recordId)
-        : ProblemsControllerService.problemExamSheetUsingGet(recordId),
-    ])
+  questionLoadError.value = ''
+  questions.value = []
+  sheets.value = []
+  sheetLoading.value = true
+  sheetLoadError.value = ''
 
-    if (questionRes.code === 0 && Array.isArray(questionRes.data)) {
-      questions.value = await fillQuestionDetails(questionRes.data)
-    } else {
-      error(questionRes.message || '获取考试题目失败')
+  const loadQuestions = async () => {
+    try {
+      const res = await ProblemsControllerService.problemExamSheetQuestionDetailsUsingGet(examId, recordId)
+      if (res.code !== 0 || !Array.isArray(res.data)) {
+        throw new Error(res.message || '获取考试题目失败')
+      }
+      questions.value = res.data
+    } catch (err) {
+      console.error('获取答题卡题目失败', err)
+      questionLoadError.value = err instanceof Error ? err.message : '获取考试题目失败，请稍后重试'
+      error(questionLoadError.value)
+    } finally {
+      loading.value = false
     }
+  }
 
-    if (sheetRes.code === 0 && Array.isArray(sheetRes.data)) {
-      sheets.value = sheetRes.data
+  const loadAnswerSheet = async () => {
+    try {
+      const res = isPublicTopSheet
+        ? await ProblemsControllerService.problemExamTopScoreSheetUsingGet(examId, recordId)
+        : await ProblemsControllerService.problemExamSheetUsingGet(recordId)
+      if (res.code !== 0 || !Array.isArray(res.data)) {
+        throw new Error(res.message || '获取答题记录失败')
+      }
+      sheets.value = res.data
       annotationDrafts.value = Object.fromEntries(
           questions.value
               .filter((question) => question.problem_id)
               .map((question) => [question.problem_id as number, sheetMap.value.get(question.problem_id as number)?.annotation || '']),
       )
+    } catch (err) {
+      console.error('获取答题记录失败', err)
+      sheetLoadError.value = err instanceof Error ? err.message : '获取答题记录失败，请稍后重试'
+      error(sheetLoadError.value)
+    } finally {
+      sheetLoading.value = false
+    }
+  }
+
+  const loadReviewGuide = async () => {
+    if (isPublicTopSheet) return
+    try {
+      const res = await ProblemsControllerService.problemExamReviewGuideUsingGet(recordId)
+      if (res.code === 0) {
+        reviewGuideDraft.value = res.data || ''
+        reviewGuideSaved.value = Boolean(res.data)
+        reviewGuideEditing.value = false
+        reviewGuideEditBaseline.value = reviewGuideDraft.value
+        reviewGuideEditSavedBaseline.value = reviewGuideSaved.value
+      }
+    } catch (err) {
+      // The saved review guide is optional and must not prevent the answer sheet from rendering.
+      console.warn('获取整卷复习建议失败', err)
+    }
+  }
+
+  void loadReviewGuide()
+  await Promise.all([loadQuestions(), loadAnswerSheet()])
+}
+
+const startReviewGuideEdit = () => {
+  reviewGuideEditBaseline.value = reviewGuideDraft.value
+  reviewGuideEditSavedBaseline.value = reviewGuideSaved.value
+  reviewGuideEditing.value = true
+}
+
+const cancelReviewGuideEdit = () => {
+  reviewGuideDraft.value = reviewGuideEditBaseline.value
+  reviewGuideSaved.value = reviewGuideEditSavedBaseline.value
+  reviewGuideEditing.value = false
+}
+
+const generateReviewGuide = async () => {
+  if (!recordId || isPublicTopSheet) return
+  if (reviewGuideDraft.value.trim() && !window.confirm('重新生成会替换当前编辑内容，确定继续吗？')) return
+
+  generatingReviewGuide.value = true
+  try {
+    const res = await ProblemsControllerService.generateExamReviewGuideUsingPost({ record_id: recordId })
+    if (res.code === 0 && res.data) {
+      reviewGuideDraft.value = res.data
+      reviewGuideSaved.value = false
+      reviewGuideEditing.value = false
+      success('已生成复习建议，请核对后保存')
     } else {
-      error(sheetRes.message || '获取答题记录失败')
+      error(res.message || 'AI 生成复习建议失败')
     }
   } catch (err) {
     console.error(err)
-    error('获取答题卡失败，请稍后重试')
+    error('AI 生成复习建议失败，请稍后重试')
   } finally {
-    loading.value = false
+    generatingReviewGuide.value = false
+  }
+}
+
+const saveReviewGuide = async () => {
+  if (!recordId || isPublicTopSheet) return
+  savingReviewGuide.value = true
+  try {
+    const res = await ProblemsControllerService.problemExamReviewGuideSaveUsingPost({
+      record_id: recordId,
+      review_guide: reviewGuideDraft.value,
+    })
+    if (res.code === 0 && res.data) {
+      reviewGuideSaved.value = true
+      reviewGuideEditing.value = false
+      reviewGuideEditBaseline.value = reviewGuideDraft.value
+      reviewGuideEditSavedBaseline.value = true
+      success('整卷复习建议已保存')
+    } else {
+      error(res.message || '保存复习建议失败')
+    }
+  } catch (err) {
+    console.error(err)
+    error('保存复习建议失败，请稍后重试')
+  } finally {
+    savingReviewGuide.value = false
   }
 }
 
@@ -731,31 +943,18 @@ const getSheet = (question: ProblemMath408BankVo) => {
   return sheetMap.value.get(question.problem_id)
 }
 
+const standardReviewSections = computed(() => questions.value
+    .map((question, index) => {
+      const annotation = getSheet(question)?.annotation?.trim()
+      return annotation
+        ? { key: `${question.problem_id || index}-${index}`, questionNumber: index + 1, annotation }
+        : null
+    })
+    .filter((section): section is { key: string; questionNumber: number; annotation: string } => section !== null))
+
 const getStructuredResult = (question: ProblemMath408BankVo) => {
   if (!question.problem_id) return undefined
   return structuredResultMap.value.get(question.problem_id)
-}
-
-const fillQuestionDetails = async (questionList: ProblemMath408BankVo[]) => {
-  const detailList = await Promise.all(
-      questionList.map(async (question) => {
-        if (!question.problem_id) return question
-        try {
-          const res = await ProblemsControllerService.problemSearchByProblemIdUsingGet(question.problem_id)
-          if (res.code === 0 && res.data) {
-            return {
-              ...question,
-              ...res.data,
-              score: question.score ?? res.data.score,
-            }
-          }
-        } catch (err) {
-          console.warn('获取题目标准答案失败', question.problem_id, err)
-        }
-        return question
-      })
-  )
-  return detailList
 }
 
 const getNeedsManualReview = (question: ProblemMath408BankVo) => {

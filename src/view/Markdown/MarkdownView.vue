@@ -1,22 +1,74 @@
 <template>
-  <MdPreview
-      class="custom-font"
-      :marked-heading-id="generateId"
-      :editorId="id"
-      :modelValue="processedData"
-      previewTheme="github"
-  />
+  <div
+      ref="lazyRoot"
+      :style="{ minHeight: !isActive && placeholderHeight > 0 ? placeholderHeight + 'px' : null }"
+  >
+    <MdPreview
+        v-if="isActive"
+        v-bind="$attrs"
+        class="custom-font"
+        :marked-heading-id="generateId"
+        :editorId="id"
+        :modelValue="processedData"
+        previewTheme="github"
+    />
+  </div>
 </template>
 
 <script>
 import { MdPreview } from "md-editor-v3";
 import "md-editor-v3/lib/preview.css";
 
-const id = "preview-only";
-const generateId = (_text, _level, index) => `heading-${index}`;
+let nextMarkdownPreviewId = 0;
+const markdownPreviewInstances = new Map();
+let markdownIntersectionObserver;
+let markdownResizeObserver;
+
+const estimateMarkdownHeight = (text) => {
+  if (!text) return 32;
+  const estimatedLines = text.split("\n").reduce(
+    (total, line) => total + Math.max(1, Math.ceil(line.length / 64)),
+    0,
+  );
+  return Math.max(32, estimatedLines * 34);
+};
+
+const getMarkdownIntersectionObserver = () => {
+  if (!markdownIntersectionObserver && typeof IntersectionObserver !== "undefined") {
+    markdownIntersectionObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        const instance = markdownPreviewInstances.get(entry.target);
+        if (!instance) return;
+
+        if (entry.isIntersecting) {
+          instance.isActive = true;
+        } else if (instance.isActive) {
+          instance.placeholderHeight = Math.ceil(entry.target.getBoundingClientRect().height);
+          instance.isActive = false;
+        }
+      });
+    }, { rootMargin: "800px 0px" });
+  }
+  return markdownIntersectionObserver;
+};
+
+const getMarkdownResizeObserver = () => {
+  if (!markdownResizeObserver && typeof ResizeObserver !== "undefined") {
+    markdownResizeObserver = new ResizeObserver((entries) => {
+      entries.forEach((entry) => {
+        const instance = markdownPreviewInstances.get(entry.target);
+        if (instance?.isActive) {
+          instance.placeholderHeight = Math.ceil(entry.contentRect.height);
+        }
+      });
+    });
+  }
+  return markdownResizeObserver;
+};
 
 export default {
   name: "problem_content",
+  inheritAttrs: false,
   components: { MdPreview },
   props: {
     generateData: {
@@ -24,17 +76,46 @@ export default {
       required: true,
     },
   },
+  data() {
+    const id = `markdown-preview-${++nextMarkdownPreviewId}`;
+    return {
+      id,
+      isActive: false,
+      placeholderHeight: estimateMarkdownHeight(this.generateData),
+      generateId: (_text, _level, index) => `${id}-heading-${index}`,
+    };
+  },
+  mounted() {
+    const root = this.$refs.lazyRoot;
+    markdownPreviewInstances.set(root, this);
+
+    const intersectionObserver = getMarkdownIntersectionObserver();
+    if (!intersectionObserver) {
+      this.isActive = true;
+      return;
+    }
+
+    intersectionObserver.observe(root);
+    getMarkdownResizeObserver()?.observe(root);
+  },
+  beforeUnmount() {
+    const root = this.$refs.lazyRoot;
+    markdownPreviewInstances.delete(root);
+    markdownIntersectionObserver?.unobserve(root);
+    markdownResizeObserver?.unobserve(root);
+  },
   computed: {
     processedData() {
       if (!this.generateData) return "";
       return this.generateData;
     },
   },
-  data() {
-    return {
-      id,
-      generateId,
-    };
+  watch: {
+    generateData(value) {
+      if (!this.isActive) {
+        this.placeholderHeight = estimateMarkdownHeight(value);
+      }
+    },
   },
 };
 </script>
