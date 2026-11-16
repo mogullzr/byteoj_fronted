@@ -469,6 +469,12 @@
             </div>
           </div>
 
+          <div v-if="resultData.total_tokens" class="ai-usage-summary">
+            <span>本次 AI 判卷</span>
+            <strong>{{ resultData.total_tokens.toLocaleString('zh-CN') }} Token</strong>
+            <em>预估 ¥{{ Number(resultData.ai_cost_cny || 0).toFixed(4) }}</em>
+          </div>
+
           <div class="result-footer">
             <p class="tip">成绩已提交，请等待老师批改主观题</p>
             <div class="buttons">
@@ -986,7 +992,9 @@ const resultData = ref({
   uuid: 0,
   username: '',
   score_option: 0,
-  score_subjective: 0
+  score_subjective: 0,
+  total_tokens: 0,
+  ai_cost_cny: 0
 })
 // 新增状态
 const showConfirmModal = ref(false)
@@ -3913,6 +3921,34 @@ input[type="checkbox"] {
   color: #1e293b;
 }
 
+.ai-usage-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -8px 0 28px;
+  padding: 14px 16px;
+  border: 1px solid #c7d2fe;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
+  color: #475569;
+  font-size: 0.86rem;
+}
+
+.ai-usage-summary strong {
+  margin-left: auto;
+  color: #4338ca;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.ai-usage-summary em {
+  color: #0f766e;
+  font-style: normal;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
 .result-footer {
   text-align: center;
 }
@@ -3957,6 +3993,17 @@ input[type="checkbox"] {
 .btn.secondary:hover {
   background: #cbd5e1;
   transform: translateY(-2px);
+}
+
+@media (max-width: 520px) {
+  .ai-usage-summary {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ai-usage-summary strong {
+    margin-left: 0;
+  }
 }
 
 /* 动画 */

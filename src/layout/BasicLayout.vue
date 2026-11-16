@@ -39,7 +39,7 @@
           <keep-alive :include="cachedComponents">
             <component
               :is="Component"
-              :key="route.fullPath"
+              :key="route.name === '考试查找' ? route.path : route.fullPath"
               @hook:activated="handleComponentActivated(route)"
             />
           </keep-alive>

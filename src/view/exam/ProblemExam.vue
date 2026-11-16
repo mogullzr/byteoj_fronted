@@ -82,7 +82,7 @@
         </div>
       </section>
     </div>
-    <div class="max-w-5xl mx-auto mb-6 flex justify-end">
+    <div class="max-w-6xl mx-auto mb-6 flex justify-end">
       <button
           class="rounded-xl bg-emerald-700 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-emerald-800 active:scale-[0.98]"
           @click="router.push('/exam/wrong-book')"
@@ -90,8 +90,28 @@
         进入我的错题本
       </button>
     </div>
+    <section class="mx-auto mb-7 max-w-6xl rounded-2xl border border-sky-200 bg-gradient-to-r from-sky-50 via-white to-indigo-50 px-5 py-4 shadow-sm sm:px-6" aria-label="DeepSeek 余额">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-600 text-sm font-black text-white shadow-sm">AI</span>
+          <div>
+            <p class="text-sm font-bold text-slate-800">DeepSeek 账户余额</p>
+            <p class="text-xs text-slate-500">用于估算本页考试提交后的判卷消耗</p>
+          </div>
+        </div>
+        <div v-if="balanceLoading" class="text-sm text-slate-500">正在查询…</div>
+        <div v-else-if="balanceError" class="text-sm text-slate-500">暂时无法获取余额</div>
+        <div v-else-if="deepSeekBalance" class="flex flex-wrap items-center gap-3">
+          <div v-for="item in deepSeekBalance.balance_infos || []" :key="item.currency" class="rounded-xl border border-sky-100 bg-white px-4 py-2 text-right shadow-sm">
+            <span class="block text-[11px] font-medium text-slate-500">{{ item.currency || '账户' }}</span>
+            <strong class="block text-lg tabular-nums text-sky-800">{{ item.total_balance || '0' }}</strong>
+          </div>
+        </div>
+      </div>
+    </section>
     <section
-        class="mx-auto mb-8 max-w-5xl cursor-pointer overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-slate-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        v-if="!activeTopic"
+        class="mx-auto mb-8 max-w-6xl cursor-pointer overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-slate-50 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
         aria-label="考研倒计时"
         @click="openCountdownPrompt"
     >
@@ -114,19 +134,47 @@
         </div>
       </div>
     </section>
-    <div class="max-w-5xl mx-auto mb-12">
+    <section class="exam-collections mx-auto mb-7 max-w-6xl" aria-label="考试专题">
+      <div class="collection-heading">
+        <div>
+          <p class="collection-eyebrow">THE EXAM COLLECTION</p>
+          <h1>{{ activeTopic ? activeTopic.title + ' · 试卷馆' : '选一门课，开始一套卷。' }}</h1>
+          <p class="collection-description">{{ activeTopic?.description || '按学科归档，按年份回看。让每一次练习都有迹可循。' }}</p>
+        </div>
+        <button v-if="activeTopic" type="button" class="all-exams-link" @click="selectTopic(null)">← 全部考试</button>
+        <span v-else class="collection-note">五个专题，一站查找</span>
+      </div>
+      <nav class="collection-nav" aria-label="选择考试专题">
+        <button
+            v-for="topic in examTopics"
+            :key="topic.id"
+            type="button"
+            class="collection-tab"
+            :class="{ 'is-active': activeTopic?.id === topic.id }"
+            :style="{ '--collection-accent': topic.accent, '--collection-wash': topic.wash }"
+            :aria-pressed="activeTopic?.id === topic.id"
+            @click="selectTopic(topic.id)"
+        >
+          <span class="collection-tab-code">{{ topic.code }}</span>
+          <span class="collection-tab-title">{{ topic.title }}</span>
+          <span class="collection-tab-arrow" aria-hidden="true">↗</span>
+        </button>
+      </nav>
+    </section>
+
+    <div class="mx-auto mb-7 max-w-6xl">
       <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-slate-200">
         <div class="flex items-center">
           <input
-              v-model="searchRequest.keyword"
+              v-model="searchKeyword"
               type="text"
-              placeholder="搜索考试名称"
-              class="flex-1 px-6 py-5 outline-none text-slate-800 placeholder-slate-500 text-lg bg-transparent"
-              @keyup.enter="doSearch"
+              :placeholder="activeTopic ? '在' + activeTopic.title + '中搜索年份或试卷名称' : '搜索考试名称'"
+              class="min-w-0 flex-1 px-5 py-4 outline-none text-slate-800 placeholder-slate-400 text-sm bg-transparent"
+              @keyup.enter="submitSearch"
           />
           <button
-              @click="doSearch"
-              class="px-10 py-5 bg-slate-700 text-white font-medium hover:bg-slate-800 transition-colors active:scale-[0.98] disabled:opacity-60"
+              @click="submitSearch"
+              class="shrink-0 px-6 py-4 bg-slate-700 text-white text-sm font-medium hover:bg-slate-800 transition-colors active:scale-[0.98] disabled:opacity-60"
               :disabled="loading"
           >
             {{ loading ? '搜索中...' : '搜索' }}
@@ -135,11 +183,31 @@
       </div>
     </div>
 
-    <div class="max-w-5xl mx-auto space-y-8">
+    <div class="mx-auto space-y-8 max-w-6xl">
       <div v-if="loading" class="text-center py-20">
         <div class="animate-spin w-12 h-12 border-4 border-slate-300 border-t-slate-500 rounded-full mx-auto mb-4"></div>
-        <p class="text-slate-600 text-lg">加载中...</p>
+        <p class="text-slate-600">{{ activeTopic ? '正在整理专题试卷…' : '加载中…' }}</p>
+        <p v-if="activeTopic && topicLoadProgress" class="mt-2 text-xs text-slate-400">已读取 {{ topicLoadProgress }} 套</p>
       </div>
+
+      <div v-else-if="loadError" class="rounded-2xl border border-rose-100 bg-white px-6 py-14 text-center">
+        <p class="text-rose-700">{{ loadError }}</p>
+        <button type="button" class="mt-4 rounded-lg bg-slate-800 px-5 py-2 text-sm text-white" @click="doSearch">重新加载</button>
+      </div>
+
+      <ExamTopicLibrary
+          v-else-if="activeTopic"
+          :key="activeTopic.id"
+          :topic="activeTopic"
+          :exams="examList"
+          :keyword="appliedKeyword"
+          :joining-exam-id="joiningExamId"
+          :exporting-exam-id="exportingExamId"
+          @start="routerToExam"
+          @join="joinExam"
+          @records="routerToExamRecords"
+          @export="exportExamPdf"
+      />
 
       <div v-else-if="examList.length === 0" class="text-center py-24 text-slate-500">
         <svg class="w-20 h-20 mx-auto text-slate-300 mb-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -282,11 +350,11 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import UserStore from '@/store/user'
 import { GRADUATE_EXAM_TARGET_TIME, GRADUATE_TARGET_SCHOOL_STORAGE_PREFIX } from '@/config/temporaryStudy'
-import { SearchControllerService, SearchRequest } from '../../../generated'
-import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
+import { ProblemsControllerService, SearchControllerService } from '../../../generated'
+import type { DeepSeekBalanceVo, ProblemExamVo, ProblemMath408BankVo } from '../../../generated'
+import ExamTopicLibrary from './ExamTopicLibrary.vue'
+import { examTopics, matchesExamTopic } from './examTopics'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
-import type { ProblemExamVo } from '../../../generated/models/ProblemExamVo'
-import type { ProblemMath408BankVo } from '../../../generated/models/ProblemMath408BankVo'
 
 type ExamItem = {
   exam_id?: number
@@ -315,24 +383,32 @@ const targetSchool = ref('')
 const targetSchoolDraft = ref('')
 const countdown = ref({ days: 0, hours: 0, minutes: 0, seconds: 0, remainingMs: 0 })
 
-const searchRequest = ref<SearchRequest>({
+const activeTopic = computed(() => examTopics.find((topic) => topic.id === route.query.topic) || null)
+const appliedKeyword = computed(() => typeof route.query.keyword === 'string' ? route.query.keyword.trim() : '')
+const searchKeyword = ref(appliedKeyword.value)
+const searchRequest = computed(() => ({
   category: 'exam',
-  keyword: (route.query.keyword as string) || '',
-  pageNum: Number(route.query.pageNum) || 1,
-  pageSize: 10
-})
+  keyword: appliedKeyword.value,
+  pageNum: Math.max(1, Math.floor(Number(route.query.pageNum) || 1)),
+  pageSize: 10,
+}))
 
 const examList = ref<ExamItem[]>([])
 const loading = ref(false)
+const loadError = ref('')
+const topicLoadProgress = ref(0)
+const totalCount = ref(0)
 const joiningExamId = ref<number | null>(null)
 const exportingExamId = ref<number | null>(null)
 const examToStart = ref<ExamItem | null>(null)
 const agreementAccepted = ref(false)
-const pageSize = 10
-const totalPages = computed(() => {
-  const totalCount = examList.value[0]?.pages
-  return typeof totalCount === 'number' && totalCount > 0 ? Math.ceil(totalCount / pageSize) : 1
-})
+const deepSeekBalance = ref<DeepSeekBalanceVo | null>(null)
+const balanceLoading = ref(false)
+const balanceError = ref(false)
+const totalPages = computed(() => Math.max(1, Math.ceil(totalCount.value / searchRequest.value.pageSize)))
+// Math topics share one collection: fetch once, then distinguish the paper number locally.
+const topicCache = new Map<string, ExamItem[]>()
+let searchVersion = 0
 
 const targetSchoolStorageKey = computed(() => {
   const uuid = useStore.loginUser?.uuid
@@ -413,14 +489,35 @@ onMounted(() => {
   updateCountdown()
   countdownTimer.value = window.setInterval(updateCountdown, 1000)
   showCountdownPrompt.value = !targetSchool.value.trim()
-  doSearch()
+  void fetchDeepSeekBalance()
 })
+
+const fetchDeepSeekBalance = async () => {
+  balanceLoading.value = true
+  balanceError.value = false
+  try {
+    const res = await ProblemsControllerService.getDeepSeekBalanceUsingGet()
+    if (res.code === 0 && res.data) {
+      deepSeekBalance.value = res.data
+    } else {
+      balanceError.value = true
+    }
+  } catch (err) {
+    console.warn('获取 DeepSeek 余额失败', err)
+    balanceError.value = true
+  } finally {
+    balanceLoading.value = false
+  }
+}
 
 watch(targetSchoolStorageKey, () => {
   loadTargetSchool()
+  topicCache.clear()
+  void doSearch()
 })
 
 onBeforeUnmount(() => {
+  searchVersion++
   if (countdownTimer.value !== null) {
     window.clearInterval(countdownTimer.value)
   }
@@ -430,35 +527,78 @@ const isJoined = (exam?: ExamItem) => {
   return exam?.join === true
 }
 
-const doSearch = async () => {
-  loading.value = true
-  try {
-    router.replace({
-      query: {
-        keyword: searchRequest.value.keyword || undefined,
-        pageNum: searchRequest.value.pageNum > 1 ? searchRequest.value.pageNum : undefined,
-      },
-    })
+const fetchExamPage = async (keyword: string, pageNum: number, pageSize: number) => {
+  const res = await SearchControllerService.searchAllUsingPost({ category: 'exam', keyword, pageNum, pageSize })
+  if (res.code !== 0 || !res.data || !Array.isArray(res.data.dataList)) {
+    throw new Error(res.message || '试卷加载失败，请稍后重试')
+  }
+  return res.data.dataList as ExamItem[]
+}
 
-    const res = await SearchControllerService.searchAllUsingPost(searchRequest.value)
-    if (res.code === 0 && res.data) {
-      examList.value = res.data.dataList || []
-      if (searchRequest.value.pageNum > totalPages.value) {
-        searchRequest.value.pageNum = totalPages.value
+const doSearch = async () => {
+  const version = ++searchVersion
+  const topic = activeTopic.value
+  const request = { ...searchRequest.value }
+  searchKeyword.value = appliedKeyword.value
+  loading.value = true
+  loadError.value = ''
+  topicLoadProgress.value = 0
+  try {
+    if (topic) {
+      let collection = topicCache.get(topic.keyword)
+      if (!collection) {
+        const firstPage = await fetchExamPage(topic.keyword, 1, 50)
+        if (version !== searchVersion) return
+        const collected = [...firstPage]
+        const total = firstPage[0]?.pages || firstPage.length
+        // Use the actual response size in case the server applies a smaller page-size limit.
+        const batchSize = firstPage.length || 50
+        const pages = Math.ceil(total / batchSize)
+        topicLoadProgress.value = collected.length
+        // Limit concurrency so opening a large collection does not flood the search API.
+        for (let page = 2; page <= pages; page += 3) {
+          const batch = await Promise.all(Array.from({ length: Math.min(3, pages - page + 1) }, (_, offset) => fetchExamPage(topic.keyword, page + offset, batchSize)))
+          if (version !== searchVersion) return
+          collected.push(...batch.flat())
+          topicLoadProgress.value = collected.length
+        }
+        collection = [...new Map(collected.map((exam) => [exam.exam_id, exam])).values()]
+        topicCache.set(topic.keyword, collection)
       }
+      if (version !== searchVersion) return
+      examList.value = collection.filter((exam) => matchesExamTopic(exam.exam_name || '', topic))
+      totalCount.value = examList.value.length
+    } else {
+      const rows = await fetchExamPage(request.keyword, request.pageNum, request.pageSize)
+      if (version !== searchVersion) return
+      totalCount.value = rows[0]?.pages || 0
+      examList.value = rows
     }
   } catch (err) {
-    console.error(err)
+    if (version !== searchVersion) return
+    console.error('获取考试列表失败', err)
+    loadError.value = err instanceof Error ? err.message : '试卷加载失败，请稍后重试'
+    examList.value = []
   } finally {
-    loading.value = false
+    if (version === searchVersion) loading.value = false
   }
+}
+
+const submitSearch = () => {
+  router.push({ query: { topic: activeTopic.value?.id, keyword: searchKeyword.value.trim() || undefined } })
+}
+
+const selectTopic = (id: string | null) => {
+  if (activeTopic.value?.id === id) return
+  router.push({ query: { topic: id || undefined } })
 }
 
 const changePage = (page: number) => {
   if (page < 1 || page > totalPages.value || loading.value) return
-  searchRequest.value.pageNum = page
-  doSearch()
+  router.push({ query: { keyword: appliedKeyword.value || undefined, pageNum: page > 1 ? page : undefined } })
 }
+
+watch(() => [route.query.topic, route.query.keyword, route.query.pageNum], () => { void doSearch() }, { immediate: true })
 
 const formatDate = (iso?: string) => {
   if (!iso) return '-'
@@ -488,6 +628,13 @@ const joinExam = async (exam?: ExamItem) => {
         exam.join = true
         exam.joins = (exam.joins || 0) + 1
       }
+      topicCache.forEach((collection) => {
+        const cached = collection.find((item) => item.exam_id === examId)
+        if (cached && cached !== exam) {
+          cached.join = true
+          cached.joins = exam?.joins || (cached.joins || 0) + 1
+        }
+      })
       success('报名成功')
       return
     }
@@ -2465,3 +2612,25 @@ const handleImageError = (e: Event) => {
       'http://mogullzr001.oss-cn-beijing.aliyuncs.com/2025/11/2c75468abcf44ef9be887216dd21b0e1.jpg'
 }
 </script>
+
+<style scoped>
+.exam-collections { padding: 8px 0 4px; }
+.collection-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; margin-bottom: 24px; }
+.collection-eyebrow { margin-bottom: 10px; color: #8c937e; font-family: Georgia, serif; font-size: 10px; letter-spacing: 3px; }
+.collection-heading h1 { color: #293b33; font-size: 30px; font-weight: 600; letter-spacing: -1px; line-height: 1.4; }
+.collection-description { margin-top: 8px; color: #899083; font-size: 12px; line-height: 1.8; }
+.collection-note { color: #92998b; font-size: 11px; letter-spacing: 1px; white-space: nowrap; }
+.all-exams-link { flex-shrink: 0; padding: 8px 13px; border: 1px solid #e1e5dc; border-radius: 8px; background: white; color: #5c6f5b; font-size: 12px; }
+.all-exams-link:hover { background: #f1f5ef; }
+.collection-nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.collection-tab { position: relative; display: flex; align-items: center; gap: 11px; min-height: 78px; padding: 14px 16px; border: 1px solid #e3e7df; border-radius: 12px; background: white; color: #53614f; text-align: left; transition: background .15s, border-color .15s, transform .15s; }
+.collection-tab:hover { border-color: var(--collection-accent); transform: translateY(-2px); }
+.collection-tab.is-active { border-color: var(--collection-accent); background: var(--collection-wash); box-shadow: inset 0 -2px 0 var(--collection-accent); }
+.collection-tab-code { display: flex; align-items: center; justify-content: center; width: 32px; height: 38px; flex-shrink: 0; border-radius: 2px 5px 5px 2px; border-left: 3px solid #ffffff30; background: var(--collection-accent); color: #fff9ec; font-family: Georgia, serif; font-size: 12px; letter-spacing: 1px; box-shadow: 2px 2px 0 #daddd0; }
+.collection-tab-title { color: var(--collection-accent); font-size: 13px; font-weight: 600; }
+.collection-tab-arrow { margin-left: auto; color: var(--collection-accent); opacity: .5; font-size: 16px; }
+.collection-tab:focus-visible, .all-exams-link:focus-visible { outline: 2px solid #356755; outline-offset: 3px; }
+@media (max-width: 900px) { .collection-tab { gap: 8px; padding: 12px 10px; } .collection-tab-arrow { display: none; } }
+@media (max-width: 640px) { .collection-heading { align-items: flex-start; gap: 10px; } .collection-heading h1 { font-size: 24px; } .collection-note { display: none; } .collection-description { max-width: 280px; font-size: 11px; } .collection-nav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } .collection-tab { min-height: 65px; gap: 7px; padding: 10px 8px; } .collection-tab-title { font-size: 11px; } .collection-tab-code { width: 25px; height: 32px; font-size: 10px; } .all-exams-link { font-size: 11px; padding: 7px 9px; } }
+@media (prefers-reduced-motion: reduce) { .collection-tab { transition: none; } .collection-tab:hover { transform: none; } }
+</style>

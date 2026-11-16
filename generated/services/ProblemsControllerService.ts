@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BaseResponse_boolean_ } from '../models/BaseResponse_boolean_';
+import type { BaseResponse_DeepSeekBalanceVo_ } from '../models/BaseResponse_DeepSeekBalanceVo_';
 import type { BaseResponse_string_ } from '../models/BaseResponse_string_';
 import type { BaseResponse_List_ProblemExamSheetPaperVo_ } from '../models/BaseResponse_List_ProblemExamSheetPaperVo_';
 import type { BaseResponse_List_ProblemExamSheetVo_ } from '../models/BaseResponse_List_ProblemExamSheetVo_';
@@ -18,10 +19,21 @@ import type { ProblemExamAnnotationRequest } from '../models/ProblemExamAnnotati
 import type { ProblemExamSubmitRequest } from '../models/ProblemExamSubmitRequest';
 import type { ProblemExamTopScoreVo } from '../models/ProblemExamTopScoreVo';
 import type { ProblemRequest } from '../models/ProblemRequest';
-import type { CancelablePromise } from '../../../generated/core/CancelablePromise';
-import { OpenAPI } from '../../../generated/core/OpenAPI';
-import { request as __request } from '../../../generated/core/request';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class ProblemsControllerService {
+    /** DeepSeek account balance (proxied by the server). */
+    public static getDeepSeekBalanceUsingGet(): CancelablePromise<BaseResponse_DeepSeekBalanceVo_> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/problem/other/exam/ai/balance',
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+            },
+        });
+    }
     /**
      * Generate a personal paper-wide review guide draft
      * @param generateRequest generateRequest

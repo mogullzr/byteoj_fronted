@@ -136,7 +136,12 @@
                   <div class="record-meta"><span>结束时间</span><strong>{{ formatDate(record.end_date) }}</strong></div>
                   <div class="record-meta"><span>考试时长</span><strong>{{ record.time ? record.time + ' 分钟' : '不限时' }}</strong></div>
                   <div class="record-meta"><span>本次得分</span><strong class="text-cyan-800">{{ getRecordScore(record) }} 分</strong></div>
+                  <div class="record-meta"><span>AI 总 Token</span><strong>{{ formatTokens(record.total_tokens) }}</strong></div>
+                  <div class="record-meta"><span>预估费用</span><strong class="text-indigo-800">{{ formatCost(record.ai_cost_cny) }}</strong></div>
                 </div>
+                <p v-if="record.total_tokens" class="mt-3 text-xs text-slate-500">
+                  输入 {{ formatTokens(record.prompt_tokens) }}（命中 {{ formatTokens(record.prompt_cache_hit_tokens) }} / 未命中 {{ formatTokens(record.prompt_cache_miss_tokens) }}） · 输出 {{ formatTokens(record.completion_tokens) }}
+                </p>
               </div>
               <button class="record-button inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold" :disabled="!record.id" @click="routerToSheet(record)">
                 查看答题卡
@@ -264,6 +269,16 @@ const formatDate = (iso?: string) => {
 
 const getRecordScore = (record: ProblemExamSheetPaperVo) => {
   return record.score ?? record.total_score ?? 0
+}
+
+const formatTokens = (tokens?: number) => {
+  if (!tokens) return '0'
+  return tokens.toLocaleString('zh-CN')
+}
+
+const formatCost = (cost?: number) => {
+  if (cost === undefined || cost === null) return '¥0.0000'
+  return `¥${Number(cost).toFixed(4)}`
 }
 
 const routerToSheet = (record: ProblemExamSheetPaperVo) => {

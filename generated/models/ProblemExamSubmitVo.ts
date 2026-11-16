@@ -9,6 +9,13 @@ export type ProblemExamSubmitVo = {
     score_option?: number;
     score_subjective?: number;
     total_score?: number;
+    ai_model?: string;
+    prompt_tokens?: number;
+    prompt_cache_hit_tokens?: number;
+    prompt_cache_miss_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    ai_cost_cny?: number;
     username?: string;
     uuid?: number;
 };
