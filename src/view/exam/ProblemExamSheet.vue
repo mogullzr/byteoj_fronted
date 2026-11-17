@@ -1,5 +1,11 @@
 <template>
-  <div class="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+  <div class="exam-sheet-page min-h-screen bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+    <ExamQuestionDirectory
+        v-if="!loading && !questionLoadError && questions.length"
+        :items="directoryItems"
+        :active-number="activeQuestionNumber"
+        @navigate="jumpToQuestion"
+    />
     <div
         v-if="showAnswerPreview"
         class="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/45 p-3 backdrop-blur-[2px] sm:p-6"
@@ -266,7 +272,10 @@
         <section
             v-for="(question, index) in filteredQuestions"
             :key="question.problem_id || index"
-            class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
+            :id="`sheet-question-${getQuestionNumber(question)}`"
+            :data-question-number="getQuestionNumber(question)"
+            tabindex="-1"
+            class="sheet-question-card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
         >
           <div :class="['h-1', accentBarClass(index)]"></div>
 
@@ -275,7 +284,7 @@
               <div class="space-y-3 xl:max-w-[calc(100%-380px)]">
                 <div class="flex flex-wrap items-center gap-3">
                   <span class="rounded-md bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-                    第 {{ index + 1 }} 题
+                    第 {{ getQuestionNumber(question) }} 题
                   </span>
                   <span class="rounded-md bg-slate-100 px-3 py-1 text-xs text-slate-600">
                     {{ getQuestionTypeLabel(question) }}
@@ -593,9 +602,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Markdown from '@/view/Markdown/MarkdownView.vue'
+import ExamQuestionDirectory from './ExamQuestionDirectory.vue'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
 import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
 import type { ProblemExamSheetVo } from '../../../generated/models/ProblemExamSheetVo'
@@ -662,6 +672,7 @@ const annotationEditing = ref<Record<number, boolean>>({})
 const annotationSaveStates = ref<Record<number, 'saving' | 'saved' | 'error'>>({})
 const typeFilter = ref<QuestionTypeFilter>('all')
 const resultFilter = ref<ResultFilter>('all')
+const activeQuestionNumber = ref(0)
 
 const questionTypeFilters: Array<{ label: string; value: QuestionTypeFilter }> = [
   { label: '全部题型', value: 'all' },
@@ -734,6 +745,60 @@ const filteredQuestions = computed(() => {
   })
 })
 
+// Original paper numbers stay stable when type/result filters hide earlier questions.
+const questionNumberMap = computed(() => new Map(questions.value.map((question, index) => [question, index + 1])))
+const getQuestionNumber = (question: ProblemMath408BankVo) => questionNumberMap.value.get(question) || 0
+const directoryItems = computed(() => {
+  const visible = new Set(filteredQuestions.value)
+  return questions.value.map((question, index) => {
+    let status: 'pending' | 'unanswered' | 'correct' | 'wrong' = 'pending'
+    if (!sheetLoading.value && !sheetLoadError.value) {
+      if (!hasAnswered(question)) status = 'unanswered'
+      else if (getNeedsManualReview(question) || getSheet(question)?.score == null) status = 'pending'
+      else if (isQuestionCorrect(question)) status = 'correct'
+      else if (isQuestionWrong(question)) status = 'wrong'
+    }
+    return { number: index + 1, type: getQuestionTypeLabel(question), status, visible: visible.has(question) }
+  })
+})
+
+let scrollFrame = 0
+const updateActiveQuestion = () => {
+  scrollFrame = 0
+  let current = 0
+  for (const question of filteredQuestions.value) {
+    const number = getQuestionNumber(question)
+    const element = document.getElementById(`sheet-question-${number}`)
+    if (!element) continue
+    const bounds = element.getBoundingClientRect()
+    if (bounds.top > 144) break
+    if (bounds.bottom > 112) current = number
+  }
+  activeQuestionNumber.value = current
+}
+
+const scheduleActiveQuestionUpdate = () => {
+  if (!scrollFrame) scrollFrame = window.requestAnimationFrame(updateActiveQuestion)
+}
+
+const jumpToQuestion = async (number: number) => {
+  const question = questions.value[number - 1]
+  if (!question) return
+  if (!filteredQuestions.value.includes(question)) resetFilters()
+  await nextTick()
+  const element = document.getElementById(`sheet-question-${number}`)
+  if (!element) return
+  // Jump immediately so a long paper does not animate through every lazy Markdown block.
+  element.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
+  element.focus({ preventScroll: true })
+  activeQuestionNumber.value = number
+}
+
+watch(filteredQuestions, async () => {
+  await nextTick()
+  scheduleActiveQuestionUpdate()
+})
+
 const filteredAnsweredCount = computed(() => {
   return filteredQuestions.value.filter((question) => hasAnswered(question)).length
 })
@@ -747,7 +812,15 @@ const filteredExamScore = computed(() => {
 })
 
 onMounted(() => {
+  window.addEventListener('scroll', scheduleActiveQuestionUpdate, { passive: true })
+  window.addEventListener('resize', scheduleActiveQuestionUpdate, { passive: true })
   void fetchSheet()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', scheduleActiveQuestionUpdate)
+  window.removeEventListener('resize', scheduleActiveQuestionUpdate)
+  if (scrollFrame) window.cancelAnimationFrame(scrollFrame)
 })
 
 const fetchSheet = async () => {
@@ -1256,3 +1329,20 @@ const buildMistakeRubricMarkdown = (question: ProblemMath408BankVo) => {
   return lines.join('\n')
 }
 </script>
+
+<style scoped>
+.sheet-question-card {
+  scroll-margin-top: 112px;
+}
+
+.sheet-question-card:focus-visible {
+  outline: 2px solid #0e7490;
+  outline-offset: 3px;
+}
+
+@media (min-width: 1280px) {
+  .exam-sheet-page {
+    padding-right: 304px;
+  }
+}
+</style>
