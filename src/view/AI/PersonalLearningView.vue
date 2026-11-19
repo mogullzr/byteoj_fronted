@@ -36,6 +36,14 @@
         </div>
       </div>
 
+      <label>
+        <span>AI 模型</span>
+        <select v-model="selectedModel">
+          <option value="AUTO">使用默认线路</option>
+          <option v-for="source in aiSources" :key="source.id" :value="source.id">{{ source.label }}</option>
+        </select>
+      </label>
+
       <!-- 生成按钮 -->
       <button
           class="generate-btn"
@@ -63,12 +71,16 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { OpenAPI } from '../../../generated/core/OpenAPI'
+import { useAiSources } from './useAiSources'
 import MarkdownView from '@/view/Markdown/MarkdownView.vue'
 import {error} from "echarts/types/src/util/log";
 
 const selectedTag = ref<string | null>(null)
 const result = ref<string>('')
 const loading = ref(false)
+const selectedModel = ref('AUTO')
+const aiSources = useAiSources('STUDY_PLAN')
 
 const presetTags = ref([
   { value: '计算机考研408', name: '计算机考研408', icon: '📚' },
@@ -89,7 +101,6 @@ const handleSSEData = async (
 ) => {
   const decoder = new TextDecoder();
   let buffer = "";
-  let flag = ref(1);
 
   while (true) {
 
@@ -112,17 +123,8 @@ const handleSSEData = async (
         try {
 
           const data = JSON.parse(payload);
-          if (data.content !== undefined) {
-
-            // ✅ 直接更新响应式变量，触发 UI 重渲染
-            result.value += data.content;
-            if (result.value.includes("[DONE]") && flag.value == 1) {
-              result.value = "";
-              flag.value += 1;
-            } else if (result.value.includes("[DONE]")) {
-              result.value = result.value.split("[DONE]")[0];
-            }
-          }
+          if (data.content === "[DONE]") return;
+          if (typeof data.content === "string") result.value += data.content;
         } catch (err) {
           console.error("Failed to parse SSE payload:", payload, err);
           // 可选择继续或中断，通常建议记录日志但不停止
@@ -140,22 +142,22 @@ const generatePath = async () => {
   try {
     let requestBody = {
       messageList: [],
-      model: "deepseek-v3-tenCloud", // 使用当前选中的模型状态
+      model: selectedModel.value,
       status: 2,
       code: selectedTag.value,
     } as any;
-    // const response: any = await fetch("http://localhost:7091/api/ai/ask", {
-    const response: any = await fetch("http://localhost:7091/api/ai/ask", {
+    const response = await fetch(OpenAPI.BASE + "/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Cookie: document.cookie, // 添加 Cookie 到请求头
       },
       body: JSON.stringify(requestBody),
       credentials: "include", // 确保发送跨域请求时包含 Cookie
     });
     const reader = response.body?.getReader();
-    loading.value = false;
+    if (!response.ok || !reader || !response.headers.get("Content-Type")?.includes("text/event-stream")) {
+      throw new Error("学习路线生成失败");
+    }
     await handleSSEData(reader); // 处理 SSE 数据流
   } catch {
     result.value = '系统错误，请刷新重试'

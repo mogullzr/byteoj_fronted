@@ -144,6 +144,10 @@
               >
                 {{ reviewGuideDraft.trim() ? '编辑建议' : '手动填写' }}
               </button>
+              <select v-model="reviewSource" aria-label="复习建议模型" class="rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm">
+                <option value="AUTO">使用默认线路</option>
+                <option v-for="source in reviewSources" :key="source.id" :value="source.id">{{ source.label }}</option>
+              </select>
               <button
                   type="button"
                   class="rounded-xl border border-cyan-300 bg-white px-4 py-2.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-50 disabled:cursor-not-allowed disabled:opacity-60"
@@ -602,6 +606,9 @@
 </template>
 
 <script setup lang="ts">
+import { request } from '../../../generated/core/request'
+import { OpenAPI } from '../../../generated/core/OpenAPI'
+import { useAiSources } from '@/view/AI/useAiSources'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Markdown from '@/view/Markdown/MarkdownView.vue'
@@ -661,6 +668,8 @@ const showAnswerPreview = ref(false)
 const questions = ref<ProblemMath408BankVo[]>([])
 const sheets = ref<ProblemExamSheetVo[]>([])
 const reviewGuideDraft = ref('')
+const reviewSource = ref('AUTO')
+const reviewSources = useAiSources('EXAM_REVIEW')
 const reviewGuideEditing = ref(false)
 const reviewGuideEditBaseline = ref('')
 const reviewGuideEditSavedBaseline = ref(false)
@@ -916,7 +925,10 @@ const generateReviewGuide = async () => {
 
   generatingReviewGuide.value = true
   try {
-    const res = await ProblemsControllerService.generateExamReviewGuideUsingPost({ record_id: recordId })
+    const res = await request<{ code: number; data?: string; message?: string }>(OpenAPI, {
+      method: 'POST', url: '/api/problem/other/exam/review-guide/generate',
+      mediaType: 'application/json', body: { record_id: recordId, ai_model: reviewSource.value },
+    })
     if (res.code === 0 && res.data) {
       reviewGuideDraft.value = res.data
       reviewGuideSaved.value = false

@@ -34,8 +34,9 @@
         <label>
           <span>AI 判卷模型</span>
           <select v-model="aiModel">
-            <option value="DEEPSEEK">DeepSeek Flash-4.1（极速路线）</option>
-            <option value="GPT_5_4">GPT-6.1-sol（不稳定1路线）</option>
+            <option value="AUTO">使用默认线路</option>
+            <option v-for="source in aiSources" :key="source.id" :value="source.id"
+              :disabled="!source.vision && (questionImageItems.length > 0 || imageItems.length > 0)">{{ source.label }}</option>
           </select>
         </label>
         <div class="score-preview">
@@ -280,6 +281,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import axios from 'axios'
+import { gradingFallback, useAiSources } from './useAiSources'
 import { OpenAPI } from '../../../generated/core/OpenAPI'
 import { UserControllerService } from '../../../generated'
 
@@ -317,7 +319,7 @@ type GradingHistoryItem = {
   mode: Mode
   examType: string
   questionType: string
-  aiModel: 'GPT_5_4' | 'DEEPSEEK'
+  aiModel: string
   questionContent: string
   studentAnswer: string
   referenceAnswer: string
@@ -344,7 +346,8 @@ function readHistory(): GradingHistoryItem[] {
 const mode = ref<Mode>('translation')
 const examType = ref('ENGLISH_I')
 const questionType = ref('TRANSLATION')
-const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('DEEPSEEK')
+const aiModel = ref('AUTO')
+const aiSources = useAiSources('ENGLISH_GRADING', gradingFallback)
 const questionContent = ref('')
 const studentAnswer = ref('')
 const referenceAnswer = ref('')
@@ -438,7 +441,7 @@ function openHistory(item: GradingHistoryItem) {
   mode.value = item.mode
   examType.value = item.examType
   questionType.value = item.questionType
-  aiModel.value = item.aiModel
+  aiModel.value = aiSources.value.some(source => source.id === item.aiModel) ? item.aiModel : 'AUTO'
   questionContent.value = item.questionContent
   studentAnswer.value = item.studentAnswer
   referenceAnswer.value = item.referenceAnswer

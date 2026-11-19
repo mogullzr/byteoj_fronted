@@ -277,7 +277,7 @@ const formatTokens = (tokens?: number) => {
 }
 
 const formatCost = (cost?: number) => {
-  if (cost === undefined || cost === null) return '¥0.0000'
+  if (cost == null) return '暂无费用估算'
   return `¥${Number(cost).toFixed(4)}`
 }
 

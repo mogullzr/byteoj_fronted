@@ -10,13 +10,8 @@
           @change="updateModel"
           class="model-select"
         >
-          <option value="Qwen/Qwen2.5-VL-72B-Instruct">QianWen2.5-VL</option>
-          <option value="deepseek-v3-tenCloud">DeepSeek V3.1(最新推出！！！)</option>
-          <option value="deepseek-ai/DeepSeek-R1-Distill-Llama-70B">
-            DeepSeek Reasoner
-          </option>
-          <option value="deepseek-chat">DeepSeek V3 线路一</option>
-          <option value="deepseek-ai/DeepSeek-V3">DeepSeek V3 线路二</option>
+          <option value="AUTO">使用默认线路</option>
+          <option v-for="source in aiSources" :key="source.id" :value="source.id">{{ source.label }}</option>
         </select>
       </div>
       <div class="tech-badge">
@@ -281,6 +276,8 @@
 </template>
 
 <script lang="ts" setup>
+import { OpenAPI } from '../../../generated/core/OpenAPI';
+import { useAiSources } from './useAiSources';
 import { Ref, ref, onMounted, watch, nextTick } from "vue";
 import user from "@/store/user";
 import MarkdownView from "@/view/Markdown/MarkdownView.vue";
@@ -326,7 +323,9 @@ const currentChat: Ref<ChatMessage> = ref({
   content: "",
 } as ChatMessage);
 const chatHistory: Ref<ChatMessage[]> = ref([]);
-const selectedModel = ref("deepseek-v3-tenCloud"); // 默认选中第一个模型
+const selectedModel = ref("AUTO");
+const aiSources = useAiSources(props.status === 1 ? "PROBLEM_CHAT" : "CHAT");
+deepSeekRequest.value.model = selectedModel.value;
 const isLoading = ref(false); // 加载状态
 const chatOutput = ref<any>(); // 聊天输出容器的引用
 
@@ -452,17 +451,17 @@ const startChat = async () => {
         status: props.status ?? 0,
       } as any;
     }
-    const response: any = await fetch("http://localhost:7091/api/ai/ask", {
+    const response: any = await fetch(OpenAPI.BASE + "/api/ai/ask", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Cookie: document.cookie, // 添加 Cookie 到请求头
       },
       body: JSON.stringify(requestBody),
       credentials: "include", // 确保发送跨域请求时包含 Cookie
     });
-    if (!response.ok) {
-      error(response.message);
+    if (!response.ok || !response.headers.get("Content-Type")?.includes("text/event-stream")) {
+      const body = await response.json().catch(() => null);
+      error(body?.message || "AI 请求失败，请稍后重试。");
       return;
     }
     const reader = response.body?.getReader();

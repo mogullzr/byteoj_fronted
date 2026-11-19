@@ -87,8 +87,8 @@
           <label class="exam-ai-model-field">
             <span>判卷模型</span>
             <select v-model="aiModel">
-              <option value="DEEPSEEK">DeepSeek Flash-4.1（极速路线）</option>
-              <option value="GPT_5_4">GPT-6.1-sol（不稳定1路线）</option>
+              <option value="AUTO">使用默认线路</option>
+              <option v-for="source in aiSources" :key="source.id" :value="source.id">{{ source.label }}</option>
             </select>
           </label>
           <div class="modal-buttons">
@@ -472,7 +472,7 @@
           <div v-if="resultData.total_tokens" class="ai-usage-summary">
             <span>本次 AI 判卷</span>
             <strong>{{ resultData.total_tokens.toLocaleString('zh-CN') }} Token</strong>
-            <em>预估 ¥{{ Number(resultData.ai_cost_cny || 0).toFixed(4) }}</em>
+            <em>{{ resultData.ai_cost_cny == null ? '暂无费用估算' : `预估 ¥${Number(resultData.ai_cost_cny).toFixed(4)}` }}</em>
           </div>
 
           <div class="result-footer">
@@ -794,6 +794,7 @@
 </template>
 
 <script setup lang="ts">
+import { gradingFallback, useAiSources } from '@/view/AI/useAiSources'
 import {ref, computed, nextTick, onMounted, onUnmounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 // 假设你的服务文件路径如下，请根据实际项目结构调整
@@ -999,7 +1000,8 @@ const resultData = ref({
 // 新增状态
 const showConfirmModal = ref(false)
 const submitting = ref(false)
-const aiModel = ref<'GPT_5_4' | 'DEEPSEEK'>('DEEPSEEK')
+const aiModel = ref('AUTO')
+const aiSources = useAiSources('EXAM_GRADING', gradingFallback)
 
 // 后端逐题判卷进度（Redis 状态由提交接口实时更新）
 interface ExamGradingProgressItem {
