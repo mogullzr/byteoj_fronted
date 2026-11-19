@@ -351,6 +351,12 @@ const routes: Array<RouteRecordRaw> = [
     ],
   },
   {
+    path: "/admin/ai-sources",
+    name: "AI 线路设置",
+    meta: { access: "2", show: true },
+    component: () => import("../views/ai/AiSourcesView.vue"),
+  },
+  {
     path: "/404",
     name: "404",
     meta: {

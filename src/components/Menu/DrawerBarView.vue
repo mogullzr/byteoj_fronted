@@ -22,6 +22,7 @@
         <template #title><span>管理员</span></template>
         <el-menu-item index="1-1-1" @click="RouterToView('/admin/list')">管理员管理</el-menu-item>
         <el-menu-item index="1-1-2" @click="RouterToView('/admin/auth')">角色管理</el-menu-item>
+        <el-menu-item index="1-1-3" @click="RouterToView('/admin/ai-sources')">AI 线路设置</el-menu-item>
       </el-menu-item-group>
       <el-menu-item-group>
         <template #title><span>用户</span></template>

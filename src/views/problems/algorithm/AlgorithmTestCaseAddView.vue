@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { request } from '../../../../generated/core/request';
+import { OpenAPI } from '../../../../generated/core/OpenAPI';
 import { useRoute } from 'vue-router';
 import { ElMessage, ElNotification } from 'element-plus';
 import { Delete, DocumentChecked, MagicStick, Plus, QuestionFilled, VideoPlay } from '@element-plus/icons-vue';
@@ -26,12 +28,13 @@ const loading = ref(false);
 const testCases = ref<ProblemAlgorithmTestCaseRequest[]>([]);
 const runCode = ref('');
 
-const models = [
+const models = ref([
+  { label: '使用默认线路', value: 'AUTO', hint: '使用 AI 线路设置中的默认配置' },
   { label: 'ChatGPT 5.6-sol-pro', value: 'gpt-5.6-sol', hint: '通用推理，优先推荐' },
   { label: 'DeepSeek Chat', value: 'deepseek-chat', hint: '速度快，适合常规规模' },
   { label: 'DeepSeek V4 Flash', value: 'deepseek-ai/DeepSeek-V4-Flash', hint: '大规模生成' },
   { label: 'DeepSeek R1', value: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B', hint: '复杂约束推理' },
-];
+]);
 const scaleOptions = ['SMALL', 'MEDIUM', 'LARGE', 'EXTREME', 'CUSTOM'] as const;
 const scaleHints: Record<string, string> = {
   SMALL: '合法边界与小数据',
@@ -41,7 +44,7 @@ const scaleHints: Record<string, string> = {
   CUSTOM: '按自定义约束生成',
 };
 const generation = ref({
-  model: models[0].value,
+  model: models.value[0].value,
   writeMode: 'APPEND' as 'APPEND' | 'REPLACE',
   generateExpectedOutput: false,
   confirmEmptyOutput: false,
@@ -197,6 +200,15 @@ const submitManualCases = async () => {
 const addManualCase = () => testCases.value.push({ input: '', output: '', runCode: '' });
 const removeManualCase = (index: number) => { if (testCases.value.length > 1) testCases.value.splice(index, 1); };
 onMounted(async () => {
+  void request<{ code: number; data?: { id: string; label: string }[] }>(OpenAPI, {
+    method: 'GET', url: '/api/ai/sources/options', query: { feature: 'TEST_GENERATION' },
+  }).then(response => {
+    if (response.code === 0 && response.data?.length) {
+      models.value = [models.value[0], ...response.data.map(source => ({
+        value: source.id, label: source.label, hint: '',
+      }))];
+    }
+  }).catch(() => { /* Keep existing options if the list is unavailable. */ });
   await Promise.all([loadManualCases(), loadReferences()]);
   const history = await AlgorithmTestGenerationControllerService.listJobs(problemId.value, 1, 1);
   job.value = history.data?.[0] ?? null;

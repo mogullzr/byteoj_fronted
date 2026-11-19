@@ -74,7 +74,6 @@ const totalScore = computed(() =>
   request.value.problemExamProblemInfos.reduce((sum: number, item: any) => sum + Number(item.score || 0), 0)
 );
 const selectedCandidateCount = computed(() => Object.keys(selectedCandidates.value).length);
-
 const buildSearchRequest = (all = false) => {
   const state = currentSearch.value;
   const config = currentTab.value;
