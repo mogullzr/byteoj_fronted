@@ -3414,9 +3414,6 @@ export const UserStore = defineStore("user", {
     maxRequestCount: 2,
     currentLocation: "",
     currentIp: "",
-    githubBaseUrl: "https://github.com/login/oauth/authorize",
-    client_id: "Ov23li8iaZwfv7KORYKw",
-    redirect_uri: "https://www.byteoj.com/authorize/redirect",
     control_list: ["导出排行榜"],
   }),
 
@@ -3460,6 +3457,8 @@ export const UserStore = defineStore("user", {
         } as User;
       }
 
+      // 待绑定账号仅能调用资料与绑定接口。
+      if (this.loginUser.uuid !== -1 && !this.loginUser.email?.trim()) return;
       const res0 = await UserControllerService.userGetPictureByUserUsingGet();
       if (res0.code === 0) {
         if (res0.data !== "") {

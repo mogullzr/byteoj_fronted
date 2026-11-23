@@ -13,6 +13,7 @@
         </div>
         <h1 class="title">完善账户信息(必填)</h1>
         <p class="desc">为了保障您的账户安全与后续服务使用，请补充以下必要信息</p>
+        <p class="desc">GitHub 绑定已有 QQ 账号时会保留原账号密码；新账号使用下方设置的密码。</p>
       </div>
 
       <!-- 表单区域 -->
@@ -35,6 +36,15 @@
           <span class="error-msg" v-if="errors.qq">{{ errors.qq }}</span>
         </div>
 
+        <div class="input-wrapper">
+          <label class="input-label">QQ 邮箱验证码</label>
+          <div class="input-box">
+            <input v-model="verificationCode" placeholder="请输入邮箱中的 6 位验证码" maxlength="6" inputmode="numeric" />
+            <button type="button" :disabled="sendingCode || codeCountdown > 0" @click="sendCode">
+              {{ codeCountdown > 0 ? `${codeCountdown}s` : '发送验证码' }}
+            </button>
+          </div>
+        </div>
         <!-- 密码输入框 -->
         <div class="input-wrapper" :class="{ 'has-error': errors.password }">
           <label class="input-label">设置登录密码</label>
@@ -45,7 +55,7 @@
             <input
                 :type="showPassword ? 'text' : 'password'"
                 v-model="formData.password"
-                placeholder="长度 6-20 位，区分大小写"
+                placeholder="长度 8-20 位，区分大小写"
                 @input="errors.password = ''"
             />
             <button type="button" class="toggle-password" @click="showPassword = !showPassword" title="切换显示/隐藏">
@@ -88,7 +98,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue';
+import { ref, reactive, onBeforeUnmount } from 'vue';
+import { completeGithubAccount } from '@/api/githubAccount';
 import { useRouter } from 'vue-router';
 import userStore from '@/store/user';
 import {UserControllerService} from "../../../../generated";
@@ -101,6 +112,26 @@ const store = userStore();
 
 const loginUser = store.loginUser;
 // 状态定义
+const verificationCode = ref('');
+const sendingCode = ref(false);
+const codeCountdown = ref(0);
+let codeTimer: ReturnType<typeof setInterval> | undefined;
+onBeforeUnmount(() => { if (codeTimer) clearInterval(codeTimer); });
+const sendCode = async () => {
+  const email = formData.qq.trim().toLowerCase();
+  if (!/^[1-9][0-9]{4,19}@qq\.com$/.test(email)) { error('请输入正确的 QQ 邮箱'); return; }
+  sendingCode.value = true;
+  try {
+    const res = await UserControllerService.userEmailSendUsingPost(email);
+    if (res.code !== 0) { error(res.message); return; }
+    success('验证码已发送');
+    codeCountdown.value = 60;
+    codeTimer = setInterval(() => {
+      if (--codeCountdown.value <= 0) clearInterval(codeTimer);
+    }, 1000);
+  } catch { error('发送失败，请稍后重试'); }
+  finally { sendingCode.value = false; }
+};
 const isLoading = ref(false);
 const showPassword = ref(false);
 const errors = reactive<{ [key: string]: string }>({
@@ -121,12 +152,18 @@ const formData = reactive({
 const validateForm = () => {
   let isValid = true;
 
+  if (!/^[1-9][0-9]{4,19}@qq\.com$/.test(formData.qq.trim().toLowerCase())) {
+    errors.qq = '请输入正确的 QQ 邮箱'; isValid = false;
+  }
+  if (!/^\d{6}$/.test(verificationCode.value)) {
+    error('请输入 6 位邮箱验证码'); isValid = false;
+  }
   // 验证密码
   if (!formData.password) {
     errors.password = '密码不能为空';
     isValid = false;
-  } else if (formData.password.length < 6 || formData.password.length > 20) {
-    errors.password = '密码长度需在 6-20 位之间';
+  } else if (formData.password.length < 8 || formData.password.length > 20) {
+    errors.password = '密码长度需在 8-20 位之间';
     isValid = false;
   } else {
     errors.password = '';
@@ -151,9 +188,10 @@ const handleSubmit = async () => {
 
   try {
     // 调用后端 API
-    const res = await UserControllerService.userModifyUsingPost({
+    const res = await completeGithubAccount({
       uuid: loginUser.uuid,
-      email: formData.qq,
+      email: formData.qq.trim().toLowerCase(),
+      confirmNumber: verificationCode.value,
       password: formData.password,
       confirm_password: formData.confirmPassword
     });
@@ -168,8 +206,8 @@ const handleSubmit = async () => {
     } else {
       error(res.message);
     }
-  } catch (error: any) {
-    error(error);
+  } catch {
+    error("保存失败，请稍后重试");
   } finally {
     isLoading.value = false;
   }
