@@ -39,12 +39,19 @@
               :disabled="!source.vision && (questionImageItems.length > 0 || imageItems.length > 0)">{{ source.label }}</option>
           </select>
         </label>
+        <label>
+          <span>讲评详略</span>
+          <select v-model="gradingDetail" :disabled="loading">
+            <option v-for="item in gradingDetails" :key="item.value" :value="item.value">{{ item.label }}</option>
+          </select>
+        </label>
         <div class="score-preview">
           <span>本题满分</span>
           <strong>{{ totalScore }} 分</strong>
         </div>
       </div>
 
+      <p class="grading-detail-hint">{{ gradingDetails.find(item => item.value === gradingDetail)?.description }}</p>
       <div class="rule-note">
         <strong>{{ ruleTitle }}</strong>
         <span>{{ ruleDescription }}</span>
@@ -142,14 +149,14 @@
       <div class="result-summary">
         <div>
           <p class="eyebrow">GRADING RESULT</p>
-          <h2>评分结果</h2>
+          <h2>评分结果 · {{ gradingDetailLabel(result.grading_detail) }}</h2>
           <p>{{ result.summary || 'AI 已完成评分。' }}</p>
         </div>
         <div class="score-badge"><strong>{{ result.awarded_score ?? 0 }}</strong><span>/ {{ result.total_score ?? totalScore }}</span></div>
       </div>
       <div v-if="result.needs_manual_review" class="review-alert">当前内容无法完全可靠判分，建议人工复核。</div>
 
-      <div class="result-grid">
+      <div v-if="result.grading_detail !== 'BASIC'" class="result-grid">
         <article v-if="result.presentation_assessment" class="result-card presentation-card">
           <div class="presentation-heading">
             <h3>卷面与书写评价</h3>
@@ -159,7 +166,7 @@
           <p class="preline">{{ result.presentation_assessment.assessment || '暂无卷面评价。' }}</p>
           <p class="preline"><b>改进建议：</b>{{ result.presentation_assessment.suggestion || '暂无' }}</p>
         </article>
-        <article v-if="questionType === 'TRANSLATION'" class="result-card wide-card">
+        <article v-if="questionType === 'TRANSLATION' && isDetailedGrading(result.grading_detail)" class="result-card wide-card">
           <h3>翻译逐句分析</h3>
           <div v-if="result.translation_sentence_analysis?.length" class="detail-list">
             <div v-for="(item, index) in result.translation_sentence_analysis" :key="index" class="sentence-row">
@@ -195,12 +202,22 @@
               <strong>{{ item.name || item.category || `评分项 ${index + 1}` }}</strong>
               <span>{{ item.awarded_score ?? item.score ?? '-' }}{{ item.max_score ? ` / ${item.max_score}` : '' }}</span>
               <p>{{ item.reason || item.description || '' }}</p>
+              <p v-if="result.grading_detail === 'DEEP'" class="preline correction">修改：{{ getRubricModification(result, item) }}</p>
+            </div>
+          </div>
+          <div v-else-if="(result.grading_detail === 'STANDARD' || result.grading_detail === 'DEEP') && result.rubric_used?.length" class="detail-list">
+            <div v-for="(item, index) in result.rubric_used" :key="index" class="detail-row">
+              <strong>{{ item.name || '总评分' }}</strong>
+              <span>{{ item.awarded_score ?? 0 }} / {{ item.max_score ?? 0 }}</span>
+              <p>{{ item.reason || '' }}</p>
+              <p v-if="item.evidence">依据：{{ item.evidence }}</p>
+              <p v-if="result.grading_detail === 'DEEP'" class="preline correction">修改：{{ getRubricModification(result, item) }}</p>
             </div>
           </div>
           <div v-else class="empty-result">模型未返回细分评分。</div>
         </article>
 
-        <article class="result-card">
+        <article v-if="isDetailedGrading(result.grading_detail)" class="result-card">
           <h3>扣分点</h3>
           <div v-if="result.deductions?.length" class="detail-list">
             <div v-for="(item, index) in result.deductions" :key="index" class="detail-row deduction">
@@ -218,7 +235,7 @@
           <div v-else class="empty-result">未发现明确扣分点。</div>
         </article>
 
-        <article v-if="questionType !== 'TRANSLATION'" class="result-card wide-card">
+        <article v-if="questionType !== 'TRANSLATION' && isDetailedGrading(result.grading_detail)" class="result-card wide-card">
           <h3>作文专项诊断</h3>
           <p class="preline"><b>任务完成：</b>{{ result.task_completion_analysis || '暂无' }}</p>
           <p class="preline"><b>结构与衔接：</b>{{ result.structure_analysis || '暂无' }}</p>
@@ -245,12 +262,12 @@
         </article>
 
         <article class="result-card wide-card">
-          <h3>修改建议与参考答案</h3>
+          <h3>{{ result.grading_detail === 'STANDARD' ? '简短建议' : '修改建议与参考答案' }}</h3>
           <p class="preline">{{ result.advice || '暂无修改建议。' }}</p>
           <div v-if="result.corrected_answer" class="corrected-answer"><strong>修改后：</strong>{{ result.corrected_answer }}</div>
         </article>
 
-        <article class="result-card">
+        <article v-if="isDetailedGrading(result.grading_detail)" class="result-card">
           <h3>词汇记忆</h3>
           <div v-if="result.vocabulary_memory?.length" class="detail-list">
             <div v-for="(item, index) in result.vocabulary_memory" :key="index" class="detail-row">
@@ -262,7 +279,7 @@
           <div v-else class="empty-result">暂无重点词汇。</div>
         </article>
 
-        <article class="result-card">
+        <article v-if="isDetailedGrading(result.grading_detail)" class="result-card">
           <h3>难句语法结构</h3>
           <div v-if="result.difficult_sentence_analysis?.length" class="detail-list">
             <div v-for="(item, index) in result.difficult_sentence_analysis" :key="index" class="detail-row">
@@ -282,17 +299,21 @@
 import { computed, nextTick, ref } from 'vue'
 import axios from 'axios'
 import { gradingFallback, useAiSources } from './useAiSources'
+import { getRubricModification } from './rubricModification'
+import { gradingDetails, gradingDetailLabel, isDetailedGrading, type GradingDetail, type GradingCorrection } from './gradingDetail'
 import { OpenAPI } from '../../../generated/core/OpenAPI'
 import { UserControllerService } from '../../../generated'
 
 type Mode = 'translation' | 'essay'
 type ImageItem = { url: string }
 type GradingResult = {
+  grading_detail?: GradingDetail
   awarded_score?: number
   total_score?: number
   summary?: string
   advice?: string
   needs_manual_review?: boolean
+  corrections?: GradingCorrection[]
   score_breakdown?: Record<string, any>[]
   deductions?: Record<string, any>[]
   vocabulary_memory?: Record<string, any>[]
@@ -320,6 +341,7 @@ type GradingHistoryItem = {
   examType: string
   questionType: string
   aiModel: string
+  gradingDetail?: GradingDetail
   questionContent: string
   studentAnswer: string
   referenceAnswer: string
@@ -347,6 +369,7 @@ const mode = ref<Mode>('translation')
 const examType = ref('ENGLISH_I')
 const questionType = ref('TRANSLATION')
 const aiModel = ref('AUTO')
+const gradingDetail = ref<GradingDetail>('SUPREME')
 const aiSources = useAiSources('ENGLISH_GRADING', gradingFallback)
 const questionContent = ref('')
 const studentAnswer = ref('')
@@ -424,6 +447,7 @@ function cacheGradingResult(gradingResult: GradingResult) {
     examType: examType.value,
     questionType: questionType.value,
     aiModel: aiModel.value,
+    gradingDetail: gradingDetail.value,
     questionContent: questionContent.value,
     studentAnswer: studentAnswer.value,
     referenceAnswer: referenceAnswer.value,
@@ -442,6 +466,7 @@ function openHistory(item: GradingHistoryItem) {
   examType.value = item.examType
   questionType.value = item.questionType
   aiModel.value = aiSources.value.some(source => source.id === item.aiModel) ? item.aiModel : 'AUTO'
+  gradingDetail.value = item.gradingDetail || item.result.grading_detail || 'SUPREME'
   questionContent.value = item.questionContent
   studentAnswer.value = item.studentAnswer
   referenceAnswer.value = item.referenceAnswer
@@ -531,6 +556,7 @@ async function submitGrading() {
       exam_type: examType.value,
       question_type: questionType.value,
       ai_model: aiModel.value,
+      grading_detail: gradingDetail.value,
       question_content: questionContent.value,
       question_image_urls: questionImageItems.value.map(item => item.url),
       student_answer: studentAnswer.value,
@@ -581,7 +607,8 @@ h1 { margin: 0; font-size: clamp(27px, 4vw, 42px); letter-spacing: -.02em; }
 .mode-tabs { display: flex; gap: 8px; border-bottom: 1px solid #edf0f5; margin: -24px -24px 24px; padding: 14px 24px 0; }
 .mode-tabs button { padding: 12px 18px; border: 0; border-bottom: 3px solid transparent; background: transparent; color: #64748b; font-weight: 700; cursor: pointer; }
 .mode-tabs button.active { color: #2563eb; border-bottom-color: #2563eb; }
-.config-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) 180px; gap: 16px; align-items: end; }
+.config-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 120px; gap: 16px; align-items: end; }
+.grading-detail-hint { margin: 12px 0; color: #64748b; font-size: 13px; line-height: 1.6; }
 label span, .field-label span { display: block; margin-bottom: 7px; color: #334155; font-size: 13px; font-weight: 700; }
 select, textarea { width: 100%; box-sizing: border-box; border: 1px solid #dbe2ec; border-radius: 10px; background: #fbfcfe; color: #172033; font: inherit; outline: none; }
 select { height: 42px; padding: 0 12px; }

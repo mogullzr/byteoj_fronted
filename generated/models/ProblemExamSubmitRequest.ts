@@ -8,5 +8,6 @@ export type ProblemExamSubmitRequest = {
     exam_id?: number;
     progress_token?: string;
     ai_model?: 'GPT_5_4' | 'DEEPSEEK' | string;
+    grading_detail?: 'SUPREME' | 'STANDARD' | 'BASIC' | 'DEEP';
 };
 

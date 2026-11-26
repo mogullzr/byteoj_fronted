@@ -91,6 +91,13 @@
               <option v-for="source in aiSources" :key="source.id" :value="source.id">{{ source.label }}</option>
             </select>
           </label>
+          <label class="exam-ai-model-field">
+            <span>讲评详略</span>
+            <select v-model="gradingDetail" :disabled="submitting">
+              <option v-for="item in gradingDetails" :key="item.value" :value="item.value">{{ item.label }}</option>
+            </select>
+          </label>
+          <p class="grading-detail-hint">{{ gradingDetails.find(item => item.value === gradingDetail)?.description }}</p>
           <div class="modal-buttons">
             <button class="btn cancel" @click="showConfirmModal = false">我再检查一下</button>
             <button class="btn confirm" @click="confirmSubmit" :disabled="submitting">
@@ -795,6 +802,7 @@
 
 <script setup lang="ts">
 import { gradingFallback, useAiSources } from '@/view/AI/useAiSources'
+import { gradingDetails, type GradingDetail } from '@/view/AI/gradingDetail'
 import {ref, computed, nextTick, onMounted, onUnmounted, watch} from 'vue'
 import {useRoute, useRouter} from 'vue-router'
 // 假设你的服务文件路径如下，请根据实际项目结构调整
@@ -1001,6 +1009,7 @@ const resultData = ref({
 const showConfirmModal = ref(false)
 const submitting = ref(false)
 const aiModel = ref('AUTO')
+const gradingDetail = ref<GradingDetail>('SUPREME')
 const aiSources = useAiSources('EXAM_GRADING', gradingFallback)
 
 // 后端逐题判卷进度（Redis 状态由提交接口实时更新）
@@ -1854,6 +1863,7 @@ const confirmSubmit = async () => {
     exam_id: examData.value?.exam_id,
     progress_token: token,
     ai_model: aiModel.value,
+    grading_detail: gradingDetail.value,
     answers: answerList,
   }
 
@@ -4238,6 +4248,14 @@ input[type="checkbox"] {
   background: #f8fafc;
   color: #1e293b;
   font: inherit;
+}
+
+.confirm-modal .grading-detail-hint {
+  margin: -12px 0 20px;
+  color: #64748b;
+  font-size: .85rem;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .modal-buttons {

@@ -566,14 +566,14 @@
                       <Markdown :generate-data="getStructuredResult(question)?.summary || ''" />
                     </div>
 
-                    <div class="rounded-xl border border-slate-200 bg-white p-5">
+                    <div v-if="getStructuredResult(question)?.grading_detail !== 'BASIC'" class="rounded-xl border border-slate-200 bg-white p-5">
                       <div class="mb-2 text-sm font-semibold text-slate-800">修改建议</div>
                       <Markdown :generate-data="getStructuredResult(question)?.advice || ''" />
                     </div>
                   </div>
 
-                  <div class="grid gap-4 xl:grid-cols-2">
-                    <div class="rounded-xl border border-slate-200 bg-white p-5">
+                  <div v-if="getStructuredResult(question)?.grading_detail !== 'BASIC'" class="grid gap-4 xl:grid-cols-2">
+                    <div v-if="isDetailedGrading(getStructuredResult(question)?.grading_detail)" class="rounded-xl border border-slate-200 bg-white p-5">
                       <div class="mb-2 text-sm font-semibold text-slate-800">识别作答与可接受答案</div>
                       <Markdown :generate-data="buildAnswerMarkdown(question)" />
                     </div>
@@ -609,6 +609,8 @@
 import { request } from '../../../generated/core/request'
 import { OpenAPI } from '../../../generated/core/OpenAPI'
 import { useAiSources } from '@/view/AI/useAiSources'
+import { getRubricModification } from '@/view/AI/rubricModification'
+import { gradingDetailLabel, isDetailedGrading, type GradingDetail, type GradingCorrection } from '@/view/AI/gradingDetail'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Markdown from '@/view/Markdown/MarkdownView.vue'
@@ -630,12 +632,16 @@ type GradingRubric = {
   name?: string
   reason?: string
   evidence?: string
+  modification?: string
   confidence?: number
   max_score?: number
   awarded_score?: number
 }
 
 type StructuredGradingResult = {
+  grading_detail?: GradingDetail
+  corrections?: GradingCorrection[]
+  corrected_answer?: string
   confidence?: number
   mistakes?: GradingMistake[]
   summary?: string
@@ -1275,6 +1281,7 @@ const quickSummaryData = (question: ProblemMath408BankVo) => {
   if (!result) return getSheet(question)?.ai_advise || ''
   return [
     '**判题速览**',
+    `- 讲评档位：${gradingDetailLabel(result.grading_detail)}`,
     `- 置信度：${formatPercent(result.confidence)}`,
     `- 得分率：${formatPercent(result.score_rate)}`,
     `- 判题模式：${result.grading_mode || '-'}`,
@@ -1312,15 +1319,17 @@ const buildMistakeRubricMarkdown = (question: ProblemMath408BankVo) => {
   if (!result) return ''
 
   const lines: string[] = []
-  lines.push('**错误点**')
-  if ((result.mistakes || []).length) {
+  if (result.grading_detail !== 'STANDARD') {
+    lines.push('**错误点**')
+    if ((result.mistakes || []).length) {
     result.mistakes!.forEach((mistake, idx) => {
       lines.push(`${idx + 1}. ${mistake.type || '错误'} · ${mistake.severity || 'unknown'}`)
       if (mistake.description) lines.push(`   - ${mistake.description}`)
       if (mistake.related_rubric_item_id) lines.push(`   - 关联细则：${mistake.related_rubric_item_id}`)
     })
-  } else {
-    lines.push('无')
+    } else {
+      lines.push('无')
+    }
   }
 
   lines.push('')
@@ -1332,6 +1341,10 @@ const buildMistakeRubricMarkdown = (question: ProblemMath408BankVo) => {
       lines.push(`- 置信度：${formatPercent(rubric.confidence)}`)
       if (rubric.reason) lines.push(`- 原因：${rubric.reason}`)
       if (rubric.evidence) lines.push(`- 依据：${rubric.evidence}`)
+      if (result.grading_detail === 'DEEP') {
+        const modification = getRubricModification(result, rubric).split('\n').join('\n  ')
+        lines.push(`- 修改：${modification}`)
+      }
       lines.push('')
     })
   } else {
