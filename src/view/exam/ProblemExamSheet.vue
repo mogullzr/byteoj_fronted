@@ -477,7 +477,9 @@
             </div>
           </div>
 
-          <div v-if="!isPublicTopSheet" class="mx-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 sm:mx-7 sm:p-6">
+          <div v-if="!isPublicTopSheet" :id="`sheet-note-${question.problem_id}`" tabindex="-1"
+            class="sheet-note-panel mx-6 mb-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-5 sm:mx-7 sm:p-6"
+            :class="{ 'note-search-highlight': requestedNoteProblemId === question.problem_id }">
             <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div>
                 <div class="border-l-4 border-amber-500 pl-3 text-sm font-semibold text-amber-900">个人复习标注</div>
@@ -615,6 +617,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Markdown from '@/view/Markdown/MarkdownView.vue'
 import ExamQuestionDirectory from './ExamQuestionDirectory.vue'
+import { readNoteProblemId } from './examNoteSearch'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
 import { ProblemsControllerService } from '../../../generated/services/ProblemsControllerService'
 import type { ProblemExamSheetVo } from '../../../generated/models/ProblemExamSheetVo'
@@ -708,6 +711,7 @@ const resultFilters: Array<{ label: string; value: ResultFilter }> = [
 const examId = Number(route.query.exam_id)
 const recordId = Number(route.query.recordId)
 const isPublicTopSheet = route.query.publicTop === '1'
+const requestedNoteProblemId = computed(() => readNoteProblemId(route.query.noteProblemId))
 
 const sheetMap = computed(() => {
   const map = new Map<number, ProblemExamSheetVo>()
@@ -808,6 +812,30 @@ const jumpToQuestion = async (number: number) => {
   element.focus({ preventScroll: true })
   activeQuestionNumber.value = number
 }
+
+const locateRequestedNote = async () => {
+  const problemId = requestedNoteProblemId.value
+  if (!problemId || isPublicTopSheet || questionLoadError.value || sheetLoadError.value) return
+  const index = questions.value.findIndex(question => question.problem_id === problemId)
+  if (index < 0) {
+    error('当前试卷中未找到该笔记对应的题目，题目可能已调整。')
+    return
+  }
+  if (!filteredQuestions.value.includes(questions.value[index])) resetFilters()
+  await nextTick()
+  // Allow the sheet and annotation DOM to mount before targeting the note itself.
+  window.requestAnimationFrame(() => {
+    const element = document.getElementById(`sheet-note-${problemId}`)
+    if (!element?.isConnected) return
+    element.scrollIntoView({ behavior: 'instant' as ScrollBehavior, block: 'start' })
+    element.focus({ preventScroll: true })
+    activeQuestionNumber.value = index + 1
+  })
+}
+
+watch(requestedNoteProblemId, () => {
+  if (!loading.value && !sheetLoading.value) void locateRequestedNote()
+})
 
 watch(filteredQuestions, async () => {
   await nextTick()
@@ -911,6 +939,7 @@ const fetchSheet = async () => {
 
   void loadReviewGuide()
   await Promise.all([loadQuestions(), loadAnswerSheet()])
+  await locateRequestedNote()
 }
 
 const startReviewGuideEdit = () => {
@@ -1356,6 +1385,9 @@ const buildMistakeRubricMarkdown = (question: ProblemMath408BankVo) => {
 </script>
 
 <style scoped>
+.sheet-note-panel { scroll-margin-top: 112px; }
+.sheet-note-panel.note-search-highlight { outline: 3px solid #d97706; outline-offset: 4px; }
+
 .sheet-question-card {
   scroll-margin-top: 112px;
 }

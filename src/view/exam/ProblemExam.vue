@@ -82,7 +82,8 @@
         </div>
       </section>
     </div>
-    <div class="max-w-6xl mx-auto mb-6 flex justify-end">
+    <div class="max-w-6xl mx-auto mb-6 flex flex-wrap justify-end gap-3">
+      <ExamNoteSearch />
       <button
           class="rounded-xl bg-emerald-700 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-emerald-800 active:scale-[0.98]"
           @click="router.push('/exam/wrong-book')"
@@ -353,6 +354,7 @@ import { GRADUATE_EXAM_TARGET_TIME, GRADUATE_TARGET_SCHOOL_STORAGE_PREFIX } from
 import { ProblemsControllerService, SearchControllerService } from '../../../generated'
 import type { DeepSeekBalanceVo, ProblemExamVo, ProblemMath408BankVo } from '../../../generated'
 import ExamTopicLibrary from './ExamTopicLibrary.vue'
+import ExamNoteSearch from './ExamNoteSearch.vue'
 import { examTopics, matchesExamTopic } from './examTopics'
 import { useMessageBox } from '@/view/components/alert/useMessageBox'
 
