@@ -15,24 +15,35 @@
           <button type="button" class="shrink-0 whitespace-nowrap rounded-lg px-2 py-1 text-slate-500 hover:bg-slate-100" aria-label="关闭笔记搜索" @click="closeSearch()">关闭</button>
         </header>
         <form class="border-b border-slate-100 px-5 py-4 sm:px-7" @submit.prevent="searchNotes(1, draft)">
+          <div class="mb-3 inline-flex rounded-xl border border-slate-200 bg-slate-50 p-1" role="group" aria-label="笔记搜索方式">
+            <button type="button" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+              :class="mode === 'keyword' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+              @click="switchMode('keyword')">关键词</button>
+            <button type="button" class="rounded-lg px-3 py-1.5 text-xs font-semibold transition"
+              :class="mode === 'semantic' ? 'bg-white text-amber-900 shadow-sm' : 'text-slate-500 hover:text-slate-800'"
+              @click="switchMode('semantic')">按意思搜索</button>
+          </div>
           <div class="flex gap-2">
             <label for="my-note-keyword" class="sr-only">笔记关键词</label>
             <input id="my-note-keyword" ref="searchInput" v-model="draft" maxlength="80" type="search" autocomplete="off"
-              placeholder="例如：汇编程序可见的寄存器"
+              :placeholder="mode === 'semantic' ? '例如：汇编程序员能直接使用哪些寄存器' : '例如：汇编程序可见的寄存器'"
               class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-100" />
             <button type="submit" :disabled="loading" class="rounded-xl bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50">
               {{ loading ? '搜索中…' : '搜索' }}
             </button>
           </div>
-          <p class="mt-2 text-xs text-slate-500">仅搜索你自己的个人复习标注；多个关键词可用空格分隔，需同时包含。</p>
+          <p class="mt-2 text-xs text-slate-500">
+            {{ mode === 'semantic' ? '按笔记表达的含义查找，支持不同说法；首次使用可能需要后台建立索引。' : '仅搜索你自己的个人复习标注；多个关键词可用空格分隔，需同时包含。' }}
+          </p>
         </form>
         <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-7" aria-live="polite" :aria-busy="loading">
           <p v-if="loading" class="py-10 text-center text-sm text-slate-500">正在查找笔记位置…</p>
           <p v-else-if="searchError" role="alert" class="rounded-xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{{ searchError }}</p>
           <p v-else-if="!hasSearched" class="py-10 text-center text-sm leading-7 text-slate-500">输入记得的知识点或笔记内容，查找它所在的试卷和题目。</p>
           <p v-else-if="!records.length" class="py-10 text-center text-sm text-slate-500">没有找到相关笔记，可以试试更短的关键词。</p>
-          <div v-else class="space-y-3">
-            <p class="text-xs text-slate-500">找到 {{ total }} 处笔记位置</p>
+          <p v-if="mode === 'semantic' && indexing" class="mb-3 rounded-xl bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800">正在为历史笔记建立语义索引。新保存的笔记会自动加入，稍后再次搜索即可看到更多结果。</p>
+          <div v-if="!loading && !searchError && records.length" class="space-y-3">
+            <p class="text-xs text-slate-500">{{ mode === 'semantic' ? '找到 ' + total + ' 条可能相关的笔记位置' : '找到 ' + total + ' 处笔记位置' }}</p>
             <RouterLink v-for="hit in records" :key="hit.noteId" :to="noteSheetLocation(hit)" @click="closeSearch(false)"
               class="block rounded-xl border border-slate-200 bg-white p-4 transition hover:border-amber-400 hover:bg-amber-50/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-500">
               <div class="flex flex-wrap items-center justify-between gap-2">
@@ -74,6 +85,8 @@ const pageNum = ref(1)
 const hasSearched = ref(false)
 const loading = ref(false)
 const searchError = ref('')
+const mode = ref<'keyword' | 'semantic'>('keyword')
+const indexing = ref(false)
 let searchVersion = 0
 
 async function showSearch() {
@@ -89,6 +102,19 @@ function closeSearch(restoreFocus = true) {
   searchVersion++
   loading.value = false
   if (restoreFocus && wasOpened) trigger.value?.focus()
+}
+
+function switchMode(nextMode: 'keyword' | 'semantic') {
+  if (mode.value === nextMode) return
+  searchVersion++
+  loading.value = false
+  mode.value = nextMode
+  records.value = []
+  total.value = 0
+  pageNum.value = 1
+  hasSearched.value = false
+  searchError.value = ''
+  indexing.value = false
 }
 
 function trapFocus(event: KeyboardEvent) {
@@ -110,8 +136,10 @@ async function searchNotes(page: number, keyword: string) {
   total.value = 0
   hasSearched.value = true
   try {
-    const response = await request<{ code: number; data?: ExamNoteSearchPage; message?: string }>(OpenAPI, {
-      method: 'GET', url: '/api/problem/other/exam/annotations/search', query: { keyword: query, pageNum: page },
+    const response = await request<{ code: number; data?: ExamNoteSearchPage & { indexing?: boolean }; message?: string }>(OpenAPI, {
+      method: 'GET',
+      url: mode.value === 'semantic' ? '/api/problem/other/exam/annotations/semantic-search' : '/api/problem/other/exam/annotations/search',
+      query: { keyword: query, pageNum: page },
     })
     if (version !== searchVersion) return
     if (response.code !== 0 || !response.data || !Array.isArray(response.data.records)) {
@@ -120,6 +148,7 @@ async function searchNotes(page: number, keyword: string) {
     records.value = response.data.records
     total.value = response.data.total
     pageNum.value = response.data.pageNum
+    indexing.value = Boolean(response.data.indexing)
   } catch (error) {
     if (version === searchVersion) searchError.value = error instanceof Error ? error.message : '笔记搜索失败，请重试。'
   } finally {
@@ -140,6 +169,7 @@ watch(() => user.loginUser?.uuid, () => {
   total.value = 0
   hasSearched.value = false
   searchError.value = ''
+  indexing.value = false
 })
 onBeforeUnmount(() => { searchVersion++ })
 </script>

@@ -7,6 +7,7 @@ export type ExamNoteSearchHit = {
   questionNumber: number
   noteUpdatedAt?: string
   snippet: string
+  similarity?: number
 }
 
 export type ExamNoteSearchPage = {
